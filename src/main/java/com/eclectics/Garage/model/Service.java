@@ -1,5 +1,7 @@
 package com.eclectics.Garage.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,14 +21,20 @@ public class Service {
     @JoinColumn(name = "garageId", referencedColumnName = "garageId")
     private Garage garage;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonBackReference
+    private ServiceCategories serviceCategories;
+
     public Service() {}
 
-    public Service(Long id, String serviceName, String description, Double price, Garage garage) {
+    public Service(Long id, String serviceName,ServiceCategories serviceCategories, String description, Double price, Garage garage) {
         this.id = id;
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
         this.garage = garage;
+        this.serviceCategories = serviceCategories;
     }
 
     public Long getId() { return id;}
@@ -43,5 +51,8 @@ public class Service {
 
     public Garage getGarage() { return garage; }
     public void setGarage(Garage garage) { this.garage = garage; }
+
+    public ServiceCategories getServiceCategories() {return serviceCategories;}
+    public void setServiceCategories(ServiceCategories serviceCategories) {this.serviceCategories = serviceCategories;}
 }
 
