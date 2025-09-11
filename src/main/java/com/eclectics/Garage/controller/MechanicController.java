@@ -41,10 +41,10 @@ public class MechanicController {
         public ResponseEntity<String> uploadDocuments(
                 @RequestParam("id") Long id,
                 @RequestPart(value = "profilepic", required = false)MultipartFile profilepic,
-                @RequestPart(value = "nationalIdFile", required = false) MultipartFile nationalIdFile,
+                @RequestPart(value = "nationalIdFile", required = true) MultipartFile nationalIdFile,
                 @RequestPart(value = "profCert", required = false)MultipartFile profCert,
                 @RequestPart(value = "anyRelCert", required = false)MultipartFile anyRelCert,
-                @RequestPart(value = "polCleCert", required = false)MultipartFile polCleCert) throws IOException, java.io.IOException {
+                @RequestPart(value = "polCleCert", required = true)MultipartFile polCleCert) throws IOException, java.io.IOException {
             mechanicService.uploadDocuments(id, profilepic, nationalIdFile, profCert, anyRelCert, polCleCert);
             return ResponseEntity.ok("Mechanic created successfully");
         }

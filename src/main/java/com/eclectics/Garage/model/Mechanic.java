@@ -20,10 +20,13 @@ public class Mechanic {
 
     @Lob
     private byte[] profilePic;
+    @Lob
     private byte[] nationalIDPic;
+    @Lob
     private byte[] professionalCertfificate;
-    @Column(name = "any_relevant_certificate", columnDefinition = "LONGBLOB")
+    @Lob
     private byte[] anyRelevantCertificate;
+    @Lob
     private byte[] policeClearanceCertficate;
 
     @Column(unique = true)
