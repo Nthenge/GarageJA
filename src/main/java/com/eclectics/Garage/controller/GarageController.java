@@ -1,8 +1,10 @@
 package com.eclectics.Garage.controller;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.service.GarageService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,10 +35,20 @@ public class GarageController {
         return garageService.getAllGarages();
     }
 
-    @PostMapping()
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
     public String createGarage(@RequestBody Garage garage){
         garageService.createGarage(garage);
         return "Garage created successfully";
+    }
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadDocuments(
+            @RequestParam("garageId") Long garageId,
+            @RequestPart(value = "businessLicense", required = true) MultipartFile businessLicense,
+            @RequestPart(value = "professionalCertificate", required = true) MultipartFile professionalCertificate,
+            @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos) throws java.io.IOException{
+        garageService.uploadDocument(garageId, businessLicense, professionalCertificate, facilityPhotos);
+        return ResponseEntity.ok("Garage documents uploaded successfully");
     }
 
     @PutMapping("/{garageId}")

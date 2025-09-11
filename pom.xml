@@ -11,7 +11,7 @@
 	<groupId>com.eclectics</groupId>
 	<artifactId>Garage</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Garage</name>
+	<businessName>Garage</businessName>
 	<description>Garage MVP</description>
 	<url/>
 	<licenses>
