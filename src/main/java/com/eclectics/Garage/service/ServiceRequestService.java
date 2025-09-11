@@ -9,13 +9,13 @@ import java.util.Optional;
 public interface ServiceRequestService {
 
     // Create a new request
-    ServiceRequest createRequest(Long customerId, Long garageId, Long serviceId);
+    ServiceRequest createRequest(Long carOwnerUniqueId, Long garageId, Long serviceId);
 
     // Update request status (e.g. PENDING → IN_PROGRESS → COMPLETED)
     ServiceRequest updateStatus(Long requestId, Status status);
 
-    // Fetch requests for a given customer
-    List<ServiceRequest> getRequestsByCustomer(Long customerId);
+    // Fetch requests for a given car owner
+    List<ServiceRequest> getRequestsByCarOwner(Long carOwnerUniqueId);
 
     // Fetch requests for a given garage
     List<ServiceRequest> getRequestsByGarage(Long garageId);

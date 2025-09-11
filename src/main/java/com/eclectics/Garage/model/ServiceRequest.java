@@ -11,8 +11,8 @@ public class ServiceRequest {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", referencedColumnName = "uniqueId")
-    private Customer customer;
+    @JoinColumn(name = "carOwner_id", referencedColumnName = "uniqueId")
+    private CarOwner carOwner;
 
     @ManyToOne
     @JoinColumn(name = "garage_id", referencedColumnName = "garageId")
@@ -33,9 +33,9 @@ public class ServiceRequest {
 
     public ServiceRequest() {}
 
-    public ServiceRequest(long id, Customer customer, Garage garage, Service service, Status status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ServiceRequest(long id, CarOwner carOwner, Garage garage, Service service, Status status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.customer = customer;
+        this.carOwner = carOwner;
         this.garage = garage;
         this.service = service;
         this.status = status;
@@ -46,8 +46,8 @@ public class ServiceRequest {
     public long getId() { return id; }
     public void setId(long id) { this.id = id;}
 
-    public Customer getCustomer() { return customer;}
-    public void setCustomer(Customer customer) { this.customer = customer; }
+    public CarOwner getCarOwner() { return carOwner;}
+    public void setCarOwner(CarOwner carOwner) { this.carOwner = carOwner; }
 
     public Garage getGarage() { return garage; }
     public void setGarage(Garage garage) { this.garage = garage;}

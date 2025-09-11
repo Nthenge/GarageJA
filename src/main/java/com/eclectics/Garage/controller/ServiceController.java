@@ -1,8 +1,6 @@
 package com.eclectics.Garage.controller;
 
-import com.eclectics.Garage.model.Customer;
 import com.eclectics.Garage.model.Service;
-import com.eclectics.Garage.service.GarageService;
 import com.eclectics.Garage.service.ServicesService;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,6 +1,5 @@
 package com.eclectics.Garage.controller;
 
-import com.eclectics.Garage.model.Service;
 import com.eclectics.Garage.model.ServiceRequest;
 import com.eclectics.Garage.model.Status;
 import com.eclectics.Garage.service.ServiceRequestService;
@@ -21,11 +20,11 @@ public class ServiceRequestsController {
 
     @PostMapping
     public ServiceRequest createRequest(
-            @RequestParam Long customerId,
+            @RequestParam Long carOwnerId,
             @RequestParam Long garageId,
             @RequestParam Long serviceId
             ){
-        return serviceRequestService. createRequest(customerId, garageId,serviceId);
+        return serviceRequestService. createRequest(carOwnerId, garageId,serviceId);
     }
 
     @PutMapping("/{requestId}/status")
@@ -36,9 +35,9 @@ public class ServiceRequestsController {
         return serviceRequestService.updateStatus(requestId, status);
     }
 
-    @GetMapping("/customer/{customerId}")
-    public List<ServiceRequest> getRequestsByCustomer(@PathVariable Long customerId){
-        return serviceRequestService.getRequestsByCustomer(customerId);
+    @GetMapping("/carOwner/{carOwnerUniqueId}")
+    public List<ServiceRequest> getRequestsByCarOwner(@PathVariable Long carOwnerUniqueId){
+        return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
     }
 
     @GetMapping("/garage/{garageId}")
