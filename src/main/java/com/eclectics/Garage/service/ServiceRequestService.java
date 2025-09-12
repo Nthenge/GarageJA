@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface ServiceRequestService {
 
     // Create a new request
-    ServiceRequest createRequest(Long carOwnerUniqueId, Long garageId, Long serviceId);
+    ServiceRequest createRequest(Integer carOwnerUniqueId, Long garageId, Long serviceId);
 
     // Update request status (e.g. PENDING → IN_PROGRESS → COMPLETED)
     ServiceRequest updateStatus(Long requestId, Status status);

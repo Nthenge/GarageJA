@@ -1,7 +1,9 @@
 package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.model.CarOwner;
+import com.eclectics.Garage.model.SeverityCategories;
 import com.eclectics.Garage.repository.CarOwnerRepository;
+import com.eclectics.Garage.repository.SeverityCategoryRepository;
 import com.eclectics.Garage.service.CarOwnerService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
@@ -15,9 +17,11 @@ import java.util.Random;
 public class CarOwnerServiceImpl implements CarOwnerService {
 
     private final CarOwnerRepository carOwnerRepository;
+    private final SeverityCategoryRepository severityCategoryRepository;
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, SeverityCategoryRepository severityCategoryRepository) {
         this.carOwnerRepository = carOwnerRepository;
+        this.severityCategoryRepository = severityCategoryRepository;
     }
 
     @Override
@@ -42,6 +46,12 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             }while (uniqueCarOwnerExists);
 
             carOwner.setUniqueId(uniqueCarOwnerId);
+
+//            String severityName = carOwner.getSeverityCategories().getSeverityName();
+//            SeverityCategories esc = severityCategoryRepository.findBySeverityName(severityName)
+//                    .orElseThrow(()->new RuntimeException("Severity with this name does not exist"));
+//
+//            carOwner.setSeverityCategories(esc);
 
         return carOwnerRepository.save(carOwner);
     }
@@ -89,7 +99,7 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwner.getEngineCapacity() != null) eco.setEngineCapacity(carOwner.getEngineCapacity());
             if (carOwner.getColor() != null) eco.setColor(carOwner.getColor());
             if (carOwner.getTransmission() != null) eco.setTransmission(carOwner.getTransmission());
-            if (carOwner.getSeverity() != null) eco.setSeverity(carOwner.getSeverity());
+            //if (carOwner.getSeverityCategories() != null) eco.setSeverityCategories(carOwner.getSeverityCategories());
 
             //binary data
             if (carOwner.getProfilePic() != null && carOwner.getProfilePic().length > 0) eco.setProfilePic(carOwner.getProfilePic());

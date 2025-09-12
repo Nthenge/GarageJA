@@ -27,8 +27,8 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     }
 
     @Override
-    public ServiceRequest createRequest(Long carOwnerUniqueId, Long garageId, Long serviceId) {
-        CarOwner carOwner = carOwnerRepository.findById(carOwnerUniqueId)
+    public ServiceRequest createRequest(Integer carOwnerUniqueId, Long garageId, Long serviceId) {
+        CarOwner carOwner = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
                 .orElseThrow(() -> new RuntimeException("Car Owner with this id does not exist"));
 
         Garage garage = garageRepository.findById(garageId)

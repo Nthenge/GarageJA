@@ -1,5 +1,6 @@
 package com.eclectics.Garage.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class CarOwner {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private Integer uniqueId;
+        private Integer uniqueId;
 
     @Lob
     private byte[] profilePic;
@@ -28,14 +29,18 @@ public class CarOwner {
     private String engineCapacity;
     private String color;
     private String transmission;
-    private String severity;
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "severity_id", nullable = false)
+//    @JsonBackReference
+//    private SeverityCategories severityCategories;
 
     @OneToMany(mappedBy = "carOwner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServiceRequest> requests = new ArrayList<>();
 
     public CarOwner() {}
 
-    public CarOwner(Long id, Integer uniqueId,byte[] profilePic, String altPhone, String make, String model, String year, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
+    public CarOwner(Long id, Integer uniqueId, byte[] profilePic, String altPhone, String make, String model, String year, String licensePlate, String engineType, String engineCapacity, String color, String transmission, SeverityCategories severityCategories) {
         this.id = id;
         this.uniqueId = uniqueId;
         this.make = make;
@@ -48,7 +53,7 @@ public class CarOwner {
         this.engineCapacity = engineCapacity;
         this.color = color;
         this.transmission = transmission;
-        this.severity = severity;
+//        this.severityCategories = severityCategories;
     }
 
     public Long getId() { return id;}
@@ -87,8 +92,8 @@ public class CarOwner {
     public String getTransmission() {return transmission;}
     public void setTransmission(String transmission) {this.transmission = transmission;}
 
-    public String getSeverity() {return severity;}
-    public void setSeverity(String severity) {this.severity = severity;}
+//    public SeverityCategories getSeverityCategories() { return severityCategories;}
+//    public void setSeverityCategories(SeverityCategories severityCategories) {this.severityCategories = severityCategories;}
 }
 
 

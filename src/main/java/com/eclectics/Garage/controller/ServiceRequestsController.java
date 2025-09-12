@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/service requests")
+@RequestMapping("/requests")
 public class ServiceRequestsController {
 
     private final ServiceRequestService serviceRequestService;
@@ -20,11 +20,11 @@ public class ServiceRequestsController {
 
     @PostMapping
     public ServiceRequest createRequest(
-            @RequestParam Long carOwnerId,
+            @RequestParam Integer carOwnerId,
             @RequestParam Long garageId,
             @RequestParam Long serviceId
             ){
-        return serviceRequestService. createRequest(carOwnerId, garageId,serviceId);
+        return serviceRequestService.createRequest(carOwnerId, garageId,serviceId);
     }
 
     @PutMapping("/{requestId}/status")

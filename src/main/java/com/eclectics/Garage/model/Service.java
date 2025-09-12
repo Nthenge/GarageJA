@@ -23,18 +23,25 @@ public class Service {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference()
     private ServiceCategories serviceCategories;
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "severity_id", nullable = false)
+//    @JsonBackReference()
+//    private SeverityCategories severityCategories;
+
 
     public Service() {}
 
-    public Service(Long id, String serviceName,ServiceCategories serviceCategories, String description, Double price, Garage garage) {
+    public Service(Long id, String serviceName,ServiceCategories serviceCategories, String description, Double price, Garage garage, SeverityCategories severityCategories) {
         this.id = id;
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
         this.garage = garage;
         this.serviceCategories = serviceCategories;
+        //this.severityCategories = severityCategories;
     }
 
     public Long getId() { return id;}
@@ -54,5 +61,8 @@ public class Service {
 
     public ServiceCategories getServiceCategories() {return serviceCategories;}
     public void setServiceCategories(ServiceCategories serviceCategories) {this.serviceCategories = serviceCategories;}
+
+//    public SeverityCategories getSeverityCategories() { return severityCategories;}
+//    public void setSeverityCategories(SeverityCategories severityCategories) { this.severityCategories = severityCategories;}
 }
 

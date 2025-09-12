@@ -59,6 +59,8 @@ public class ServiceServiceImpl implements ServicesService {
             if (service.getServiceName() != null) existingService.setDescription(service.getDescription());
             if (service.getServiceName() != null) existingService.setPrice(service.getPrice());
             if (service.getServiceName() != null) existingService.setGarage(service.getGarage());
+            if (service.getServiceCategories() != null) existingService.setServiceCategories(service.getServiceCategories());
+            //if (service.getSeverityCategories() != null) existingService.setSeverityCategories(service.getSeverityCategories());
             return serviceRepository.save(existingService);
         }).orElseThrow(() -> new RuntimeException("Service not found"));
     }
