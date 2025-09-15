@@ -3,6 +3,7 @@ package com.eclectics.Garage.controller;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,6 @@ public class UserController {
         this.jwtUtil = jwtUtil;
     }
 
-    //Get one user
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -32,42 +32,55 @@ public class UserController {
     }
 
 
-    //Get all users
     @GetMapping()
     public ResponseEntity<List<User>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    //PostUser
-    @PostMapping()
-    public ResponseEntity<?> createUser(@RequestBody User user){
-        try {
-            // This method now throws RuntimeException if email already exists
-            User savedUser = userService.createUser(user);
 
-            // Successful registration response
+    @PostMapping("/register")
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        try {
+            User savedUser = userService.createUser(user);
+            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
+
             return ResponseEntity
                     .ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
                             "message", "User registered successfully",
-                            "userId", savedUser.getId().toString()
+                            "token", token,
+                            "role", savedUser.getRole().name()
                     ));
 
         } catch (RuntimeException e) {
-            // Friendly error response (like "Email already registered")
+            if ("Email is already in use".equals(e.getMessage())) {
+                return ResponseEntity
+                        .status(HttpStatus.CONFLICT)
+                        .body(Map.of(
+                                "status", 409,
+                                "error", "Conflict",
+                                "message", e.getMessage()
+                        ));
+            }
             return ResponseEntity
                     .badRequest()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(
+                            "status", 400,
+                            "error", "Bad Request",
+                            "message", e.getMessage()
+                    ));
         } catch (Exception e) {
-            // Catch other unexpected errors
             return ResponseEntity
-                    .status(500)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("error", "An unexpected error occurred"));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "status", 500,
+                            "error", "Internal Server Error",
+                            "message", "An unexpected error occurred"
+                    ));
         }
     }
+
 
 
 
@@ -77,25 +90,35 @@ public class UserController {
             String email = payload.get("email");
             String password = payload.get("password");
 
-            User user = userService.loginUser(email, password);
+            if (email == null || password == null) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(Map.of(
+                                "status", 400,
+                                "error", "Bad Request",
+                                "message", "Email and password are required"
+                        ));
+            }
 
+            User user = userService.loginUser(email, password);
             // generate JWT token
             String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
             return ResponseEntity.ok(Map.of(
-                    "message", "Login successful",
                     "token", token,
-                    "email", user.getEmail(),
                     "role", user.getRole().name(),
                     "firstname", user.getFirstname()
             ));
         } catch (RuntimeException e) {
             return ResponseEntity
-                    .status(401)
-                    .body(Map.of("error", e.getMessage()));
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "status", 401,
+                            "error", "Unauthorized access",
+                            "message", e.getMessage())
+                    );
         }
     }
-
 
 
     //updateUser
