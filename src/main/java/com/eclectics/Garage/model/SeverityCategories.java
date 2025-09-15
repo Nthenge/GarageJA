@@ -18,6 +18,10 @@ public class SeverityCategories {
 
 //    @OneToMany(mappedBy = "severityCategories", cascade = CascadeType.ALL, orphanRemoval = true )
 //    @JsonManagedReference
+//    private List<ServiceRequest> serviceRequests;
+
+//    @OneToMany(mappedBy = "severityCategories", cascade = CascadeType.ALL, orphanRemoval = true )
+//    @JsonManagedReference
 //    private List<CarOwner> carOwners = new ArrayList<>();
 
 //    @OneToMany(mappedBy = "severityCategories", cascade = CascadeType.ALL, orphanRemoval = true )

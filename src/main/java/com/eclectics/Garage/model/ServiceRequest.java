@@ -1,5 +1,6 @@
 package com.eclectics.Garage.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -31,9 +32,13 @@ public class ServiceRequest {
     @OneToOne(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
     private AssignMechanics assignRequests;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "severity_id", nullable = false)
+    private SeverityCategories severityCategories;
+
     public ServiceRequest() {}
 
-    public ServiceRequest(long id, CarOwner carOwner, Garage garage, Service service, Status status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ServiceRequest(long id, CarOwner carOwner,SeverityCategories severityCategories, Garage garage, Service service, Status status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.carOwner = carOwner;
         this.garage = garage;
@@ -41,6 +46,7 @@ public class ServiceRequest {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.severityCategories = severityCategories;
     }
 
     public long getId() { return id; }
@@ -63,4 +69,7 @@ public class ServiceRequest {
 
     public Service getService() { return service; }
     public void setService(Service service) { this.service = service; }
+
+    public SeverityCategories getSeverityCategories() {return severityCategories;}
+    public void setSeverityCategories(SeverityCategories severityCategories) { this.severityCategories = severityCategories;}
 }
