@@ -30,7 +30,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         CarOwner carOwner = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
                 .orElseThrow(() -> new RuntimeException("Car Owner with this id does not exist"));
 
-        Garage garage = garageRepository.findById(garageId)
+        Garage garage = garageRepository.findByGarageId(garageId)
                 .orElseThrow(() -> new RuntimeException("Garage with this id does not exist"));
 
         Service service = serviceRepository.findById(serviceId)
@@ -67,13 +67,13 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     }
 
     @Override
-    public List<ServiceRequest> getRequestsByCarOwner(Long carOwnerUniqueId) {
-        return requestServiceRepository.getServiceByCarOwnerId(carOwnerUniqueId);
+    public List<ServiceRequest> getRequestsByCarOwner(Integer carOwnerUniqueId) {
+        return requestServiceRepository.getServiceByCarOwner_UniqueId(carOwnerUniqueId);
     }
 
     @Override
     public List<ServiceRequest> getRequestsByGarage(Long garageId) {
-        return requestServiceRepository.getServiceByGarageId(garageId);
+        return requestServiceRepository.getServiceByGarage_GarageId(garageId);
     }
 
     @Override

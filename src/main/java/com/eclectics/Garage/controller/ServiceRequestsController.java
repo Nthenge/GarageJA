@@ -44,7 +44,7 @@ public class ServiceRequestsController {
     }
 
     @GetMapping("/carOwner/{carOwnerUniqueId}")
-    public List<ServiceRequest> getRequestsByCarOwner(@PathVariable Long carOwnerUniqueId){
+    public List<ServiceRequest> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
         return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
     }
 

@@ -19,7 +19,7 @@ public interface ServiceRequestService {
     ServiceRequest updateStatus(Long requestId, Status status, Long severityId);
 
     // Fetch requests for a given car owner
-    List<ServiceRequest> getRequestsByCarOwner(Long carOwnerUniqueId);
+    List<ServiceRequest> getRequestsByCarOwner(Integer carOwnerUniqueId);
 
     // Fetch requests for a given garage
     List<ServiceRequest> getRequestsByGarage(Long garageId);
