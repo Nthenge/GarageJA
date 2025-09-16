@@ -39,6 +39,18 @@ public class AutomobilesServiceImpl implements AutomobilesService {
         return automobilesRepository.save(existing);
     }
 
+    public List<String> getAllMakes() {
+        return automobilesRepository.findAllMakes();
+    }
+    public List<String> findAllYears() {
+        return automobilesRepository.findAllYears();
+    }
+    public List<String> findAllEngineType() {
+        return automobilesRepository.findAllEngineType();
+    }
+    public List<String> findAllTransmission() {
+        return automobilesRepository.findAllTransmission();
+    }
 
     @Override
     public void deleteAutoMobile(Long id) {

@@ -30,10 +30,16 @@
         @Enumerated(EnumType.STRING)
         private Role role;
 
-        @Transient
-        private boolean detailsCompleted;
+        @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+        private Mechanic mechanic;
 
-        public User(String email, String secondname, String firstname, String password, String phoneNumber, boolean enabled, Role role) {
+        @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+        private CarOwner carOwner;
+
+        @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+        private Garage garage;
+
+        public User(String email, String secondname,Mechanic mechanic,CarOwner carOwner,Garage garage, String firstname, String password, String phoneNumber, boolean enabled, Role role) {
             this.email = email;
             this.secondname = secondname;
             this.firstname = firstname;
@@ -41,6 +47,9 @@
             this.phoneNumber = phoneNumber;
             this.enabled = enabled;
             this.role = role;
+            this.mechanic = mechanic;
+            this.carOwner = carOwner;
+            this.garage = garage;
         }
 
         public Long getId() {
@@ -85,13 +94,29 @@
             this.role = role;
         }
 
-        public boolean isDetailsCompleted(){
-            return email != null && !email.isBlank()
-                    && password != null && !password.isBlank();
-//                    && firstname != null && !firstname.isBlank()
-//                    && secondname != null && !secondname.isBlank()
-//                    && phoneNumber != null && !phoneNumber.isBlank();
+        public Mechanic getMechanic() {return mechanic;}
+        public void setMechanic(Mechanic mechanic) {this.mechanic = mechanic;}
+
+        public CarOwner getCarOwner() {return carOwner;}
+        public void setCarOwner(CarOwner carOwner) {this.carOwner = carOwner;}
+
+        public Garage getGarage() {return garage;}
+        public void setGarage(Garage garage) {this.garage = garage;}
+
+        @Transient
+        public boolean isDetailsCompleted() {
+            switch (this.role) {
+                case MECHANIC:
+                    return mechanic != null && mechanic.isComplete();
+                case CAR_OWNER:
+                    return carOwner != null && carOwner.isComplete();
+                case GARAGE_ADMIN:
+                    return garage != null && garage.isComplete();
+                default:
+                    return false; // in case role is unknown
+            }
         }
+
 
         public User() {
         }

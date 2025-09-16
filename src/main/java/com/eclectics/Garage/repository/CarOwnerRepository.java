@@ -19,6 +19,8 @@ public interface CarOwnerRepository extends JpaRepository<CarOwner, Long> {
     Optional<CarOwner> findByAltPhone(String altPhone);
 
     Optional<CarOwner> findByUniqueId(Integer uniqueId);
+
+    Optional<CarOwner> findByUserId(Long userId);
 }
 
 

@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface GarageRepository extends JpaRepository<Garage, Long> {
     Optional<Garage> findByGarageId(Long garageId);
     Optional<Garage> findByBusinessName(String businessName);
+    Optional<Garage> findByUserId(Long userId);
 }

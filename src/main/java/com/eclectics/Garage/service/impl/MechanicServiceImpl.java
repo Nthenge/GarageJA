@@ -2,11 +2,11 @@ package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Mechanic;
+import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
+import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.MechanicService;
-import io.jsonwebtoken.io.IOException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,12 +18,25 @@ public class MechanicServiceImpl implements MechanicService {
 
     private final MechanicRepository mechanicRepository;
     private final GarageRepository garageRepository;
+    private final UsersRepository usersRepository;
 
-    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository) {
+    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, UsersRepository usersRepository) {
         this.mechanicRepository = mechanicRepository;
         this.garageRepository = garageRepository;
+        this.usersRepository = usersRepository;
     }
 
+    @Override
+    public Optional<Mechanic> findByUserId(Long userId) {
+        return mechanicRepository.findByUserId(userId);
+    }
+
+    @Override
+    public boolean isDetailsCompleted(Long userId) {
+        return mechanicRepository.findByUserId(userId)
+                .map(Mechanic::isComplete) // calls the entity method
+                .orElse(false);
+    }
 
     @Override
     public Mechanic createMechanic(Mechanic mechanic) {

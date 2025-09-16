@@ -20,6 +20,22 @@ public class AutoMobilesController {
     public List<AutoMobiles> getAllAutomobiles(){
         return automobilesService.getAllAutomobiles();
     }
+    @GetMapping("/make")
+    public List<String> getAllMakes() {
+        return automobilesService.getAllMakes();
+    }
+    @GetMapping("/year")
+    public List<String> getAllYea() {
+        return automobilesService.findAllYears();
+    }
+    @GetMapping("/engineType")
+    public List<String> getAllEngineType() {
+        return automobilesService.findAllEngineType();
+    }
+    @GetMapping("/transmission")
+    public List<String> getAllTransmission() {
+        return automobilesService.findAllTransmission();
+    }
 
     @PostMapping
     public AutoMobiles createAutoMobile(@RequestBody AutoMobiles autoMobiles){

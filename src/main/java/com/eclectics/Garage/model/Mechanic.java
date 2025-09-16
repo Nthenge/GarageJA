@@ -36,9 +36,13 @@ public class Mechanic {
     @JoinColumn(name = "garageId", referencedColumnName = "garageId")
     private Garage garage;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    private User user;
+
     public Mechanic() {}
 
-    public Mechanic(Long id, String areasofSpecialization, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, byte[] profilePic, byte[] nationalIDPic, byte[] professionalCertfificate, byte[] anyRelevantCertificate, byte[] policeClearanceCertficate, Integer nationalIdNumber, Garage garage) {
+    public Mechanic(Long id, String areasofSpecialization, User user, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, byte[] profilePic, byte[] nationalIDPic, byte[] professionalCertfificate, byte[] anyRelevantCertificate, byte[] policeClearanceCertficate, Integer nationalIdNumber, Garage garage) {
         this.id = id;
         this.areasofSpecialization = areasofSpecialization;
         this.alternativePhone = alternativePhone;
@@ -55,7 +59,28 @@ public class Mechanic {
         this.policeClearanceCertficate = policeClearanceCertficate;
         this.nationalIdNumber = nationalIdNumber;
         this.garage = garage;
+        this.user = user;
     }
+
+    @Transient
+    public boolean isComplete() {
+        return areasofSpecialization != null && !areasofSpecialization.isBlank()
+                && alternativePhone != null && !alternativePhone.isBlank()
+                && physicalAddress != null && !physicalAddress.isBlank()
+                && emergencyContactName != null && !emergencyContactName.isBlank()
+                && emergencyContactNumber != null && !emergencyContactNumber.isBlank()
+                && yearsofExperience != null && !yearsofExperience.isBlank()
+                && vehicleBrands != null && !vehicleBrands.isBlank()
+                && availability != null && !availability.isBlank()
+                && profilePic != null && profilePic.length > 0
+                && nationalIDPic != null && nationalIDPic.length > 0
+                && professionalCertfificate != null && professionalCertfificate.length > 0
+                && anyRelevantCertificate != null && anyRelevantCertificate.length > 0
+                && policeClearanceCertficate != null && policeClearanceCertficate.length > 0
+                && nationalIdNumber != null
+                && garage != null;
+    }
+
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id;}
@@ -104,5 +129,8 @@ public class Mechanic {
 
     public Garage getGarage() { return garage;}
     public void setGarage(Garage garage) { this.garage = garage;}
+
+    public User getUser() {return user;}
+    public void setUser(User user) {this.user = user;}
 }
 

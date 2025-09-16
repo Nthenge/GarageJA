@@ -8,6 +8,11 @@ import java.util.Optional;
 
 public interface GarageService {
     Garage createGarage(Garage garage);
+
+    Optional<Garage> findByUserId(Long userId);
+
+    boolean isDetailsCompleted(Long userId);
+
     Garage uploadDocument(Long garageId, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws java.io.IOException;
     Optional<Garage> getGarageById(Long garageId);
     Optional<Garage> getGarageByName(String name);

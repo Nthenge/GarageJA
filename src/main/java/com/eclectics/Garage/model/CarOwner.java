@@ -37,9 +37,13 @@ public class CarOwner {
     @OneToMany(mappedBy = "carOwner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServiceRequest> requests = new ArrayList<>();
 
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    private User user;
+
     public CarOwner() {}
 
-    public CarOwner(Long id, Integer uniqueId,AutoMobiles automobile, byte[] profilePic,String model, String altPhone, String licensePlate, String engineCapacity, String color) {
+    public CarOwner(Long id, Integer uniqueId,AutoMobiles automobile,User user, byte[] profilePic,String model, String altPhone, String licensePlate, String engineCapacity, String color) {
         this.id = id;
         this.uniqueId = uniqueId;
 //        this.make = make;
@@ -54,7 +58,22 @@ public class CarOwner {
 //        this.transmission = transmission;
         this.automobile = automobile;
 //        this.severityCategories = severityCategories;
+        this.user = user;
     }
+
+    @Transient
+    public boolean isComplete() {
+        return uniqueId != null
+                && profilePic != null && profilePic.length > 0
+                && altPhone != null && !altPhone.isBlank()
+                && model != null && !model.isBlank()
+                && licensePlate != null && !licensePlate.isBlank()
+                && engineCapacity != null && !engineCapacity.isBlank()
+                && color != null && !color.isBlank()
+                && automobile != null
+                && user != null;
+    }
+
 
     public Long getId() { return id;}
     public void setId(Long id) { this.id = id;}
@@ -95,7 +114,10 @@ public class CarOwner {
     public AutoMobiles getAutomobile() {return automobile;}
     public void setAutomobile(AutoMobiles automobile) {this.automobile = automobile;}
 
-//    public SeverityCategories getSeverityCategories() { return severityCategories;}
+    public User getUser() {return user;}
+    public void setUser(User user) {this.user = user;}
+
+    //    public SeverityCategories getSeverityCategories() { return severityCategories;}
 //    public void setSeverityCategories(SeverityCategories severityCategories) {this.severityCategories = severityCategories;}
 }
 

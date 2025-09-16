@@ -48,6 +48,18 @@ public class GarageServiceImpl implements GarageService {
     }
 
     @Override
+    public Optional<Garage> findByUserId(Long userId) {
+        return garageRepository.findByUserId(userId);
+    }
+
+    @Override
+    public boolean isDetailsCompleted(Long userId) {
+        return garageRepository.findByUserId(userId)
+                .map(Garage::isComplete) // delegate to entity method
+                .orElse(false);
+    }
+
+    @Override
     public Garage uploadDocument(Long garageId, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws IOException {
         Garage garage = garageRepository.findByGarageId(garageId).orElseThrow(()-> new RuntimeException("Garage with this id not found"));
 

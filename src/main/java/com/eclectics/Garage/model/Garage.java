@@ -42,7 +42,11 @@ public class Garage {
     @OneToMany(mappedBy = "garage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Service> services = new ArrayList<>();
 
-    public Garage(Integer mpesaTill, Integer mpesaPayBill, String businessPhoneNumber, String physicalBusinessAddress, String businessName, String specialisedServices, String serviceCategories, String twentyFourHours, Long operatingHours, Integer yearsInOperation, String businessEmailAddress, String businessRegNumber, Long garageId, byte[] facilityPhotos, byte[] professionalCertificate, byte[] businessLicense, Long id) {
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    private User user;
+
+    public Garage(Integer mpesaTill, Integer mpesaPayBill, User user, String businessPhoneNumber, String physicalBusinessAddress, String businessName, String specialisedServices, String serviceCategories, String twentyFourHours, Long operatingHours, Integer yearsInOperation, String businessEmailAddress, String businessRegNumber, Long garageId, byte[] facilityPhotos, byte[] professionalCertificate, byte[] businessLicense, Long id) {
         this.mpesaTill = mpesaTill;
         this.mpesaPayBill = mpesaPayBill;
         this.businessPhoneNumber = businessPhoneNumber;
@@ -60,6 +64,26 @@ public class Garage {
         this.professionalCertificate = professionalCertificate;
         this.businessLicense = businessLicense;
         this.id = id;
+        this.user = user;
+    }
+    @Transient
+    public boolean isComplete() {
+        return businessLicense != null && businessLicense.length > 0
+                && professionalCertificate != null && professionalCertificate.length > 0
+                && facilityPhotos != null && facilityPhotos.length > 0
+                && garageId != null
+                && operatingHours != null
+                && businessRegNumber != null && !businessRegNumber.isBlank()
+                && businessEmailAddress != null && !businessEmailAddress.isBlank()
+                && twentyFourHours != null && !twentyFourHours.isBlank()
+                && serviceCategories != null && !serviceCategories.isBlank()
+                && specialisedServices != null && !specialisedServices.isBlank()
+                && businessName != null && !businessName.isBlank()
+                && physicalBusinessAddress != null && !physicalBusinessAddress.isBlank()
+                && businessPhoneNumber != null && !businessPhoneNumber.isBlank()
+                && yearsInOperation != null
+                && (mpesaPayBill != null || mpesaTill != null) // at least one payment method
+                && user != null; // must be linked to a user
     }
 
     public Garage() {}
@@ -114,4 +138,7 @@ public class Garage {
 
     public Integer getMpesaTill() { return mpesaTill;}
     public void setMpesaTill(Integer mpesaTill) {this.mpesaTill = mpesaTill;}
+
+    public User getUser() {return user;}
+    public void setUser(User user) {this.user = user;}
 }

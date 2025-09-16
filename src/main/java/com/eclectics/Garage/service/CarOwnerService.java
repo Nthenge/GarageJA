@@ -9,6 +9,11 @@ import java.util.Optional;
 
 public interface CarOwnerService {
     CarOwner createCarOwner(CarOwner carOwner);
+
+    Optional<CarOwner> findByUserId(Long userId);
+
+    boolean isDetailsCompleted(Long userId);
+
     CarOwner uploadDocument(Integer uniqueId, MultipartFile profilePic) throws java.io.IOException;
     Optional<CarOwner> getCarOwnerById(Long id);
     Optional<CarOwner> getCarOwnerByEmail(String email);

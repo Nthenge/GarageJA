@@ -58,6 +58,18 @@ public class CarOwnerServiceImpl implements CarOwnerService {
 
         return carOwnerRepository.save(carOwner);
     }
+    @Override
+    public Optional<CarOwner> findByUserId(Long userId) {
+        return carOwnerRepository.findByUserId(userId);
+    }
+
+     @Override
+    public boolean isDetailsCompleted(Long userId) {
+        return carOwnerRepository.findByUserId(userId)
+                .map(CarOwner::isComplete)
+                .orElse(false);
+    }
+
 
     @Override
     public CarOwner uploadDocument(Integer uniqueId, MultipartFile profilePic) throws java.io.IOException {
@@ -98,7 +110,7 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwner.getLicensePlate() != null) eco.setLicensePlate(carOwner.getLicensePlate());
             if (carOwner.getEngineCapacity() != null) eco.setEngineCapacity(carOwner.getEngineCapacity());
             if (carOwner.getColor() != null) eco.setColor(carOwner.getColor());
-            
+
             if (carOwner.getAutomobile() != null) {
                 AutoMobiles auto = automobilesRepository.findById(carOwner.getAutomobile().getId())
                         .orElseThrow(() -> new RuntimeException("Automobile with that ID does not exist"));

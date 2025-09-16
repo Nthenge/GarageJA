@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface MechanicRepository extends JpaRepository<Mechanic, Long> {
     List<Mechanic> findByGarageId(Long garageId);
     Optional<Mechanic> findMechanicByNationalIdNumber(Integer nationalIdNumber);
+    Optional<Mechanic> findByUserId(Long userId);
 }
 

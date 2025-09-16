@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MechanicService {
+    Optional<Mechanic> findByUserId(Long userId);
+
+    boolean isDetailsCompleted(Long userId);
+
     Mechanic createMechanic(Mechanic mechanic);
     Mechanic uploadDocuments(Long id, MultipartFile profilepic, MultipartFile nationalIdFile, MultipartFile profCert, MultipartFile anyRelCert, MultipartFile polCleCert) throws java.io.IOException;
     Optional<Mechanic> getMechanicByNationalId(Integer nationalIdNumber);
