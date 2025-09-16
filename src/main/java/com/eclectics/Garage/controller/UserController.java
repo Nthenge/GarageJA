@@ -107,7 +107,8 @@ public class UserController {
             return ResponseEntity.ok(Map.of(
                     "token", token,
                     "role", user.getRole().name(),
-                    "firstname", user.getFirstname()
+                    "firstname", user.getFirstname(),
+                    "detailsCompleted",user.isDetailsCompleted()
             ));
         } catch (RuntimeException e) {
             return ResponseEntity
