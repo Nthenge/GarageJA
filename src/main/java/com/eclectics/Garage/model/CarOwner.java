@@ -21,38 +21,38 @@ public class CarOwner {
     private byte[] profilePic;
 
     private String altPhone;
-    private String make;
+//    private String make;
     private String model;
-    private String year;
+//    private String year;
     private String licensePlate;
-    private String engineType;
+//    private String engineType;
     private String engineCapacity;
     private String color;
-    private String transmission;
+//    private String transmission;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "severity_id", nullable = false)
-//    @JsonBackReference
-//    private SeverityCategories severityCategories;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "automobile_id", nullable = false)
+    private AutoMobiles automobile;
 
     @OneToMany(mappedBy = "carOwner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServiceRequest> requests = new ArrayList<>();
 
     public CarOwner() {}
 
-    public CarOwner(Long id, Integer uniqueId, byte[] profilePic, String altPhone, String make, String model, String year, String licensePlate, String engineType, String engineCapacity, String color, String transmission, SeverityCategories severityCategories) {
+    public CarOwner(Long id, Integer uniqueId,AutoMobiles automobile, byte[] profilePic,String model, String altPhone, String licensePlate, String engineCapacity, String color) {
         this.id = id;
         this.uniqueId = uniqueId;
-        this.make = make;
+//        this.make = make;
         this.profilePic = profilePic;
         this.altPhone = altPhone;
         this.model = model;
-        this.year = year;
+//        this.year = year;
         this.licensePlate = licensePlate;
-        this.engineType = engineType;
+//        this.engineType = engineType;
         this.engineCapacity = engineCapacity;
         this.color = color;
-        this.transmission = transmission;
+//        this.transmission = transmission;
+        this.automobile = automobile;
 //        this.severityCategories = severityCategories;
     }
 
@@ -62,8 +62,8 @@ public class CarOwner {
     public Integer getUniqueId() { return uniqueId;}
     public void setUniqueId(Integer uniqueId) {this.uniqueId = uniqueId;}
 
-    public String getMake() {return make;}
-    public void setMake(String make) {this.make = make;}
+//    public String getMake() {return make;}
+//    public void setMake(String make) {this.make = make;}
 
     public byte[] getProfilePic() {return profilePic;}
     public void setProfilePic(byte[] profilePic) {this.profilePic = profilePic;}
@@ -74,14 +74,14 @@ public class CarOwner {
     public String getModel() {return model;}
     public void setModel(String model) {this.model = model;}
 
-    public String getYear() {return year;}
-    public void setYear(String year) {this.year = year;}
+//    public String getYear() {return year;}
+//    public void setYear(String year) {this.year = year;}
 
     public String getLicensePlate() {return licensePlate;}
     public void setLicensePlate(String licensePlate) {this.licensePlate = licensePlate;}
 
-    public String getEngineType() {return engineType;}
-    public void setEngineType(String engineType) {this.engineType = engineType;}
+//    public String getEngineType() {return engineType;}
+//    public void setEngineType(String engineType) {this.engineType = engineType;}
 
     public String getEngineCapacity() {return engineCapacity;}
     public void setEngineCapacity(String engineCapacity) {this.engineCapacity = engineCapacity;}
@@ -89,8 +89,11 @@ public class CarOwner {
     public String getColor() {return color;}
     public void setColor(String color) {this.color = color;}
 
-    public String getTransmission() {return transmission;}
-    public void setTransmission(String transmission) {this.transmission = transmission;}
+//    public String getTransmission() {return transmission;}
+//    public void setTransmission(String transmission) {this.transmission = transmission;}
+
+    public AutoMobiles getAutomobile() {return automobile;}
+    public void setAutomobile(AutoMobiles automobile) {this.automobile = automobile;}
 
 //    public SeverityCategories getSeverityCategories() { return severityCategories;}
 //    public void setSeverityCategories(SeverityCategories severityCategories) {this.severityCategories = severityCategories;}

@@ -1,7 +1,8 @@
 package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.model.CarOwner;
-import com.eclectics.Garage.model.SeverityCategories;
+import com.eclectics.Garage.model.AutoMobiles;
+import com.eclectics.Garage.repository.AutomobilesRepository;
 import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.repository.SeverityCategoryRepository;
 import com.eclectics.Garage.service.CarOwnerService;
@@ -18,47 +19,50 @@ public class CarOwnerServiceImpl implements CarOwnerService {
 
     private final CarOwnerRepository carOwnerRepository;
     private final SeverityCategoryRepository severityCategoryRepository;
+    private final AutomobilesRepository automobilesRepository;
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, SeverityCategoryRepository severityCategoryRepository) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, SeverityCategoryRepository severityCategoryRepository, AutomobilesRepository automobilesRepository) {
         this.carOwnerRepository = carOwnerRepository;
         this.severityCategoryRepository = severityCategoryRepository;
+        this.automobilesRepository = automobilesRepository;
     }
 
     @Override
     public CarOwner createCarOwner(CarOwner carOwner) {
-            Optional<CarOwner> carOwnerExists = carOwnerRepository.findByUniqueId(carOwner.getUniqueId());
-            if (carOwnerExists.isPresent()){
-                throw new RuntimeException("This car owner exist.");
+        Optional<CarOwner> carOwnerExists = carOwnerRepository.findByUniqueId(carOwner.getUniqueId());
+        if (carOwnerExists.isPresent()) {
+            throw new RuntimeException("This car owner exist.");
+        }
+
+        boolean uniqueCarOwnerExists;
+        Integer uniqueCarOwnerId;
+
+        do {
+            Random random = new Random();
+            uniqueCarOwnerId = random.nextInt(8888889) + 1111111;
+
+            uniqueCarOwnerExists = carOwnerRepository.findByUniqueId(uniqueCarOwnerId).isPresent();
+            if (uniqueCarOwnerExists) {
+                throw new RuntimeException("A car owner with this id already exist");
             }
 
-            boolean uniqueCarOwnerExists;
-            Integer uniqueCarOwnerId;
+        } while (uniqueCarOwnerExists);
 
-            do {
-                Random random = new Random();
-                uniqueCarOwnerId = random.nextInt(8888889) + 1111111;
+        carOwner.setUniqueId(uniqueCarOwnerId);
 
-                uniqueCarOwnerExists = carOwnerRepository.findByUniqueId(uniqueCarOwnerId).isPresent();
-                if (uniqueCarOwnerExists){
-                    throw new RuntimeException("A car owner with this id already exist");
-                }
-
-            }while (uniqueCarOwnerExists);
-
-            carOwner.setUniqueId(uniqueCarOwnerId);
-
-//            String severityName = carOwner.getSeverityCategories().getSeverityName();
-//            SeverityCategories esc = severityCategoryRepository.findBySeverityName(severityName)
-//                    .orElseThrow(()->new RuntimeException("Severity with this name does not exist"));
-//
-//            carOwner.setSeverityCategories(esc);
+        if (carOwner.getAutomobile() != null) {
+            AutoMobiles auto = automobilesRepository.findById(carOwner.getAutomobile().getId())
+                    .orElseThrow(() -> new RuntimeException("Automobile with that ID does not exist"));
+            carOwner.setAutomobile(auto);
+        }
 
         return carOwnerRepository.save(carOwner);
     }
 
     @Override
     public CarOwner uploadDocument(Integer uniqueId, MultipartFile profilePic) throws java.io.IOException {
-        CarOwner carOwner = carOwnerRepository.findByUniqueId(uniqueId).orElseThrow(()-> new RuntimeException("Car owner not found"));
+        CarOwner carOwner = carOwnerRepository.findByUniqueId(uniqueId)
+                .orElseThrow(() -> new RuntimeException("Car owner not found"));
 
         if (profilePic != null && !profilePic.isEmpty()) {
             carOwner.setProfilePic(profilePic.getBytes());
@@ -86,26 +90,26 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         Optional<CarOwner> existingCarOwnerOptional = carOwnerRepository.findById(id);
 
         if (existingCarOwnerOptional.isPresent()) {
-            // eco = existing car owner
             CarOwner eco = existingCarOwnerOptional.get();
 
             if (carOwner.getUniqueId() != null) eco.setUniqueId(carOwner.getUniqueId());
             if (carOwner.getAltPhone() != null) eco.setAltPhone(carOwner.getAltPhone());
-            if (carOwner.getMake() != null) eco.setMake(carOwner.getMake());
             if (carOwner.getModel() != null) eco.setModel(carOwner.getModel());
-            if (carOwner.getYear() != null) eco.setYear(carOwner.getYear());
             if (carOwner.getLicensePlate() != null) eco.setLicensePlate(carOwner.getLicensePlate());
-            if (carOwner.getEngineType() != null) eco.setEngineType(carOwner.getEngineType());
             if (carOwner.getEngineCapacity() != null) eco.setEngineCapacity(carOwner.getEngineCapacity());
             if (carOwner.getColor() != null) eco.setColor(carOwner.getColor());
-            if (carOwner.getTransmission() != null) eco.setTransmission(carOwner.getTransmission());
-            //if (carOwner.getSeverityCategories() != null) eco.setSeverityCategories(carOwner.getSeverityCategories());
+            
+            if (carOwner.getAutomobile() != null) {
+                AutoMobiles auto = automobilesRepository.findById(carOwner.getAutomobile().getId())
+                        .orElseThrow(() -> new RuntimeException("Automobile with that ID does not exist"));
+                eco.setAutomobile(auto);
+            }
 
-            //binary data
-            if (carOwner.getProfilePic() != null && carOwner.getProfilePic().length > 0) eco.setProfilePic(carOwner.getProfilePic());
+            if (carOwner.getProfilePic() != null && carOwner.getProfilePic().length > 0)
+                eco.setProfilePic(carOwner.getProfilePic());
 
             return carOwnerRepository.save(eco);
-        }else {
+        } else {
             throw new ResourceAccessException("Car Owner does not exist");
         }
     }
@@ -113,10 +117,10 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     @Override
     public String deleteCarOwner(Long id) {
         Optional<CarOwner> existingCarOwner = carOwnerRepository.findById(id);
-        if (existingCarOwner.isPresent()){
+        if (existingCarOwner.isPresent()) {
             carOwnerRepository.deleteById(id);
             return "Car Owner Deleted";
-        }else {
+        } else {
             return "No Car Owner with that id";
         }
     }
