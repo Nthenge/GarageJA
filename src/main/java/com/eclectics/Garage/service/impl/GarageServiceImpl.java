@@ -1,7 +1,10 @@
 package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.model.Garage;
+import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
+import com.eclectics.Garage.repository.UsersRepository;
+import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.GarageService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,14 +17,21 @@ import java.util.Random;
 @Service
 public class GarageServiceImpl implements GarageService {
 
-    public GarageServiceImpl(GarageRepository garageRepository) {
+    public GarageServiceImpl(GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
         this.garageRepository = garageRepository;
+        this.usersRepository = usersRepository;
+        this.authenticationService = authenticationService;
     }
 
     private final GarageRepository garageRepository;
+    private final UsersRepository usersRepository;
+    private final AuthenticationService authenticationService;
 
     @Override
     public Garage createGarage(Garage garage) {
+
+        User userid = authenticationService.getCurrentUser();
+        garage.setUser(userid);
 
         Optional<Garage> GarageExists = garageRepository.findByBusinessName(garage.getBusinessName());
         if (GarageExists.isPresent()){

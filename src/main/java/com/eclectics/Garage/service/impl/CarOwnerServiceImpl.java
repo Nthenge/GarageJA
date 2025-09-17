@@ -2,10 +2,15 @@ package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.AutoMobiles;
+import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.AutomobilesRepository;
 import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.repository.SeverityCategoryRepository;
+import com.eclectics.Garage.repository.UsersRepository;
+import com.eclectics.Garage.security.CustomUserDetails;
+import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
+import org.apache.juli.logging.Log;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,15 +25,23 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     private final CarOwnerRepository carOwnerRepository;
     private final SeverityCategoryRepository severityCategoryRepository;
     private final AutomobilesRepository automobilesRepository;
+    private final UsersRepository usersRepository;
+    private final AuthenticationService authenticationService;
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, SeverityCategoryRepository severityCategoryRepository, AutomobilesRepository automobilesRepository) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, SeverityCategoryRepository severityCategoryRepository, AutomobilesRepository automobilesRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
         this.carOwnerRepository = carOwnerRepository;
         this.severityCategoryRepository = severityCategoryRepository;
         this.automobilesRepository = automobilesRepository;
+        this.usersRepository = usersRepository;
+        this.authenticationService = authenticationService;
     }
 
     @Override
     public CarOwner createCarOwner(CarOwner carOwner) {
+
+        User userid = authenticationService.getCurrentUser();
+        carOwner.setUser(userid);
+
         Optional<CarOwner> carOwnerExists = carOwnerRepository.findByUniqueId(carOwner.getUniqueId());
         if (carOwnerExists.isPresent()) {
             throw new RuntimeException("This car owner exist.");

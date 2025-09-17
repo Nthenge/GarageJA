@@ -37,8 +37,9 @@ public class CarOwner {
     @OneToMany(mappedBy = "carOwner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServiceRequest> requests = new ArrayList<>();
 
+    // make this nullable false
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true, unique = true)
     private User user;
 
     public CarOwner() {}

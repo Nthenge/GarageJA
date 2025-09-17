@@ -6,6 +6,7 @@ import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.UsersRepository;
+import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.MechanicService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,11 +20,13 @@ public class MechanicServiceImpl implements MechanicService {
     private final MechanicRepository mechanicRepository;
     private final GarageRepository garageRepository;
     private final UsersRepository usersRepository;
+    private final AuthenticationService authenticationService;
 
-    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, UsersRepository usersRepository) {
+    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
         this.mechanicRepository = mechanicRepository;
         this.garageRepository = garageRepository;
         this.usersRepository = usersRepository;
+        this.authenticationService = authenticationService;
     }
 
     @Override
@@ -40,10 +43,15 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Override
     public Mechanic createMechanic(Mechanic mechanic) {
+
+        User userid = authenticationService.getCurrentUser();
+        mechanic.setUser(userid);
+
         Optional<Mechanic> mechanicExist = mechanicRepository.findMechanicByNationalIdNumber(mechanic.getNationalIdNumber());
         if (mechanicExist.isPresent()) {
             throw new RuntimeException("Mechanic with this national ID already exist");
         }
+
         if (mechanic.getGarage() != null && mechanic.getGarage().getGarageId() != null) {
             Long garageAdminId = mechanic.getGarage().getGarageId();
             Garage garage = garageRepository.findByGarageId(garageAdminId)
