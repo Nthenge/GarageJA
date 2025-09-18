@@ -14,7 +14,7 @@ public interface CarOwnerService {
 
     boolean isDetailsCompleted(Long userId);
 
-    CarOwner uploadDocument(Integer uniqueId, MultipartFile profilePic) throws java.io.IOException;
+    CarOwner uploadDocument(MultipartFile profilePic, CarOwner carOwner) throws java.io.IOException;
     Optional<CarOwner> getCarOwnerById(Long id);
     Optional<CarOwner> getCarOwnerByEmail(String email);
     List<CarOwner> getAllCarOwners();

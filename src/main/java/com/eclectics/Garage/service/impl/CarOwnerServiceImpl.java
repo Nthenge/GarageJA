@@ -1,16 +1,10 @@
 package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.model.CarOwner;
-import com.eclectics.Garage.model.AutoMobiles;
 import com.eclectics.Garage.model.User;
-import com.eclectics.Garage.repository.AutomobilesRepository;
 import com.eclectics.Garage.repository.CarOwnerRepository;
-import com.eclectics.Garage.repository.SeverityCategoryRepository;
-import com.eclectics.Garage.repository.UsersRepository;
-import com.eclectics.Garage.security.CustomUserDetails;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
-import org.apache.juli.logging.Log;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,16 +17,10 @@ import java.util.Random;
 public class CarOwnerServiceImpl implements CarOwnerService {
 
     private final CarOwnerRepository carOwnerRepository;
-    private final SeverityCategoryRepository severityCategoryRepository;
-    private final AutomobilesRepository automobilesRepository;
-    private final UsersRepository usersRepository;
     private final AuthenticationService authenticationService;
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, SeverityCategoryRepository severityCategoryRepository, AutomobilesRepository automobilesRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService) {
         this.carOwnerRepository = carOwnerRepository;
-        this.severityCategoryRepository = severityCategoryRepository;
-        this.automobilesRepository = automobilesRepository;
-        this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
     }
 
@@ -62,13 +50,6 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         } while (uniqueCarOwnerExists);
 
         carOwner.setUniqueId(uniqueCarOwnerId);
-
-        if (carOwner.getAutomobile() != null) {
-            AutoMobiles auto = automobilesRepository.findById(carOwner.getAutomobile().getId())
-                    .orElseThrow(() -> new RuntimeException("Automobile with that ID does not exist"));
-            carOwner.setAutomobile(auto);
-        }
-
         return carOwnerRepository.save(carOwner);
     }
     @Override
@@ -85,10 +66,7 @@ public class CarOwnerServiceImpl implements CarOwnerService {
 
 
     @Override
-    public CarOwner uploadDocument(Integer uniqueId, MultipartFile profilePic) throws java.io.IOException {
-        CarOwner carOwner = carOwnerRepository.findByUniqueId(uniqueId)
-                .orElseThrow(() -> new RuntimeException("Car owner not found"));
-
+    public CarOwner uploadDocument(MultipartFile profilePic, CarOwner carOwner) throws java.io.IOException {
         if (profilePic != null && !profilePic.isEmpty()) {
             carOwner.setProfilePic(profilePic.getBytes());
         }
@@ -123,13 +101,13 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwner.getLicensePlate() != null) eco.setLicensePlate(carOwner.getLicensePlate());
             if (carOwner.getEngineCapacity() != null) eco.setEngineCapacity(carOwner.getEngineCapacity());
             if (carOwner.getColor() != null) eco.setColor(carOwner.getColor());
+            if (carOwner.getMake() != null) eco.setMake(carOwner.getMake());
+            if (carOwner.getYear() != null) eco.setYear(carOwner.getYear());
+            if (carOwner.getEngineType() != null) eco.setEngineType(carOwner.getEngineType());
+            if (carOwner.getTransmission() != null) eco.setTransmission(carOwner.getTransmission());
+            if (carOwner.getSeverity() != null) eco.setSeverity(carOwner.getSeverity());
 
-            if (carOwner.getAutomobile() != null) {
-                AutoMobiles auto = automobilesRepository.findById(carOwner.getAutomobile().getId())
-                        .orElseThrow(() -> new RuntimeException("Automobile with that ID does not exist"));
-                eco.setAutomobile(auto);
-            }
-
+            //binary documents
             if (carOwner.getProfilePic() != null && carOwner.getProfilePic().length > 0)
                 eco.setProfilePic(carOwner.getProfilePic());
 

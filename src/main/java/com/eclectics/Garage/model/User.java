@@ -1,5 +1,6 @@
     package com.eclectics.Garage.model;
 
+    import com.fasterxml.jackson.annotation.JsonManagedReference;
     import jakarta.persistence.*;
 
     @Entity
@@ -34,6 +35,7 @@
         private Mechanic mechanic;
 
         @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+        @JsonManagedReference
         private CarOwner carOwner;
 
         @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

@@ -7,11 +7,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/carOwner")
+@CrossOrigin(origins = "http://10.20.33.84:4200",
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class CarOwnerController {
 
         CarOwnerService carOwnerService;
@@ -34,19 +38,23 @@ public class CarOwnerController {
             return carOwnerService.getAllCarOwners();
         }
 
-        @PostMapping(value = "create", consumes = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<String> createCarOwner(@RequestBody CarOwner carOwner){
-            carOwnerService.createCarOwner(carOwner);
-            return ResponseEntity.ok("Car owner created");
-        }
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> createCarOwner(
+            @RequestPart("carOwner") CarOwner carOwner,
+            @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
+    ) throws IOException {
+        carOwnerService.createCarOwner(carOwner);
+        return ResponseEntity.ok("Car owner created with profile picture");
+    }
 
-        @PostMapping(value = "upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        public ResponseEntity<String> uploadCarOwnerProfilePic(
-                @RequestParam Integer uniqueId,
-                @RequestPart(value = "profilePic", required = false)MultipartFile profilePic) throws java.io.IOException{
-            carOwnerService.uploadDocument(uniqueId, profilePic);
-            return ResponseEntity.ok("Car owner profile picture uploaded");
-        }
+
+//    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//        public ResponseEntity<String> uploadCarOwnerProfilePic(
+//                @RequestParam Integer uniqueId,
+//                @RequestPart(value = "profilePic", required = false)MultipartFile profilePic) throws java.io.IOException{
+//            carOwnerService.uploadDocument(uniqueId, profilePic);
+//            return ResponseEntity.ok("Car owner profile picture uploaded");
+//        }
 
         @PutMapping("/{carOwnerId}")
         public String updateCarOwner(@PathVariable Long carOwnerId, @RequestBody CarOwner carOwner){
