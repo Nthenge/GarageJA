@@ -1,5 +1,6 @@
 package com.eclectics.Garage.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -38,6 +39,7 @@ public class Mechanic {
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    @JsonBackReference
     private User user;
 
     public Mechanic() {}

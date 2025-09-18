@@ -1,4 +1,5 @@
 package com.eclectics.Garage.model;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ public class Garage {
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    @JsonBackReference
     private User user;
 
     public Garage(Integer mpesaTill, Integer mpesaPayBill, User user, String businessPhoneNumber, String physicalBusinessAddress, String businessName, String specialisedServices, String serviceCategories, String twentyFourHours, Long operatingHours, Integer yearsInOperation, String businessEmailAddress, String businessRegNumber, Long garageId, byte[] facilityPhotos, byte[] professionalCertificate, byte[] businessLicense, Long id) {

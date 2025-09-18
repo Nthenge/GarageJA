@@ -32,6 +32,7 @@
         private Role role;
 
         @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+        @JsonManagedReference
         private Mechanic mechanic;
 
         @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
@@ -39,6 +40,7 @@
         private CarOwner carOwner;
 
         @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+        @JsonManagedReference
         private Garage garage;
 
         public User(String email, String secondname,Mechanic mechanic,CarOwner carOwner,Garage garage, String firstname, String password, String phoneNumber, boolean enabled, Role role) {
