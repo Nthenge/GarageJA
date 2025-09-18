@@ -17,8 +17,9 @@ public class CarOwner {
     @Column(unique = true, nullable = false)
         private Integer uniqueId;
 
+    //this takes lots of space, use url to minimise storages use
     @Lob
-    @Column(unique = false, nullable = true)
+    @Column(columnDefinition = "LONGBLOB", unique = false, nullable = true)
     private byte[] profilePic;
 
     @Column(unique = false, nullable = true)
@@ -120,6 +121,9 @@ public class CarOwner {
 
     public User getUser() {return user;}
     public void setUser(User user) {this.user = user;}
+
+    public List<ServiceRequest> getRequests() {return requests;}
+    public void setRequests(List<ServiceRequest> requests) {this.requests = requests;}
 }
 
 

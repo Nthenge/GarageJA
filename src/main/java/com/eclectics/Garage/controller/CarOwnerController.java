@@ -1,6 +1,8 @@
 package com.eclectics.Garage.controller;
 
-import com.eclectics.Garage.model.CarOwner;
+import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
+import com.eclectics.Garage.dto.CarOwnerResponseDTO;
+import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.service.CarOwnerService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,48 +20,47 @@ import java.util.Optional;
         methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class CarOwnerController {
 
-        CarOwnerService carOwnerService;
+        private final CarOwnerService carOwnerService;
+        private final CarOwnerMapper mapper;
 
-        public CarOwnerController(CarOwnerService carOwnerService) {
+        public CarOwnerController(CarOwnerService carOwnerService, CarOwnerMapper mapper) {
             this.carOwnerService = carOwnerService;
+            this.mapper = mapper;
         }
 
-        @GetMapping("/{carOwnerId}")
-        public Optional<CarOwner> getOneCarOwner(@PathVariable("carOwnerId") Long Id){
-            return carOwnerService.getCarOwnerById(Id);
-        }
         @GetMapping("/search/{carOwnerUniqueId}")
-        public Optional<CarOwner> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
+        public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
             return carOwnerService.getCarOwnerByUniqueId(carOwnerUniqueId);
         }
 
         @GetMapping()
-        public List<CarOwner> getAllCarOwners(){
+        public List<CarOwnerResponseDTO> getAllCarOwners(){
             return carOwnerService.getAllCarOwners();
         }
 
-    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> createCarOwner(
-            @RequestPart("carOwner") CarOwner carOwner,
-            @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
-    ) throws IOException {
-        carOwnerService.createCarOwner(carOwner);
-        return ResponseEntity.ok("Car owner created with profile picture");
-    }
+        @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
+        public ResponseEntity<String> createCarOwner(
+                @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
+                @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
+        ) throws IOException {
+            carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
+            return ResponseEntity.ok("Car owner created with profile picture");
+        }
 
+        @PutMapping(value = "/{carOwnerUniqueId}/uploadprofile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<CarOwnerResponseDTO> updateCarOwnerProfilePic(
+                @PathVariable Integer carOwnerUniqueId,
+                @RequestPart("profilePic") MultipartFile profilePic
+        ) throws IOException {
 
-//    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//        public ResponseEntity<String> uploadCarOwnerProfilePic(
-//                @RequestParam Integer uniqueId,
-//                @RequestPart(value = "profilePic", required = false)MultipartFile profilePic) throws java.io.IOException{
-//            carOwnerService.uploadDocument(uniqueId, profilePic);
-//            return ResponseEntity.ok("Car owner profile picture uploaded");
-//        }
+            CarOwnerResponseDTO updatedOwner = carOwnerService.updateProfilePic(carOwnerUniqueId, profilePic);
+            return ResponseEntity.ok(updatedOwner);
+        }
 
         @PutMapping("/{carOwnerId}")
-        public String updateCarOwner(@PathVariable Long carOwnerId, @RequestBody CarOwner carOwner){
-            carOwnerService.updateCarOwner(carOwnerId, carOwner);
-            return "Car Owner updated successfully";
+        public ResponseEntity<CarOwnerResponseDTO> updateCarOwner(@PathVariable Long carOwnerId, @RequestBody CarOwnerRequestsDTO carOwnerRequestsDTO){
+            CarOwnerResponseDTO updatedOwner = carOwnerService.updateCarOwner(carOwnerId, carOwnerRequestsDTO);
+            return ResponseEntity.ok(updatedOwner);
         }
 
         @DeleteMapping("/{carOwnerId}")

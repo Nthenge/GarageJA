@@ -1,10 +1,14 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
+import com.eclectics.Garage.dto.CarOwnerResponseDTO;
+import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
+import io.jsonwebtoken.io.IOException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,22 +22,21 @@ public class CarOwnerServiceImpl implements CarOwnerService {
 
     private final CarOwnerRepository carOwnerRepository;
     private final AuthenticationService authenticationService;
+    private final CarOwnerMapper mapper;
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService, CarOwnerMapper mapper) {
         this.carOwnerRepository = carOwnerRepository;
         this.authenticationService = authenticationService;
+        this.mapper = mapper;
     }
 
     @Override
-    public CarOwner createCarOwner(CarOwner carOwner) {
+    public CarOwner createCarOwner(CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException{
+
+        CarOwner carOwner = mapper.toEntity(carOwnerRequestsDTO);
 
         User userid = authenticationService.getCurrentUser();
         carOwner.setUser(userid);
-
-        Optional<CarOwner> carOwnerExists = carOwnerRepository.findByUniqueId(carOwner.getUniqueId());
-        if (carOwnerExists.isPresent()) {
-            throw new RuntimeException("This car owner exist.");
-        }
 
         boolean uniqueCarOwnerExists;
         Integer uniqueCarOwnerId;
@@ -49,12 +52,17 @@ public class CarOwnerServiceImpl implements CarOwnerService {
 
         } while (uniqueCarOwnerExists);
 
+        if (profilePic != null && !profilePic.isEmpty()) {
+            carOwner.setProfilePic(profilePic.getBytes());
+        }
+
         carOwner.setUniqueId(uniqueCarOwnerId);
         return carOwnerRepository.save(carOwner);
     }
     @Override
-    public Optional<CarOwner> findByUserId(Long userId) {
-        return carOwnerRepository.findByUserId(userId);
+    public Optional<CarOwnerResponseDTO> findByUserId(Long userId) {
+        Optional<CarOwner> carOwner = carOwnerRepository.findByUserId(userId);
+        return carOwner.map(mapper::toDto);
     }
 
      @Override
@@ -64,57 +72,49 @@ public class CarOwnerServiceImpl implements CarOwnerService {
                 .orElse(false);
     }
 
-
     @Override
-    public CarOwner uploadDocument(MultipartFile profilePic, CarOwner carOwner) throws java.io.IOException {
-        if (profilePic != null && !profilePic.isEmpty()) {
-            carOwner.setProfilePic(profilePic.getBytes());
-        }
-        return carOwnerRepository.save(carOwner);
+    public List<CarOwnerResponseDTO> getAllCarOwners() {
+        List<CarOwner> carOwners =  carOwnerRepository.findAll();
+        return carOwners.stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public Optional<CarOwner> getCarOwnerById(Long id) {
-        return carOwnerRepository.findById(id);
-    }
-
-    @Override
-    public Optional<CarOwner> getCarOwnerByEmail(String licensePlate) {
-        return carOwnerRepository.findByLicensePlate(licensePlate);
-    }
-
-    @Override
-    public List<CarOwner> getAllCarOwners() {
-        return carOwnerRepository.findAll();
-    }
-
-    @Override
-    public CarOwner updateCarOwner(Long id, CarOwner carOwner) {
+    public CarOwnerResponseDTO updateCarOwner(Long id, CarOwnerRequestsDTO carOwnerRequestsDTO) {
         Optional<CarOwner> existingCarOwnerOptional = carOwnerRepository.findById(id);
 
         if (existingCarOwnerOptional.isPresent()) {
             CarOwner eco = existingCarOwnerOptional.get();
 
-            if (carOwner.getUniqueId() != null) eco.setUniqueId(carOwner.getUniqueId());
-            if (carOwner.getAltPhone() != null) eco.setAltPhone(carOwner.getAltPhone());
-            if (carOwner.getModel() != null) eco.setModel(carOwner.getModel());
-            if (carOwner.getLicensePlate() != null) eco.setLicensePlate(carOwner.getLicensePlate());
-            if (carOwner.getEngineCapacity() != null) eco.setEngineCapacity(carOwner.getEngineCapacity());
-            if (carOwner.getColor() != null) eco.setColor(carOwner.getColor());
-            if (carOwner.getMake() != null) eco.setMake(carOwner.getMake());
-            if (carOwner.getYear() != null) eco.setYear(carOwner.getYear());
-            if (carOwner.getEngineType() != null) eco.setEngineType(carOwner.getEngineType());
-            if (carOwner.getTransmission() != null) eco.setTransmission(carOwner.getTransmission());
-            if (carOwner.getSeverity() != null) eco.setSeverity(carOwner.getSeverity());
+            if (carOwnerRequestsDTO.getAltPhone() != null) eco.setAltPhone(carOwnerRequestsDTO.getAltPhone());
+            if (carOwnerRequestsDTO.getModel() != null) eco.setModel(carOwnerRequestsDTO.getModel());
+            if (carOwnerRequestsDTO.getLicensePlate() != null) eco.setLicensePlate(carOwnerRequestsDTO.getLicensePlate());
+            if (carOwnerRequestsDTO.getEngineCapacity() != null) eco.setEngineCapacity(carOwnerRequestsDTO.getEngineCapacity());
+            if (carOwnerRequestsDTO.getColor() != null) eco.setColor(carOwnerRequestsDTO.getColor());
+            if (carOwnerRequestsDTO.getMake() != null) eco.setMake(carOwnerRequestsDTO.getMake());
+            if (carOwnerRequestsDTO.getYear() != null) eco.setYear(carOwnerRequestsDTO.getYear());
+            if (carOwnerRequestsDTO.getEngineType() != null) eco.setEngineType(carOwnerRequestsDTO.getEngineType());
+            if (carOwnerRequestsDTO.getTransmission() != null) eco.setTransmission(carOwnerRequestsDTO.getTransmission());
+            if (carOwnerRequestsDTO.getSeverity() != null) eco.setSeverity(carOwnerRequestsDTO.getSeverity());
 
-            //binary documents
-            if (carOwner.getProfilePic() != null && carOwner.getProfilePic().length > 0)
-                eco.setProfilePic(carOwner.getProfilePic());
-
-            return carOwnerRepository.save(eco);
+            CarOwner carOwnerUpdate = carOwnerRepository.save(eco);
+            return mapper.toDto(carOwnerUpdate);
         } else {
             throw new ResourceAccessException("Car Owner does not exist");
         }
+    }
+
+    //connect it such that it updates dynamically
+    @Override
+    public CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId, MultipartFile profilePic) throws java.io.IOException {
+        CarOwner exco = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
+                .orElseThrow(()-> new ResourceAccessException("Car Owner not found with this id"));
+        if (profilePic != null && !profilePic.isEmpty()){
+            exco.setProfilePic(profilePic.getBytes());
+        }else {
+            exco.setProfilePic(null);
+        }
+        CarOwner updatedEntity = carOwnerRepository.save(exco);
+        return mapper.toDto(updatedEntity);
     }
 
     @Override
@@ -129,7 +129,8 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     }
 
     @Override
-    public Optional<CarOwner> getCarOwnerByUniqueId(Integer uniqueId) {
-        return carOwnerRepository.findByUniqueId(uniqueId);
+    public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId) {
+        Optional<CarOwner> carOwner = carOwnerRepository.findByUniqueId(uniqueId);
+        return carOwner.map(mapper::toDto);
     }
 }
