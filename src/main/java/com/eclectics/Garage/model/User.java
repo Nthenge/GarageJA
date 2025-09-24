@@ -25,7 +25,7 @@
 
         @Column(nullable = false)
         private String phoneNumber;
-        //    private String status;
+
         private boolean enabled = true;
 
         @Enumerated(EnumType.STRING)
@@ -117,7 +117,7 @@
                 case GARAGE_ADMIN:
                     return garage != null && garage.isComplete();
                 default:
-                    return false; // in case role is unknown
+                    return false;
             }
         }
 

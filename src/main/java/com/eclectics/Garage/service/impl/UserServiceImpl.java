@@ -26,6 +26,17 @@ public class UserServiceImpl implements UserService {
         return usersRepository.save(user);
     }
 
+    @Override
+    public User loginUser(String email, String password){
+        User user = usersRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User does not exist"));
+
+        if (!user.getPassword().equals(password)){
+            throw new RuntimeException("Invalid password");
+        }
+
+        return user;
+    }
 
     @Override
     public Optional<User> getUserByEmail(String email) {
@@ -51,7 +62,6 @@ public class UserServiceImpl implements UserService {
         }).orElseThrow(() -> new RuntimeException("User with id " + id + ", not found."));
     }
 
-
     @Override
     public void deleteUser(Long id) {
         if (!usersRepository.existsById(id)){
@@ -60,15 +70,4 @@ public class UserServiceImpl implements UserService {
         usersRepository.deleteById(id);
     }
 
-    @Override
-    public User loginUser(String email, String password){
-        User user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User does not exist"));
-
-        if (!user.getPassword().equals(password)){
-            throw new RuntimeException("Invalid password");
-        }
-
-        return user;
-    }
 }
