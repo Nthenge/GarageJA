@@ -70,23 +70,33 @@ public class Garage {
     }
     @Transient
     public boolean isComplete() {
-        return businessLicense != null && businessLicense.length > 0
-                && professionalCertificate != null && professionalCertificate.length > 0
-                && facilityPhotos != null && facilityPhotos.length > 0
-                && garageId != null
-                && operatingHours != null
-                && businessRegNumber != null && !businessRegNumber.isBlank()
-                && businessEmailAddress != null && !businessEmailAddress.isBlank()
-                && twentyFourHours != null && !twentyFourHours.isBlank()
-                && serviceCategories != null && !serviceCategories.isBlank()
-                && specialisedServices != null && !specialisedServices.isBlank()
-                && businessName != null && !businessName.isBlank()
-                && physicalBusinessAddress != null && !physicalBusinessAddress.isBlank()
-                && businessPhoneNumber != null && !businessPhoneNumber.isBlank()
-                && yearsInOperation != null
-                && (mpesaPayBill != null || mpesaTill != null) // at least one payment method
-                && user != null; // must be linked to a user
+        return getMissingFields().isEmpty();
     }
+
+    @Transient
+    public List<String> getMissingFields() {
+        List<String> missingFields = new ArrayList<>();
+
+        if (businessLicense == null || businessLicense.length == 0) missingFields.add("businessLicense");
+        if (professionalCertificate == null || professionalCertificate.length == 0) missingFields.add("professionalCertificate");
+        if (facilityPhotos == null || facilityPhotos.length == 0) missingFields.add("facilityPhotos");
+        if (garageId == null) missingFields.add("garageId");
+        if (operatingHours == null) missingFields.add("operatingHours");
+        if (businessRegNumber == null || businessRegNumber.isBlank()) missingFields.add("businessRegNumber");
+        if (businessEmailAddress == null || businessEmailAddress.isBlank()) missingFields.add("businessEmailAddress");
+        if (twentyFourHours == null || twentyFourHours.isBlank()) missingFields.add("twentyFourHours");
+        if (serviceCategories == null || serviceCategories.isBlank()) missingFields.add("serviceCategories");
+        if (specialisedServices == null || specialisedServices.isBlank()) missingFields.add("specialisedServices");
+        if (businessName == null || businessName.isBlank()) missingFields.add("businessName");
+        if (physicalBusinessAddress == null || physicalBusinessAddress.isBlank()) missingFields.add("physicalBusinessAddress");
+        if (businessPhoneNumber == null || businessPhoneNumber.isBlank()) missingFields.add("businessPhoneNumber");
+        if (yearsInOperation == null) missingFields.add("yearsInOperation");
+        if (mpesaPayBill == null && mpesaTill == null) missingFields.add("mpesaPayBill/mpesaTill");
+        if (user == null) missingFields.add("user");
+
+        return missingFields;
+    }
+
 
     public Garage() {}
 

@@ -2,7 +2,9 @@ package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
+import com.eclectics.Garage.dto.ProfileCompleteDTO;
 import com.eclectics.Garage.mapper.MechanicMapper;
+import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
@@ -35,6 +37,11 @@ public class MechanicServiceImpl implements MechanicService {
         this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
+    }
+
+    public ProfileCompleteDTO checkProfileCompletion(Mechanic mechanic){
+        List<String> missingFields = mechanic.getMissingFields();
+        return new ProfileCompleteDTO(missingFields.isEmpty(), missingFields);
     }
 
     @Transactional(readOnly = true)

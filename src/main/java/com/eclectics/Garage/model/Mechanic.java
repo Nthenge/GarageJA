@@ -3,6 +3,9 @@ package com.eclectics.Garage.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "mechanics")
 public class Mechanic {
@@ -66,23 +69,31 @@ public class Mechanic {
 
     @Transient
     public boolean isComplete() {
-        return areasofSpecialization != null && !areasofSpecialization.isBlank()
-                && alternativePhone != null && !alternativePhone.isBlank()
-                && physicalAddress != null && !physicalAddress.isBlank()
-                && emergencyContactName != null && !emergencyContactName.isBlank()
-                && emergencyContactNumber != null && !emergencyContactNumber.isBlank()
-                && yearsofExperience != null && !yearsofExperience.isBlank()
-                && vehicleBrands != null && !vehicleBrands.isBlank()
-                && availability != null && !availability.isBlank()
-                && profilePic != null && profilePic.length > 0
-                && nationalIDPic != null && nationalIDPic.length > 0
-                && professionalCertfificate != null && professionalCertfificate.length > 0
-                && anyRelevantCertificate != null && anyRelevantCertificate.length > 0
-                && policeClearanceCertficate != null && policeClearanceCertficate.length > 0
-                && nationalIdNumber != null
-                && garage != null;
+        return getMissingFields().isEmpty();
     }
 
+    @Transient
+    public List<String> getMissingFields() {
+        List<String> missingFields = new ArrayList<>();
+
+        if (areasofSpecialization != null && !areasofSpecialization.isBlank()) {missingFields.add("areasofSpecialization");};
+        if (alternativePhone == null || alternativePhone.isBlank()) missingFields.add("alternativePhone");
+        if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalAddress");
+        if (emergencyContactName == null || emergencyContactName.isBlank()) missingFields.add("emergencyContactName");
+        if (emergencyContactNumber == null || emergencyContactNumber.isBlank()) missingFields.add("emergencyContactNumber");
+        if (yearsofExperience == null || yearsofExperience.isBlank()) missingFields.add("yearsofExperience");
+        if (vehicleBrands == null || vehicleBrands.isBlank()) missingFields.add("vehicleBrands");
+        if (availability == null || availability.isBlank()) missingFields.add("availability");
+        if (profilePic == null || profilePic.length == 0) missingFields.add("profilePic");
+        if (nationalIDPic == null || nationalIDPic.length == 0) missingFields.add("nationalIDPic");
+        if (professionalCertfificate == null || professionalCertfificate.length == 0) missingFields.add("professionalCertfificate");
+        if (anyRelevantCertificate == null || anyRelevantCertificate.length == 0) missingFields.add("anyRelevantCertificate");
+        if (policeClearanceCertficate == null || policeClearanceCertficate.length == 0) missingFields.add("policeClearanceCertficate");
+        if (nationalIdNumber == null) missingFields.add("nationalIdNumber");
+        if (garage == null) missingFields.add("garage");
+
+        return missingFields;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id;}

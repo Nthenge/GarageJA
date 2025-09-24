@@ -3,6 +3,8 @@ package com.eclectics.Garage.controller;
 import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.CarOwnerRepository;
+import com.eclectics.Garage.repository.GarageRepository;
+import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -19,14 +21,18 @@ import java.util.Optional;
 @RequestMapping("/users")
 public class UserController {
 
-    UserService userService;
+    private final UserService userService;
     private final JwtUtil jwtUtil;
     private final CarOwnerRepository carOwnerRepository;
+    private final GarageRepository garageRepository;
+    private final MechanicRepository mechanicRepository;
 
-    public UserController(UserService userService, JwtUtil jwtUtil, CarOwnerRepository carOwnerRepository) {
+    public UserController(UserService userService, JwtUtil jwtUtil, CarOwnerRepository carOwnerRepository, GarageRepository garageRepository, MechanicRepository mechanicRepository) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.carOwnerRepository = carOwnerRepository;
+        this.garageRepository = garageRepository;
+        this.mechanicRepository = mechanicRepository;
     }
 
     @GetMapping("/{email}")
@@ -112,10 +118,30 @@ public class UserController {
             response.put("detailsCompleted", user.isDetailsCompleted());
 
             if (!user.isDetailsCompleted()) {
-                carOwnerRepository.findByUser(user).ifPresent(carOwner -> {
-                    response.put("missingFields", carOwner.getMissingFields());
-                });
+                switch (user.getRole().name()) {
+                    case "CAR_OWNER":
+                        carOwnerRepository.findByUser(user).ifPresent(carOwner ->
+                                response.put("missingFields", carOwner.getMissingFields())
+                        );
+                        break;
+
+                    case "GARAGE_ADMIN":
+                        garageRepository.findByUser(user).ifPresent(garage ->
+                                response.put("missingFields", garage.getMissingFields())
+                        );
+                        break;
+
+                    case "MECHANIC":
+                        mechanicRepository.findByUser(user).ifPresent(mechanic ->
+                                response.put("missingFields", mechanic.getMissingFields())
+                        );
+                        break;
+
+                    default:
+                        response.put("missingFields", List.of("Unknown role – cannot determine missing fields"));
+                }
             }
+
 
             return ResponseEntity.ok(response);
 

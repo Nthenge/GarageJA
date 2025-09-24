@@ -1,6 +1,8 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.ProfileCompleteDTO;
 import com.eclectics.Garage.model.Garage;
+import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.UsersRepository;
@@ -17,15 +19,21 @@ import java.util.Random;
 @Service
 public class GarageServiceImpl implements GarageService {
 
+    private final GarageRepository garageRepository;
+    private final UsersRepository usersRepository;
+    private final AuthenticationService authenticationService;
+
     public GarageServiceImpl(GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
         this.garageRepository = garageRepository;
         this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
     }
 
-    private final GarageRepository garageRepository;
-    private final UsersRepository usersRepository;
-    private final AuthenticationService authenticationService;
+
+    public ProfileCompleteDTO checkProfileCompletion(Garage garage){
+        List<String> missingFields = garage.getMissingFields();
+        return new ProfileCompleteDTO(missingFields.isEmpty(), missingFields);
+    }
 
     @Override
     public Garage createGarage(Garage garage) {
