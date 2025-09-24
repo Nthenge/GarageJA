@@ -2,6 +2,7 @@ package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
+import com.eclectics.Garage.dto.ProfileCompleteDTO;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.User;
@@ -28,6 +29,11 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         this.carOwnerRepository = carOwnerRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
+    }
+
+    public ProfileCompleteDTO checkProfileCompletion(CarOwner carOwner){
+        List<String> missingFields = carOwner.getMissingFields();
+        return new ProfileCompleteDTO(missingFields.isEmpty(), missingFields);
     }
 
     @Override

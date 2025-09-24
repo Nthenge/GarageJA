@@ -64,20 +64,30 @@ public class CarOwner {
 
     @Transient
     public boolean isComplete() {
-        return uniqueId != null
-                && profilePic != null && profilePic.length > 0
-                && altPhone != null && !altPhone.isBlank()
-                && model != null && !model.isBlank()
-                && licensePlate != null && !licensePlate.isBlank()
-                && engineCapacity != null && !engineCapacity.isBlank()
-                && color != null && !color.isBlank()
-                && make != null && !make.isBlank()
-                && year != null && !year.isBlank()
-                && engineType != null && !engineType.isBlank()
-                && transmission != null && !transmission.isBlank()
-                && severity != null && !severity.isBlank()
-                && user != null;
+        return getMissingFields().isEmpty();
     }
+
+    @Transient
+    public List<String> getMissingFields() {
+        List<String> missingFields = new ArrayList<>();
+
+        if (uniqueId == null) {missingFields.add("uniqueId");}
+        if (profilePic == null || profilePic.length == 0) {missingFields.add("profilePic");}
+        if (altPhone == null || altPhone.isBlank()) {missingFields.add("altPhone");}
+        if (model == null || model.isBlank()) {missingFields.add("model");}
+        if (licensePlate == null || licensePlate.isBlank()) {missingFields.add("licensePlate");}
+        if (engineCapacity == null || engineCapacity.isBlank()) {missingFields.add("engineCapacity");}
+        if (color == null || color.isBlank()) {missingFields.add("color");}
+        if (make == null || make.isBlank()) {missingFields.add("make");}
+        if (year == null || year.isBlank()) {missingFields.add("year");}
+        if (engineType == null || engineType.isBlank()) {missingFields.add("engineType");}
+        if (transmission == null || transmission.isBlank()) {missingFields.add("transmission");}
+        if (severity == null || severity.isBlank()) {missingFields.add("severity");}
+        if (user == null) {missingFields.add("user");}
+
+        return missingFields;
+    }
+
 
 
     public Long getId() { return id;}

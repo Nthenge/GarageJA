@@ -2,6 +2,7 @@ package com.eclectics.Garage.repository;
 
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
 import com.eclectics.Garage.model.CarOwner;
+import com.eclectics.Garage.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,7 @@ public interface CarOwnerRepository extends JpaRepository<CarOwner, Long> {
     boolean existsByLicensePlate(String licensePlate);
     Optional<CarOwner> findByUniqueId(Integer uniqueId);
     Optional<CarOwner> findByUserId(Long userId);
+    Optional<CarOwner> findByUser(User user);
 }
 
 

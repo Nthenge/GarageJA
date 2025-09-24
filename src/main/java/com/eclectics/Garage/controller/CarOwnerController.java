@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -35,16 +37,24 @@ public class CarOwnerController {
             return carOwnerService.getAllCarOwners();
         }
 
-        @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
-        public ResponseEntity<String> createCarOwner(
+        @PostMapping(
+                value = "/create",
+                consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE}
+        )
+        public ResponseEntity<Map<String, String>> createCarOwner(
                 @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
                 @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
             carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
-            return ResponseEntity.ok("Car owner created with profile picture");
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Car owner created with profile picture");
+
+            return ResponseEntity.ok(response);
         }
 
-        @PutMapping(value = "/{carOwnerUniqueId}/uploadprofile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    @PutMapping(value = "/{carOwnerUniqueId}/uploadprofile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<CarOwnerResponseDTO> updateCarOwnerProfilePic(
                 @PathVariable Integer carOwnerUniqueId,
                 @RequestPart("profilePic") MultipartFile profilePic

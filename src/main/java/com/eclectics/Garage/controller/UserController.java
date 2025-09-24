@@ -1,6 +1,8 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.User;
+import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,10 +21,12 @@ public class UserController {
 
     UserService userService;
     private final JwtUtil jwtUtil;
+    private final CarOwnerRepository carOwnerRepository;
 
-    public UserController(UserService userService, JwtUtil jwtUtil) {
+    public UserController(UserService userService, JwtUtil jwtUtil, CarOwnerRepository carOwnerRepository) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.carOwnerRepository = carOwnerRepository;
     }
 
     @GetMapping("/{email}")
@@ -81,9 +86,6 @@ public class UserController {
         }
     }
 
-
-
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
         try {
@@ -101,15 +103,22 @@ public class UserController {
             }
 
             User user = userService.loginUser(email, password);
-            // generate JWT token
             String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
-            return ResponseEntity.ok(Map.of(
-                    "token", token,
-                    "role", user.getRole().name(),
-                    "firstname", user.getFirstname(),
-                    "detailsCompleted",user.isDetailsCompleted()
-            ));
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("role", user.getRole().name());
+            response.put("firstname", user.getFirstname());
+            response.put("detailsCompleted", user.isDetailsCompleted());
+
+            if (!user.isDetailsCompleted()) {
+                carOwnerRepository.findByUser(user).ifPresent(carOwner -> {
+                    response.put("missingFields", carOwner.getMissingFields());
+                });
+            }
+
+            return ResponseEntity.ok(response);
+
         } catch (RuntimeException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
