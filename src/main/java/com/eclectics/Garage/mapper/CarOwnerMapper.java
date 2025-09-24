@@ -14,7 +14,7 @@ public interface CarOwnerMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uniqueId", ignore = true)
-    @Mapping(target = "profilePic", ignore = true)
+//    @Mapping(target = "profilePic", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "requests", ignore = true)
     CarOwner toEntity(CarOwnerRequestsDTO dto);

@@ -15,9 +15,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/carOwner")
-@CrossOrigin(origins = "http://10.20.33.84:4200",
-        allowedHeaders = "*",
-        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class CarOwnerController {
 
         private final CarOwnerService carOwnerService;

@@ -12,10 +12,11 @@ public class CarOwnerRequestsDTO {
     private String color;
     private String transmission;
     private String severity;
+    private byte[] profilePic;
 
     public CarOwnerRequestsDTO() {}
 
-    public CarOwnerRequestsDTO(String altPhone, String make, String model, String year, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
+    public CarOwnerRequestsDTO(String altPhone, String make, String model, String year,byte[] profilePic, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
         this.altPhone = altPhone;
         this.make = make;
         this.model = model;
@@ -26,12 +27,12 @@ public class CarOwnerRequestsDTO {
         this.color = color;
         this.transmission = transmission;
         this.severity = severity;
+        this.profilePic = profilePic;
     }
 
     public String getAltPhone() {
         return altPhone;
     }
-
     public void setAltPhone(String altPhone) {
         this.altPhone = altPhone;
     }
@@ -39,7 +40,6 @@ public class CarOwnerRequestsDTO {
     public String getMake() {
         return make;
     }
-
     public void setMake(String make) {
         this.make = make;
     }
@@ -47,7 +47,6 @@ public class CarOwnerRequestsDTO {
     public String getModel() {
         return model;
     }
-
     public void setModel(String model) {
         this.model = model;
     }
@@ -55,7 +54,6 @@ public class CarOwnerRequestsDTO {
     public String getYear() {
         return year;
     }
-
     public void setYear(String year) {
         this.year = year;
     }
@@ -63,7 +61,6 @@ public class CarOwnerRequestsDTO {
     public String getLicensePlate() {
         return licensePlate;
     }
-
     public void setLicensePlate(String licensePlate) {
         this.licensePlate = licensePlate;
     }
@@ -71,7 +68,6 @@ public class CarOwnerRequestsDTO {
     public String getEngineType() {
         return engineType;
     }
-
     public void setEngineType(String engineType) {
         this.engineType = engineType;
     }
@@ -79,7 +75,6 @@ public class CarOwnerRequestsDTO {
     public String getEngineCapacity() {
         return engineCapacity;
     }
-
     public void setEngineCapacity(String engineCapacity) {
         this.engineCapacity = engineCapacity;
     }
@@ -87,7 +82,6 @@ public class CarOwnerRequestsDTO {
     public String getColor() {
         return color;
     }
-
     public void setColor(String color) {
         this.color = color;
     }
@@ -95,7 +89,6 @@ public class CarOwnerRequestsDTO {
     public String getTransmission() {
         return transmission;
     }
-
     public void setTransmission(String transmission) {
         this.transmission = transmission;
     }
@@ -103,8 +96,10 @@ public class CarOwnerRequestsDTO {
     public String getSeverity() {
         return severity;
     }
-
     public void setSeverity(String severity) {
         this.severity = severity;
     }
+
+    public byte[] getProfilePic() {return profilePic;}
+    public void setProfilePic(byte[] profilePic) {this.profilePic = profilePic;}
 }

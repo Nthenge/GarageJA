@@ -1,5 +1,8 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.MechanicRequestDTO;
+import com.eclectics.Garage.dto.MechanicResponseDTO;
+import com.eclectics.Garage.mapper.MechanicMapper;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
@@ -9,10 +12,13 @@ import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.MechanicService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Service
 public class MechanicServiceImpl implements MechanicService {
@@ -21,17 +27,21 @@ public class MechanicServiceImpl implements MechanicService {
     private final GarageRepository garageRepository;
     private final UsersRepository usersRepository;
     private final AuthenticationService authenticationService;
+    private final MechanicMapper mapper;
 
-    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
+    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService, MechanicMapper mapper) {
         this.mechanicRepository = mechanicRepository;
         this.garageRepository = garageRepository;
         this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
+        this.mapper = mapper;
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public Optional<Mechanic> findByUserId(Long userId) {
-        return mechanicRepository.findByUserId(userId);
+    public Optional<MechanicResponseDTO> findByUserId(Long id) {
+        Optional<Mechanic> mechanic = mechanicRepository.findByUserId(id);
+        return mechanic.map(mapper::toResponseDTO);
     }
 
     @Override
@@ -41,16 +51,26 @@ public class MechanicServiceImpl implements MechanicService {
                 .orElse(false);
     }
 
-    @Override
-    public Mechanic createMechanic(Mechanic mechanic) {
+    private void setFileIfPresent(MultipartFile file, Consumer<byte[]> setter) throws IOException {
+        if (file != null && !file.isEmpty()) {
+            setter.accept(file.getBytes());
+        }
+    }
 
-        User userid = authenticationService.getCurrentUser();
-        mechanic.setUser(userid);
+
+    @Transactional
+    @Override
+    public MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO, MultipartFile profilepic, MultipartFile nationalIdFile, MultipartFile profCert, MultipartFile anyRelCert, MultipartFile polCleCert) throws java.io.IOException {
+
+        Mechanic mechanic = mapper.toEntity(mechanicRequestDTO);
 
         Optional<Mechanic> mechanicExist = mechanicRepository.findMechanicByNationalIdNumber(mechanic.getNationalIdNumber());
         if (mechanicExist.isPresent()) {
             throw new RuntimeException("Mechanic with this national ID already exist");
         }
+
+        User userid = authenticationService.getCurrentUser();
+        mechanic.setUser(userid);
 
         if (mechanic.getGarage() != null && mechanic.getGarage().getGarageId() != null) {
             Long garageAdminId = mechanic.getGarage().getGarageId();
@@ -59,84 +79,59 @@ public class MechanicServiceImpl implements MechanicService {
 
             mechanic.setGarage(garage);
         }
-        return mechanicRepository.save(mechanic);
+
+        setFileIfPresent(profilepic, mechanic::setProfilePic);
+        setFileIfPresent(nationalIdFile, mechanic::setNationalIDPic);
+        setFileIfPresent(profCert, mechanic::setProfessionalCertfificate);
+        setFileIfPresent(anyRelCert, mechanic::setAnyRelevantCertificate);
+        setFileIfPresent(polCleCert, mechanic::setPoliceClearanceCertficate);
+
+        Mechanic savedMechanic = mechanicRepository.save(mechanic);
+        return mapper.toResponseDTO(savedMechanic);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public Mechanic uploadDocuments(Long id, MultipartFile profilepic, MultipartFile nationalIdFile, MultipartFile profCert, MultipartFile anyRelCert, MultipartFile polCleCert) throws java.io.IOException {
-        Mechanic mechanic = mechanicRepository.findById(id).orElseThrow(() -> new RuntimeException("Mechanic not found"));
-
-        if (profilepic != null && !profilepic.isEmpty()) {
-            mechanic.setProfilePic(profilepic.getBytes());
-        }
-
-        if (nationalIdFile != null && !nationalIdFile.isEmpty()) {
-            mechanic.setNationalIDPic(nationalIdFile.getBytes());
-        }
-
-        if (profCert != null && !profCert.isEmpty()) {
-            mechanic.setProfessionalCertfificate(profCert.getBytes());
-        }
-
-        if (anyRelCert != null && !anyRelCert.isEmpty()) {
-            mechanic.setAnyRelevantCertificate(anyRelCert.getBytes());
-        }
-
-        if (polCleCert != null && !polCleCert.isEmpty()) {
-            mechanic.setPoliceClearanceCertficate(polCleCert.getBytes());
-        }
-
-        return mechanicRepository.save(mechanic);
-    }
-
-    @Override
-    public Optional<Mechanic> getMechanicByNationalId(Integer nationalIdNumber) {
-        return mechanicRepository.findMechanicByNationalIdNumber(nationalIdNumber);
+    public Optional<MechanicResponseDTO> getMechanicByNationalId(Integer nationalIdNumber) {
+        return mechanicRepository.findMechanicByNationalIdNumber(nationalIdNumber)
+                .map(mapper::toResponseDTO);
     }
 
     //For system admin
+    @Transactional(readOnly = true)
     @Override
-    public List<Mechanic> getAllMechanics() {
-        return  mechanicRepository.findAll();
+    public List<MechanicResponseDTO> getAllMechanics() {
+        List<Mechanic> mechanics = mechanicRepository.findAll();
+        return mapper.toResponseDTOList(mechanics);
     }
 
     //Get all mechanics for a certain garage
+    @Transactional(readOnly = true)
     @Override
-    public List<Mechanic> getMechanicsByGarageId(Long garageId) {
-        return mechanicRepository.findByGarageId(garageId);
+    public List<MechanicResponseDTO> getMechanicsByGarageId(Long garageId) {
+        List<Mechanic> garageMechanics= mechanicRepository.findByGarageId(garageId);
+        return mapper.toResponseDTOList(garageMechanics);
     }
 
+    @Transactional
     @Override
-    public Mechanic updateMechanic(Long id, Mechanic mechanic){
-        return mechanicRepository.findById(id).map(em -> {
-            if (mechanic.getAreasofSpecialization() != null) em.setAreasofSpecialization(mechanic.getAreasofSpecialization());
-            if (mechanic.getAlternativePhone() != null) em.setAlternativePhone(mechanic.getAlternativePhone());
-            if (mechanic.getNationalIdNumber() != null) em.setNationalIdNumber(mechanic.getNationalIdNumber());
-            if (mechanic.getPhysicalAddress() != null) em.setPhysicalAddress(mechanic.getPhysicalAddress());
-            if (mechanic.getEmergencyContactName() != null) em.setEmergencyContactName(mechanic.getEmergencyContactName());
-            if (mechanic.getEmergencyContactNumber() != null) em.setEmergencyContactNumber(mechanic.getEmergencyContactNumber());
-            if (mechanic.getYearsofExperience() != null) em.setYearsofExperience(mechanic.getYearsofExperience());
-            if (mechanic.getVehicleBrands() != null) em.setVehicleBrands(mechanic.getVehicleBrands());
-            if (mechanic.getAvailability() != null) em.setAvailability(mechanic.getAvailability());
+    public MechanicResponseDTO updateMechanic(Long id, MechanicRequestDTO mechanicRequestDTO) {
+        Mechanic mechanic = mechanicRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mechanic not found"));
 
-            //binary files
-            if (mechanic.getProfilePic() != null && mechanic.getProfilePic().length > 0) em.setProfilePic(mechanic.getProfilePic());
-            if (mechanic.getNationalIDPic() != null && mechanic.getNationalIDPic().length > 0) em.setNationalIDPic(mechanic.getNationalIDPic());
-            if (mechanic.getProfessionalCertfificate() != null && mechanic.getProfessionalCertfificate().length > 0) em.setProfessionalCertfificate(mechanic.getProfessionalCertfificate());
-            if (mechanic.getAnyRelevantCertificate() != null && mechanic.getAnyRelevantCertificate().length > 0) em.setAnyRelevantCertificate(mechanic.getAnyRelevantCertificate());
-            if (mechanic.getPoliceClearanceCertficate() != null && mechanic.getPoliceClearanceCertficate().length > 0) em.setPoliceClearanceCertficate(mechanic.getPoliceClearanceCertficate());
+        mapper.updateEntityFromDTO(mechanicRequestDTO, mechanic);
 
-            //garage the mechanic belongs to
-            if (mechanic.getGarage() != null && mechanic.getGarage().getGarageId() != null) {
-                Garage garage = garageRepository.findByGarageId(mechanic.getGarage().getGarageId())
-                        .orElseThrow(() -> new RuntimeException("Garage not found"));
-                em.setGarage(garage);
-            }
+        if (mechanicRequestDTO.getGarage() != null && mechanicRequestDTO.getGarage().getGarageId() != null) {
+            Garage garage = garageRepository.findByGarageId(mechanicRequestDTO.getGarage().getGarageId())
+                    .orElseThrow(() -> new RuntimeException("Garage not found"));
+            mechanic.setGarage(garage);
+        }
 
-            return mechanicRepository.save(em);
-        }).orElseThrow(()->new RuntimeException("Mechanic not found"));
+        Mechanic saved = mechanicRepository.save(mechanic);
+        return mapper.toResponseDTO(saved);
     }
 
+    @Transactional
     @Override
     public String deleteMechanic(Long id) {
         mechanicRepository.deleteById(id);

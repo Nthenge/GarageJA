@@ -1,8 +1,8 @@
 package com.eclectics.Garage.controller;
 
-import com.eclectics.Garage.model.Mechanic;
+import com.eclectics.Garage.dto.MechanicRequestDTO;
+import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.service.MechanicService;
-import io.jsonwebtoken.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,37 +22,31 @@ public class MechanicController {
         }
 
         @GetMapping("/search/{nationalIdNumber}")
-        public Optional<Mechanic> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
+        public Optional<MechanicResponseDTO> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
             return mechanicService.getMechanicByNationalId(nationalIdNumber);
         }
 
         @GetMapping()
-        public List<Mechanic> getAllMechanics(){
+        public List<MechanicResponseDTO> getAllMechanics(){
             return mechanicService.getAllMechanics();
         }
 
-        @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<String> createMechanic( @RequestBody Mechanic mechanic){
-            mechanicService.createMechanic(mechanic);
-            return ResponseEntity.ok("Mechanic created successfully");
-        }
-
-        @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        public ResponseEntity<String> uploadDocuments(
-                @RequestParam("id") Long id,
+        @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_OCTET_STREAM_VALUE})
+        public ResponseEntity<String> createMechanic(
+                @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
                 @RequestPart(value = "profilepic", required = false)MultipartFile profilepic,
                 @RequestPart(value = "nationalIdFile", required = true) MultipartFile nationalIdFile,
                 @RequestPart(value = "profCert", required = false)MultipartFile profCert,
                 @RequestPart(value = "anyRelCert", required = false)MultipartFile anyRelCert,
-                @RequestPart(value = "polCleCert", required = true)MultipartFile polCleCert) throws IOException, java.io.IOException {
-            mechanicService.uploadDocuments(id, profilepic, nationalIdFile, profCert, anyRelCert, polCleCert);
+                @RequestPart(value = "polCleCert", required = true)MultipartFile polCleCert) throws java.io.IOException{
+            mechanicService.createMechanic(mechanicRequestDTO,profilepic,nationalIdFile,profCert,anyRelCert,polCleCert);
             return ResponseEntity.ok("Mechanic created successfully");
         }
 
         @PutMapping("/{mechanicId}")
-        public String updateMechanic(@PathVariable Long mechanicId, @RequestBody Mechanic mechanic){
-            mechanicService.updateMechanic(mechanicId, mechanic);
-            return "Mechanic updated successfully";
+        public ResponseEntity<MechanicResponseDTO> updateMechanic(@PathVariable Long mechanicId, @RequestBody MechanicRequestDTO mechanicRequestDTO){
+            MechanicResponseDTO updatedMechanic = mechanicService.updateMechanic(mechanicId, mechanicRequestDTO);
+            return ResponseEntity.ok(updatedMechanic);
         }
 
         @DeleteMapping("/{MechanicId}")

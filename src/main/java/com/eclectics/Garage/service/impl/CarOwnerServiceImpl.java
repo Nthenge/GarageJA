@@ -95,6 +95,7 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwnerRequestsDTO.getEngineType() != null) eco.setEngineType(carOwnerRequestsDTO.getEngineType());
             if (carOwnerRequestsDTO.getTransmission() != null) eco.setTransmission(carOwnerRequestsDTO.getTransmission());
             if (carOwnerRequestsDTO.getSeverity() != null) eco.setSeverity(carOwnerRequestsDTO.getSeverity());
+            if (carOwnerRequestsDTO.getProfilePic() != null) eco.setProfilePic(carOwnerRequestsDTO.getProfilePic());
 
             CarOwner carOwnerUpdate = carOwnerRepository.save(eco);
             return mapper.toDto(carOwnerUpdate);
