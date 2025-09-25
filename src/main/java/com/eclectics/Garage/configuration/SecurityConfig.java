@@ -36,9 +36,11 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 "/users/register",
-                                "/carOwner/create",
                                 "/users/login",
-                                "/users",
+                                "/users/**",
+                                "/garages/**",
+                                "/carOwners/**",
+                                "/mechanics/**",
                                 "/automobiles/make",
                                 "/automobiles/year",
                                 "/automobiles/transmission",
@@ -55,7 +57,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://10.20.33.60:4200"));
+        configuration.setAllowedOrigins(List.of("http://10.20.33.84:4200","http://10.20.33.60:4200"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

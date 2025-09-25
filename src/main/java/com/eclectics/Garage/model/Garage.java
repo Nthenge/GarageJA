@@ -68,6 +68,7 @@ public class Garage {
         this.id = id;
         this.user = user;
     }
+
     @Transient
     public boolean isComplete() {
         return getMissingFields().isEmpty();
