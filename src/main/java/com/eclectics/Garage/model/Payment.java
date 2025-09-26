@@ -1,8 +1,6 @@
 package com.eclectics.Garage.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "payments")
@@ -15,8 +13,11 @@ public class Payment {
     private String createdAt;
     private String updatedAt;
     private String transactionRef;
+    @Enumerated(EnumType.STRING)
     private PaymentCurrency currency;
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+    @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
     public Payment() {}

@@ -1,7 +1,6 @@
 package com.eclectics.Garage.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -26,22 +25,15 @@ public class Service {
     @JsonBackReference()
     private ServiceCategories serviceCategories;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "severity_id", nullable = false)
-//    @JsonBackReference()
-//    private SeverityCategories severityCategories;
-
-
     public Service() {}
 
-    public Service(Long id, String serviceName,ServiceCategories serviceCategories, String description, Double price, Garage garage, SeverityCategories severityCategories) {
+    public Service(Long id, String serviceName,ServiceCategories serviceCategories, String description, Double price, Garage garage) {
         this.id = id;
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
         this.garage = garage;
         this.serviceCategories = serviceCategories;
-        //this.severityCategories = severityCategories;
     }
 
     public Long getId() { return id;}
@@ -61,8 +53,5 @@ public class Service {
 
     public ServiceCategories getServiceCategories() {return serviceCategories;}
     public void setServiceCategories(ServiceCategories serviceCategories) {this.serviceCategories = serviceCategories;}
-
-//    public SeverityCategories getSeverityCategories() { return severityCategories;}
-//    public void setSeverityCategories(SeverityCategories severityCategories) { this.severityCategories = severityCategories;}
 }
 

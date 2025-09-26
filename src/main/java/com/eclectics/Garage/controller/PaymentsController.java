@@ -49,9 +49,16 @@ public class PaymentsController {
     }
 
     @PutMapping("/update/{paymentId}")
-    public Payment updateAPayment(@PathVariable Integer paymentId, PaymentStatus paymentStatus, String transactionRef){
-        return paymentService.updatePayment(paymentId, paymentStatus, transactionRef);
+    public Payment updateAPayment(
+            @PathVariable Integer paymentId,
+            @RequestParam(required = true) PaymentStatus paymentStatus,
+            @RequestParam(required = false) String transactionRef,
+            @RequestParam(required = false) PaymentMethod paymentMethod,
+            @RequestParam(required = false) PaymentCurrency paymentCurrency) {
+
+        return paymentService.updatePayment(paymentId, paymentStatus, transactionRef, paymentMethod, paymentCurrency);
     }
+
 
     @DeleteMapping("/delete/{paymentId}")
     public String deletePayment(@PathVariable Integer paymentId){

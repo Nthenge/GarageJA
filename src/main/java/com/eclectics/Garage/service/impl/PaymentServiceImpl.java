@@ -89,20 +89,34 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional
     @Override
-    public Payment updatePayment(Integer paymentId, PaymentStatus paymentStatus, String transactionRef) {
-        Payment payment = paymentRepository.findByPaymentId(paymentId)
-                .orElseThrow(()-> new RuntimeException("Payment not found"));
+    public Payment updatePayment(
+            Integer paymentId,
+            PaymentStatus paymentStatus,
+            String transactionRef,
+            PaymentMethod paymentMethod,
+            PaymentCurrency paymentCurrency) {
 
-        payment.setPaymentStatus(paymentStatus);
+        return paymentRepository.findByPaymentId(paymentId).map(existingPayment -> {
 
-        if (transactionRef != null && !transactionRef.isEmpty()){
-            payment.setTransactionRef(transactionRef);
-        }
+            if (transactionRef != null) {
+                existingPayment.setTransactionRef(transactionRef);
+            }
+            if (paymentCurrency != null) {
+                existingPayment.setCurrency(paymentCurrency);
+            }
+            if (paymentMethod != null) {
+                existingPayment.setPaymentMethod(paymentMethod);
+            }
+            if (paymentStatus != null) {
+                existingPayment.setPaymentStatus(paymentStatus);
+            }
 
-        payment.setUpdatedAt(String.valueOf(LocalDateTime.now()));
+            existingPayment.setUpdatedAt(String.valueOf(LocalDateTime.now()));
 
-        return paymentRepository.save(payment);
+            return paymentRepository.save(existingPayment);
+        }).orElseThrow(() -> new RuntimeException("Payment not found"));
     }
+
 
     @Transactional
     @Override
