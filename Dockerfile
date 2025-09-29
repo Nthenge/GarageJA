@@ -11,7 +11,7 @@ RUN ./mvnw package -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
 # Stage 2: Create the final lightweight runtime image (using a Java Runtime Environment)
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine AS stage-1
 VOLUME /tmp
 ARG JAR_FILE=/app/target/*.jar
 COPY --from=build ${JAR_FILE} app.jar
