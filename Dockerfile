@@ -3,9 +3,9 @@ FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
+RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline
 COPY src/ main/
-RUN chmod +x mvnw
 RUN ./mvnw package -DskipTests
 # Extract the JAR file
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
