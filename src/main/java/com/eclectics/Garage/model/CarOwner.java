@@ -19,7 +19,7 @@ public class CarOwner {
 
     //this takes lots of space, use url to minimise storages use
     @Lob
-    @Column(columnDefinition = "LONGBLOB", unique = false, nullable = true)
+    @Column(unique = false, nullable = true)
     private byte[] profilePic;
 
     @Column(unique = false, nullable = true)
