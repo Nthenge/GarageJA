@@ -5,7 +5,7 @@ COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline
-COPY src/ main/
+COPY src/ src/
 RUN ./mvnw package -DskipTests
 # Extract the JAR file
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
