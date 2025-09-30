@@ -3,8 +3,10 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+
   flyway:
-    enabled: false  # return this to true and add migration scripts
+    enabled: false  # set to true if you add migration scripts later
+
   servlet:
     multipart:
       enabled: true
@@ -12,10 +14,12 @@ spring:
       max-request-size: 250MB
 
   jpa:
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
-        ddl-auto: create
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
 
 server:
   address: 0.0.0.0
