@@ -14,7 +14,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        ddl-auto: update
+        ddl-auto: create
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
