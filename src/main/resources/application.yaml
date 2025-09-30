@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/garage
-    username: postgres
-    password: 5047
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   flyway:
     enabled: false  # return this to true and add migration scripts
   servlet:
@@ -14,9 +14,8 @@ spring:
   jpa:
     properties:
       hibernate:
+        ddl-auto: update
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  jpa.hibernate.ddl-auto: update
 
 server:
   address: 0.0.0.0
