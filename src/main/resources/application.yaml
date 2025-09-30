@@ -34,3 +34,15 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+
+  mpesa:
+    consumer:
+      key: rrS42JDcIh7jGmmBsSOahnHWPkRYmK84MbwUcygtH9vQUsj0
+      secret: pm08BgNWThsd46UOVeAYkWf8C0hClfLGc5r6HyAVwNZsdJGCWDRdqF83kjf5Pz2W
+    passkey:
+    business:
+      shortcode: 174379
+    base:
+      url: https://sandbox.safaricom.co.ke
+    callback:
+      url: https://yourdomain.com/api/mpesa/callback
