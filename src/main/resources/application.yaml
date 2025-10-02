@@ -1,14 +1,18 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+      url: ${SPRING_DATASOURCE_URL} for production
+      username: ${SPRING_DATASOURCE_USERNAME}
+      password: ${SPRING_DATASOURCE_PASSWORD}
 
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 587
-    username: 51c2c6a995c556
-    password: 2780c1bfbb46ad
+    host: ${MAILTRAP_HOST}
+    port: {$MAILTRAP_PORT}
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
+#    host: sandbox.smtp.mailtrap.io
+#    port: 587
+#    username: 51c2c6a995c556
+#    password: 2780c1bfbb46ad
     properties:
       mail:
         smtp:
@@ -17,7 +21,7 @@ spring:
             enable: true
 
   flyway:
-    enabled: false  # set to true if you add migration scripts later
+    enabled: false  # set to true add migration scripts later
 
   servlet:
     multipart:
