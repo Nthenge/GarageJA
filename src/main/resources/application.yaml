@@ -4,6 +4,18 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
 
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 587
+    username: 51c2c6a995c556
+    password: 2780c1bfbb46ad
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   flyway:
     enabled: false  # set to true if you add migration scripts later
 
