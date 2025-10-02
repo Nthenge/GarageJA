@@ -6,7 +6,7 @@ spring:
 
   mail:
     host: ${MAILTRAP_HOST}
-    port: {$MAILTRAP_PORT}
+    port: ${MAILTRAP_PORT}
     username: ${MAILTRAP_USERNAME}
     password: ${MAILTRAP_PASSWORD}
 #    host: sandbox.smtp.mailtrap.io
