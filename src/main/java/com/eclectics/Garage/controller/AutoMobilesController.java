@@ -5,6 +5,7 @@ import com.eclectics.Garage.service.AutomobilesService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/automobiles")
@@ -33,8 +34,11 @@ public class AutoMobilesController {
         return automobilesService.findAllEngineType();
     }
     @GetMapping("/transmission")
-    public List<String> getAllTransmission() {
-        return automobilesService.findAllTransmission();
+    public List<String> getTransmissions() {
+        return automobilesService.findAllTransmission()
+                .stream()
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     @PostMapping
