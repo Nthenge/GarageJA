@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GarageService {
-    Garage createGarage(Garage garage);
+    Garage createGarage(Garage garage, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos);
 
     Optional<Garage> findByUserId(Long userId);
 

@@ -35,9 +35,13 @@ public class GarageController {
         return garageService.getAllGarages();
     }
 
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public String createGarage(@RequestBody Garage garage){
-        garageService.createGarage(garage);
+    @PostMapping(value = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
+    public String createGarage(
+            @RequestPart("garage") Garage garage,
+            @RequestPart(value = "businessLicense", required = false) MultipartFile businessLicense,
+            @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
+            @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos) throws java.io.IOException{
+        garageService.createGarage(garage, businessLicense, professionalCertificate, facilityPhotos);
         return "Garage created successfully";
     }
 

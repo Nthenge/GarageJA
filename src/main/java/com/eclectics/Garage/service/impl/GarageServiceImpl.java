@@ -20,12 +20,10 @@ import java.util.Random;
 public class GarageServiceImpl implements GarageService {
 
     private final GarageRepository garageRepository;
-    private final UsersRepository usersRepository;
     private final AuthenticationService authenticationService;
 
-    public GarageServiceImpl(GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
+    public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService) {
         this.garageRepository = garageRepository;
-        this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
     }
 
@@ -36,7 +34,7 @@ public class GarageServiceImpl implements GarageService {
     }
 
     @Override
-    public Garage createGarage(Garage garage) {
+    public Garage createGarage(Garage garage, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos) {
 
         User userid = authenticationService.getCurrentUser();
         garage.setUser(userid);
