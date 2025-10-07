@@ -1,4 +1,6 @@
 package com.eclectics.Garage.controller;
+import com.eclectics.Garage.dto.GarageRequestsDTO;
+import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.service.GarageService;
 import org.springframework.http.MediaType;
@@ -21,8 +23,8 @@ public class GarageController {
 
     //get garage by id, can be used by mechanic
     @GetMapping("/search/{garageId}")
-    public ResponseEntity<Garage> getGarageById(@PathVariable Long garageId){
-        Optional<Garage> garage = garageService.getGarageById(garageId);
+    public ResponseEntity<GarageResponseDTO> getGarageById(@PathVariable Long garageId){
+        Optional<GarageResponseDTO> garage = garageService.getGarageById(garageId);
         if (garage.isPresent()){
             return ResponseEntity.ok(garage.get());
         }else {
@@ -31,33 +33,23 @@ public class GarageController {
     }
 
     @GetMapping()
-    public List<Garage> getAllGarages(){
+    public List<GarageResponseDTO> getAllGarages(){
         return garageService.getAllGarages();
     }
 
-    @PostMapping(value = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
+    @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public String createGarage(
-            @RequestPart("garage") Garage garage,
+            @RequestPart("garage") GarageRequestsDTO garageRequestsDTO,
             @RequestPart(value = "businessLicense", required = false) MultipartFile businessLicense,
             @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
             @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos) throws java.io.IOException{
-        garageService.createGarage(garage, businessLicense, professionalCertificate, facilityPhotos);
+        garageService.createGarage(garageRequestsDTO, businessLicense, professionalCertificate, facilityPhotos);
         return "Garage created successfully";
     }
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadDocuments(
-            @RequestParam("garageId") Long garageId,
-            @RequestPart(value = "businessLicense", required = true) MultipartFile businessLicense,
-            @RequestPart(value = "professionalCertificate", required = true) MultipartFile professionalCertificate,
-            @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos) throws java.io.IOException{
-        garageService.uploadDocument(garageId, businessLicense, professionalCertificate, facilityPhotos);
-        return ResponseEntity.ok("Garage documents uploaded successfully");
-    }
-
     @PutMapping("/{garageId}")
-    public String updateGarage(@PathVariable Long garageId, @RequestBody Garage garage){
-        garageService.updateGarage(garageId, garage);
+    public String updateGarage(@PathVariable Long garageId, @RequestBody GarageRequestsDTO garageRequestsDTO){
+        garageService.updateGarage(garageId, garageRequestsDTO);
         return "Garage updated successfully";
     }
 
