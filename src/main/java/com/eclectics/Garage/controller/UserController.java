@@ -92,6 +92,52 @@ public class UserController {
         }
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> requestResetPassword(@RequestBody Map<String, String> payload) {
+        try {
+            String email = payload.get("email");
+
+            if (email == null || email.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            }
+
+            User user = userService.resetPassword(email);
+            String resetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
+            userService.sendResetEmail(user.getEmail(), resetToken);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Password reset link sent to " + email
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> payload) {
+        try {
+            String token = payload.get("token");
+            String newPassword = payload.get("newPassword");
+
+            if (token == null || newPassword == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Token and new password are required"));
+            }
+
+            User updatedUser = userService.updatePassword(token, newPassword);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Password updated successfully",
+                    "user", updatedUser.getEmail()
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
         try {

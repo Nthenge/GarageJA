@@ -1,17 +1,17 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.GarageRequestsDTO;
+import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
+import com.eclectics.Garage.mapper.GarageMapper;
 import com.eclectics.Garage.model.Garage;
-import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
-import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.GarageService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -20,13 +20,13 @@ import java.util.Random;
 public class GarageServiceImpl implements GarageService {
 
     private final GarageRepository garageRepository;
-    private final UsersRepository usersRepository;
     private final AuthenticationService authenticationService;
+    private final GarageMapper mapper;
 
-    public GarageServiceImpl(GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService) {
+    public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService, GarageMapper mapper) {
         this.garageRepository = garageRepository;
-        this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
+        this.mapper = mapper;
     }
 
 
@@ -36,12 +36,24 @@ public class GarageServiceImpl implements GarageService {
     }
 
     @Override
-    public Garage createGarage(Garage garage) {
+    public Garage createGarage(GarageRequestsDTO garageRequestsDTO, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos)throws java.io.IOException {
 
+        Garage garage = mapper.toEntity(garageRequestsDTO);
         User userid = authenticationService.getCurrentUser();
         garage.setUser(userid);
 
         Optional<Garage> GarageExists = garageRepository.findByBusinessName(garage.getBusinessName());
+        if (businessLicense != null && !businessLicense.isEmpty()) {
+            garage.setBusinessLicense(businessLicense.getBytes());
+        }
+
+        if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
+            garage.setProfessionalCertificate(professionalCertificate.getBytes());
+        }
+
+        if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
+            garage.setFacilityPhotos(facilityPhotos.getBytes());
+        }
         if (GarageExists.isPresent()){
             throw new RuntimeException("Garage with this name exists");
         }
@@ -66,8 +78,9 @@ public class GarageServiceImpl implements GarageService {
     }
 
     @Override
-    public Optional<Garage> findByUserId(Long userId) {
-        return garageRepository.findByUserId(userId);
+    public Optional<GarageResponseDTO> findByUserId(Long userId) {
+        Optional<Garage> garage = garageRepository.findByUserId(userId);
+        return garage.map(mapper::toResponseDTO);
     }
 
     @Override
@@ -78,63 +91,48 @@ public class GarageServiceImpl implements GarageService {
     }
 
     @Override
-    public Garage uploadDocument(Long garageId, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws IOException {
-        Garage garage = garageRepository.findByGarageId(garageId).orElseThrow(()-> new RuntimeException("Garage with this id not found"));
-
-        if (businessLicense != null && !businessLicense.isEmpty()) {
-            garage.setBusinessLicense(businessLicense.getBytes());
-        }
-
-        if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
-            garage.setProfessionalCertificate(professionalCertificate.getBytes());
-        }
-
-        if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
-            garage.setFacilityPhotos(facilityPhotos.getBytes());
-        }
-
-        return garageRepository.save(garage);
+    public Optional<GarageResponseDTO> getGarageById(Long garageId) {
+        Optional<Garage> garage = garageRepository.findByGarageId(garageId);
+        return garage.map(mapper::toResponseDTO);
     }
 
     @Override
-    public Optional<Garage> getGarageById(Long garageId) {
-        return garageRepository.findByGarageId(garageId);
-    }
-
-    @Override
-    public Optional<Garage> getGarageByName(String name) {
-        return garageRepository.findByBusinessName(name);
+    public Optional<GarageResponseDTO> getGarageByName(String name) {
+        Optional<Garage> garage = garageRepository.findByBusinessName(name);
+        return garage.map(mapper::toResponseDTO);
     }
 
 
     @Override
-    public List<Garage> getAllGarages() {
-        return garageRepository.findAll();
+    public List<GarageResponseDTO> getAllGarages() {
+        List<Garage> allGarages =garageRepository.findAll();
+        return mapper.toResponseDTOList(allGarages);
     }
 
     @Override
-    public Garage updateGarage(Long garageId, Garage garage) {
+    public GarageResponseDTO updateGarage(Long garageId, GarageRequestsDTO garageRequestsDTO) {
         return garageRepository.findByGarageId(garageId).map(eg -> {
-            if (garage.getGarageId() != null) eg.setGarageId(garage.getGarageId());
-            if (garage.getOperatingHours() != null) eg.setOperatingHours(garage.getOperatingHours());
-            if (garage.getBusinessRegNumber() != null) eg.setBusinessRegNumber(garage.getBusinessRegNumber());
-            if (garage.getBusinessEmailAddress() != null) eg.setBusinessEmailAddress(garage.getBusinessEmailAddress());
-            if (garage.getTwentyFourHours() != null) eg.setTwentyFourHours(garage.getTwentyFourHours());
-            if (garage.getServiceCategories() != null) eg.setServiceCategories(garage.getServiceCategories());
-            if (garage.getSpecialisedServices() != null) eg.setSpecialisedServices(garage.getSpecialisedServices());
-            if (garage.getBusinessName() != null) eg.setBusinessName(garage.getBusinessName());
-            if (garage.getPhysicalBusinessAddress() != null) eg.setPhysicalBusinessAddress(garage.getPhysicalBusinessAddress());
-            if (garage.getBusinessPhoneNumber() != null) eg.setBusinessPhoneNumber(garage.getBusinessPhoneNumber());
-            if (garage.getYearsInOperation() != null) eg.setYearsInOperation(garage.getYearsInOperation());
-            if (garage.getMpesaPayBill() != null) eg.setMpesaPayBill(garage.getMpesaPayBill());
-            if (garage.getMpesaTill() != null) eg.setMpesaTill(garage.getMpesaTill());
+            if (garageRequestsDTO.getGarageId() != null) eg.setGarageId(garageRequestsDTO.getGarageId());
+            if (garageRequestsDTO.getOperatingHours() != null) eg.setOperatingHours(garageRequestsDTO.getOperatingHours());
+            if (garageRequestsDTO.getBusinessRegNumber() != null) eg.setBusinessRegNumber(garageRequestsDTO.getBusinessRegNumber());
+            if (garageRequestsDTO.getBusinessEmailAddress() != null) eg.setBusinessEmailAddress(garageRequestsDTO.getBusinessEmailAddress());
+            if (garageRequestsDTO.getTwentyFourHours() != null) eg.setTwentyFourHours(garageRequestsDTO.getTwentyFourHours());
+            if (garageRequestsDTO.getServiceCategories() != null) eg.setServiceCategories(garageRequestsDTO.getServiceCategories());
+            if (garageRequestsDTO.getSpecialisedServices() != null) eg.setSpecialisedServices(garageRequestsDTO.getSpecialisedServices());
+            if (garageRequestsDTO.getBusinessName() != null) eg.setBusinessName(garageRequestsDTO.getBusinessName());
+            if (garageRequestsDTO.getPhysicalBusinessAddress() != null) eg.setPhysicalBusinessAddress(garageRequestsDTO.getPhysicalBusinessAddress());
+            if (garageRequestsDTO.getBusinessPhoneNumber() != null) eg.setBusinessPhoneNumber(garageRequestsDTO.getBusinessPhoneNumber());
+            if (garageRequestsDTO.getYearsInOperation() != null) eg.setYearsInOperation(garageRequestsDTO.getYearsInOperation());
+            if (garageRequestsDTO.getMpesaPayBill() != null) eg.setMpesaPayBill(garageRequestsDTO.getMpesaPayBill());
+            if (garageRequestsDTO.getMpesaTill() != null) eg.setMpesaTill(garageRequestsDTO.getMpesaTill());
 
             //binary data
-            if (garage.getBusinessLicense() != null && garage.getBusinessLicense().length > 0) eg.setBusinessLicense(garage.getBusinessLicense());
-            if (garage.getProfessionalCertificate() != null && garage.getProfessionalCertificate().length > 0) eg.setProfessionalCertificate(garage.getProfessionalCertificate());
-            if (garage.getFacilityPhotos() != null && garage.getFacilityPhotos().length > 0) eg.setFacilityPhotos(garage.getFacilityPhotos());
+            if (garageRequestsDTO.getBusinessLicense() != null && garageRequestsDTO.getBusinessLicense().length > 0) eg.setBusinessLicense(garageRequestsDTO.getBusinessLicense());
+            if (garageRequestsDTO.getProfessionalCertificate() != null && garageRequestsDTO.getProfessionalCertificate().length > 0) eg.setProfessionalCertificate(garageRequestsDTO.getProfessionalCertificate());
+            if (garageRequestsDTO.getFacilityPhotos() != null && garageRequestsDTO.getFacilityPhotos().length > 0) eg.setFacilityPhotos(garageRequestsDTO.getFacilityPhotos());
 
-            return garageRepository.save(eg);
+            Garage garageUpdate = garageRepository.save(eg);
+            return mapper.toResponseDTO(garageUpdate);
         }).orElseThrow(()-> new RuntimeException("Garage not found"));
     }
 

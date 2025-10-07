@@ -1,5 +1,8 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.AutoMobileResponseDTO;
+import com.eclectics.Garage.dto.AutomobileRequestsDTO;
+import com.eclectics.Garage.mapper.AutoMobileMapper;
 import com.eclectics.Garage.model.AutoMobiles;
 import com.eclectics.Garage.repository.AutomobilesRepository;
 import com.eclectics.Garage.service.AutomobilesService;
@@ -11,45 +14,56 @@ import java.util.List;
 public class AutomobilesServiceImpl implements AutomobilesService {
 
     private final AutomobilesRepository automobilesRepository;
+    private final AutoMobileMapper mapper;
 
-    public AutomobilesServiceImpl(AutomobilesRepository automobilesRepository) {
+    public AutomobilesServiceImpl(AutomobilesRepository automobilesRepository, AutoMobileMapper mapper) {
         this.automobilesRepository = automobilesRepository;
+        this.mapper = mapper;
     }
 
     @Override
-    public AutoMobiles createAutoMobile(AutoMobiles autoMobiles) {
-        return automobilesRepository.save(autoMobiles);
+    public AutoMobileResponseDTO createAutoMobile(AutomobileRequestsDTO automobileRequestsDTO) {
+        AutoMobiles autoMobiles = mapper.toEntity(automobileRequestsDTO);
+        AutoMobiles autoMobilesSaved =automobilesRepository.save(autoMobiles);
+        return mapper.toResponseDTO(autoMobilesSaved);
     }
 
     @Override
-    public List<AutoMobiles> getAllAutomobiles() {
-        return automobilesRepository.findAll();
+    public List<AutoMobileResponseDTO> getAllAutomobiles() {
+        List<AutoMobiles> autoMobiles = automobilesRepository.findAll();
+        return mapper.toResponseDTOList(autoMobiles);
     }
 
     @Override
-    public AutoMobiles updateAutoMobile(Long id, AutoMobiles autoMobiles) {
+    public AutoMobileResponseDTO updateAutoMobile(Long id, AutomobileRequestsDTO automobileRequestsDTO) {
         AutoMobiles existing = automobilesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Automobile not found with id: " + id));
 
-        existing.setMake(autoMobiles.getMake());
-        existing.setYear(autoMobiles.getYear());
-        existing.setEngineType(autoMobiles.getEngineType());
-        existing.setTransmission(autoMobiles.getTransmission());
+        mapper.updateEntityFromDTO(automobileRequestsDTO, existing);
+        existing.setMake(automobileRequestsDTO.getMake());
+        existing.setYear(automobileRequestsDTO.getYear());
+        existing.setEngineType(automobileRequestsDTO.getEngineType());
+        existing.setTransmission(automobileRequestsDTO.getTransmission());
 
-        return automobilesRepository.save(existing);
+        AutoMobiles saveAutoMobiles = automobilesRepository.save(existing);
+        return mapper.toResponseDTO(saveAutoMobiles);
     }
 
     public List<String> getAllMakes() {
-        return automobilesRepository.findAllMakes();
+        List<String> autoMobileMakes = automobilesRepository.findAllMakes();
+        return autoMobileMakes;
     }
     public List<String> findAllYears() {
-        return automobilesRepository.findAllYears();
+        List<String> autoMobilesYears = automobilesRepository.findAllYears();
+        return autoMobilesYears;
     }
     public List<String> findAllEngineType() {
-        return automobilesRepository.findAllEngineType();
+        List<String> autoMobilesEngineType = automobilesRepository.findAllEngineType();
+        return autoMobilesEngineType;
     }
     public List<String> findAllTransmission() {
-        return automobilesRepository.findAllTransmission();
+        List<String> autoMobilesTransmission = automobilesRepository.findAllTransmission();
+        return autoMobilesTransmission;
     }
 
     @Override

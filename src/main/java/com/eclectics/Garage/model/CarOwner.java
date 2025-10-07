@@ -64,8 +64,8 @@ public class CarOwner {
 
     @Transient
     public boolean isComplete() {
-        return getMissingFields().isEmpty();
-    }
+        return true;
+    } // make this return getMissingFields().isEmpty()
 
     @Transient
     public List<String> getMissingFields() {

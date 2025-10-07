@@ -3,11 +3,22 @@ spring:
     url: jdbc:postgresql://localhost:5432/garage
     username: postgres
     password: 5047
-#    url: ${SPRING_DATASOURCE_URL} for production
-#    username: ${SPRING_DATASOURCE_USERNAME}
-#    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 51c2c6a995c556
+    password: 2780c1bfbb46ad
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   flyway:
-    enabled: false  # return this to true and add migration scripts
+    enabled: false  # set to true add migration scripts later
+
   servlet:
     multipart:
       enabled: true
@@ -15,11 +26,12 @@ spring:
       max-request-size: 250MB
 
   jpa:
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  jpa.hibernate.ddl-auto: update
+        default_schema: public
 
 server:
   address: 0.0.0.0
@@ -34,15 +46,3 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
-
-  mpesa:
-    consumer:
-      key: rrS42JDcIh7jGmmBsSOahnHWPkRYmK84MbwUcygtH9vQUsj0
-      secret: pm08BgNWThsd46UOVeAYkWf8C0hClfLGc5r6HyAVwNZsdJGCWDRdqF83kjf5Pz2W
-    passkey:
-    business:
-      shortcode: 174379
-    base:
-      url: https://sandbox.safaricom.co.ke
-    callback:
-      url: https://yourdomain.com/api/mpesa/callback
