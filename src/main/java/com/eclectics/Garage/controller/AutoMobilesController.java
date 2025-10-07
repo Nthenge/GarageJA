@@ -1,5 +1,7 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.dto.AutoMobileResponseDTO;
+import com.eclectics.Garage.dto.AutomobileRequestsDTO;
 import com.eclectics.Garage.model.AutoMobiles;
 import com.eclectics.Garage.service.AutomobilesService;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +20,7 @@ public class AutoMobilesController {
     }
 
     @GetMapping
-    public List<AutoMobiles> getAllAutomobiles(){
+    public List<AutoMobileResponseDTO> getAllAutomobiles(){
         return automobilesService.getAllAutomobiles();
     }
     @GetMapping("/make")
@@ -41,13 +43,14 @@ public class AutoMobilesController {
                 .toList();
     }
 
+
     @PostMapping
-    public AutoMobiles createAutoMobile(@RequestBody AutoMobiles autoMobiles){
-        return automobilesService.createAutoMobile(autoMobiles);
+    public AutoMobileResponseDTO createAutoMobile(@RequestBody AutomobileRequestsDTO automobileRequestsDTO){
+        return automobilesService.createAutoMobile(automobileRequestsDTO);
     }
 
     @PutMapping("/{id}")
-    public AutoMobiles updateAutoMobile(@PathVariable Long id, @RequestBody AutoMobiles autoMobiles){
+    public AutoMobileResponseDTO updateAutoMobile(@PathVariable Long id, @RequestBody AutomobileRequestsDTO autoMobiles){
         return automobilesService.updateAutoMobile(id, autoMobiles);
     }
 
