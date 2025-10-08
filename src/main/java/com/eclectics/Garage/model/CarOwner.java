@@ -64,16 +64,13 @@ public class CarOwner {
 
     @Transient
     public boolean isComplete() {
-        return true;
-    } // make this return getMissingFields().isEmpty()
+        return getMissingFields().isEmpty();
+    }
 
     @Transient
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (uniqueId == null) {missingFields.add("uniqueId");}
-        if (profilePic == null || profilePic.length == 0) {missingFields.add("profilePic");}
-        if (altPhone == null || altPhone.isBlank()) {missingFields.add("altPhone");}
         if (model == null || model.isBlank()) {missingFields.add("model");}
         if (licensePlate == null || licensePlate.isBlank()) {missingFields.add("licensePlate");}
         if (engineCapacity == null || engineCapacity.isBlank()) {missingFields.add("engineCapacity");}
@@ -83,7 +80,6 @@ public class CarOwner {
         if (engineType == null || engineType.isBlank()) {missingFields.add("engineType");}
         if (transmission == null || transmission.isBlank()) {missingFields.add("transmission");}
         if (severity == null || severity.isBlank()) {missingFields.add("severity");}
-        if (user == null) {missingFields.add("user");}
 
         return missingFields;
     }

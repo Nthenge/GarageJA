@@ -77,20 +77,14 @@ public class Mechanic {
         List<String> missingFields = new ArrayList<>();
 
         if (areasofSpecialization != null && !areasofSpecialization.isBlank()) {missingFields.add("areasofSpecialization");};
-        if (alternativePhone == null || alternativePhone.isBlank()) missingFields.add("alternativePhone");
         if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalAddress");
-        if (emergencyContactName == null || emergencyContactName.isBlank()) missingFields.add("emergencyContactName");
-        if (emergencyContactNumber == null || emergencyContactNumber.isBlank()) missingFields.add("emergencyContactNumber");
         if (yearsofExperience == null || yearsofExperience.isBlank()) missingFields.add("yearsofExperience");
         if (vehicleBrands == null || vehicleBrands.isBlank()) missingFields.add("vehicleBrands");
         if (availability == null || availability.isBlank()) missingFields.add("availability");
-        if (profilePic == null || profilePic.length == 0) missingFields.add("profilePic");
-        if (nationalIDPic == null || nationalIDPic.length == 0) missingFields.add("nationalIDPic");
         if (professionalCertfificate == null || professionalCertfificate.length == 0) missingFields.add("professionalCertfificate");
-        if (anyRelevantCertificate == null || anyRelevantCertificate.length == 0) missingFields.add("anyRelevantCertificate");
         if (policeClearanceCertficate == null || policeClearanceCertficate.length == 0) missingFields.add("policeClearanceCertficate");
         if (nationalIdNumber == null) missingFields.add("nationalIdNumber");
-        if (garage == null) missingFields.add("garage");
+//        if (garage == null) missingFields.add("garage"); return it to be a must
 
         return missingFields;
     }
