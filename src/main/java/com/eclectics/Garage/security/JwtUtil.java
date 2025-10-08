@@ -20,7 +20,6 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    // Generate token
     public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
@@ -31,7 +30,16 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Extract email
+    public String generateEmailConfirmToken(String email, String role) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("role", role)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + ResetPasswordTime))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public String extractEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -41,7 +49,6 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    // Extract role
     public String extractRole(String token) {
         return (String) Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -51,7 +58,6 @@ public class JwtUtil {
                 .get("role");
     }
 
-    //Extract emails for reset
     public String extractEmailFromToken(String token) {
         try {
             return extractEmail(token);
@@ -60,7 +66,6 @@ public class JwtUtil {
         }
     }
 
-    //validate token for reset
     public boolean validateResetPasswordToken(String token, String email) {
         try {
             Claims claims = Jwts.parserBuilder()
@@ -80,7 +85,6 @@ public class JwtUtil {
         }
     }
 
-    // Generate forgot password token
     public String generateResetPasswordToken(String email){
         return Jwts.builder()
                 .setSubject(email)
@@ -91,7 +95,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Validate token for login
+
     public boolean validateToken(String token, String email) {
         String tokenEmail = extractEmail(token);
         return (tokenEmail.equals(email) && !isTokenExpired(token));

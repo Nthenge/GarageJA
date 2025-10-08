@@ -26,7 +26,7 @@
         @Column(nullable = false)
         private String phoneNumber;
 
-        private boolean enabled = true;
+        private boolean enabled = false;
 
         @Enumerated(EnumType.STRING)
         private Role role;

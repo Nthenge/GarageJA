@@ -155,6 +155,11 @@ public class UserController {
             }
 
             User user = userService.loginUser(email, password);
+
+            if (!user.isEnabled()) {
+                throw new RuntimeException("Please verify your email before logging in.");
+            }
+
             String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
             Map<String, Object> response = new HashMap<>();
@@ -202,15 +207,42 @@ public class UserController {
         }
     }
 
+    @PostMapping("/confirm")
+    public ResponseEntity<?> confirmAccount(@RequestBody Map<String, Object> payload) {
+        String token = (String) payload.get("token");
+        boolean enabled = payload.get("enabled") != null && (boolean) payload.get("enabled");
 
-    //updateUser
+        if (!enabled) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Account not enabled"));
+        }
+
+        boolean confirmed = userService.confirmUser(token);
+        if (confirmed) {
+            return ResponseEntity.ok(Map.of("message", "Account confirmed successfully!"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Invalid or expired token"));
+        }
+    }
+
+    @GetMapping("/confirm")
+    public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
+        boolean confirmed = userService.confirmUser(token);
+        if (confirmed) {
+            return ResponseEntity.ok(Map.of("message", "Your account has been confirmed!"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Invalid or expired token"));
+        }
+    }
+
     @PutMapping("/{userId}")
     public  ResponseEntity<?>updateUser(@PathVariable Long userId, @RequestBody User user){
         userService.updateUser(userId, user);
         return ResponseEntity.ok(Map.of("message", "User updated successfully"));
     }
 
-    //deleteUser
+
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);
