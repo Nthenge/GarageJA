@@ -46,10 +46,7 @@ public class CarOwnerController {
                 @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
             carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
-
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Car owner created with profile picture");
-
             return ResponseEntity.ok(response);
         }
 
