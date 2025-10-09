@@ -14,6 +14,9 @@ public interface GarageMapper {
     GarageMapper INSTANCE = Mappers.getMapper(GarageMapper.class);
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "businessLicense", ignore = true)
+    @Mapping(target = "professionalCertificate", ignore = true)
+    @Mapping(target = "facilityPhotos", ignore = true)
     Garage toEntity(GarageRequestsDTO dto);
     GarageResponseDTO toResponseDTO(Garage entity);
     List<GarageResponseDTO> toResponseDTOList(List<Garage> garages);

@@ -43,20 +43,29 @@ public class GarageController {
             @RequestPart(value = "businessLicense", required = false) MultipartFile businessLicense,
             @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
             @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos) throws java.io.IOException{
-        garageService.createGarage(garageRequestsDTO, businessLicense, professionalCertificate, facilityPhotos);
-        return "Garage created successfully";
+        try{
+            garageService.createGarage(garageRequestsDTO, businessLicense, professionalCertificate, facilityPhotos);
+            return "Garage created successfully";
+        }catch (java.io.IOException e){
+            return "Error creating garage: " + e.getMessage();
+        }
     }
 
     @PutMapping("/{garageId}")
-    public String updateGarage(@PathVariable Long garageId, @RequestBody GarageRequestsDTO garageRequestsDTO){
-        garageService.updateGarage(garageId, garageRequestsDTO);
+    public String updateGarage(
+            @PathVariable Long garageId,
+            @RequestPart("garage") GarageRequestsDTO garageRequestsDTO,
+            @RequestPart(value = "businessLicense", required = false) MultipartFile businessLicense,
+            @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
+            @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos){
+        garageService.updateGarage(garageId, garageRequestsDTO,businessLicense,professionalCertificate,facilityPhotos);
         return "Garage updated successfully";
     }
 
     @DeleteMapping("/{garageId}")
     public String deleteAGarage(@PathVariable("garageId") Long garageId){
         garageService.deleteGarage(garageId);
-        return "Garage Deleted Succesfully";
+        return "Garage Deleted Successfully";
     }
 
 }

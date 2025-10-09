@@ -1,9 +1,11 @@
 package com.eclectics.Garage.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class GarageRequestsDTO {
-    private byte[] businessLicense;
-    private byte[] professionalCertificate;
-    private byte[] facilityPhotos;
+    private MultipartFile businessLicense;
+    private MultipartFile professionalCertificate;
+    private MultipartFile facilityPhotos;
 
     private Long garageId;
     private Long operatingHours;
@@ -24,7 +26,7 @@ public class GarageRequestsDTO {
 
     public GarageRequestsDTO() {}
 
-    public GarageRequestsDTO(byte[] businessLicense, byte[] professionalCertificate, byte[] facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
+    public GarageRequestsDTO(MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
         this.businessLicense = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -43,27 +45,27 @@ public class GarageRequestsDTO {
         this.mpesaTill = mpesaTill;
     }
 
-    public byte[] getBusinessLicense() {
+    public MultipartFile getBusinessLicense() {
         return businessLicense;
     }
 
-    public void setBusinessLicense(byte[] businessLicense) {
+    public void setBusinessLicense(MultipartFile businessLicense) {
         this.businessLicense = businessLicense;
     }
 
-    public byte[] getProfessionalCertificate() {
+    public MultipartFile getProfessionalCertificate() {
         return professionalCertificate;
     }
 
-    public void setProfessionalCertificate(byte[] professionalCertificate) {
+    public void setProfessionalCertificate(MultipartFile professionalCertificate) {
         this.professionalCertificate = professionalCertificate;
     }
 
-    public byte[] getFacilityPhotos() {
+    public MultipartFile getFacilityPhotos() {
         return facilityPhotos;
     }
 
-    public void setFacilityPhotos(byte[] facilityPhotos) {
+    public void setFacilityPhotos(MultipartFile facilityPhotos) {
         this.facilityPhotos = facilityPhotos;
     }
 

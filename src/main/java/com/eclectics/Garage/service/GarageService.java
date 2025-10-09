@@ -14,7 +14,7 @@ public interface GarageService {
     Optional<GarageResponseDTO> getGarageById(Long garageId);
     Optional<GarageResponseDTO> getGarageByName(String name);
     List<GarageResponseDTO> getAllGarages();
-    GarageResponseDTO updateGarage(Long id, GarageRequestsDTO garageRequestsDTO);
+    GarageResponseDTO updateGarage(Long id, GarageRequestsDTO garageRequestsDTO, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos);
     void deleteGarage(Long id);
 }
 

@@ -3,6 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/garage
     username: postgres
     password: 5047
+    hikari:
+      auto-commit: false
 
   mail:
     host: sandbox.smtp.mailtrap.io
