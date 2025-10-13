@@ -1,6 +1,6 @@
 package com.eclectics.Garage.service.impl;
 
-import com.eclectics.Garage.exception.ExceptionHandlerNotFound;
+import com.eclectics.Garage.exception.GarageExceptions;
 import com.eclectics.Garage.model.Booking;
 import com.eclectics.Garage.repository.BookingRepository;
 import com.eclectics.Garage.service.BookingService;
@@ -26,7 +26,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking getBookingById(Long id) {
         if (bookingRepository.findById(id).isEmpty())
-            throw new ExceptionHandlerNotFound("Requested Booking does not exist");
+            throw new GarageExceptions("Requested Booking does not exist");
         return bookingRepository.findById(id).get();
     }
 

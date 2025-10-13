@@ -9,6 +9,9 @@ import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.GarageService;
+import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,7 +59,7 @@ public class GarageServiceImpl implements GarageService {
             garage.setFacilityPhotos(facilityPhotos.getBytes());
         }
         if (GarageExists.isPresent()){
-            throw new RuntimeException("Garage with this name exists");
+            throw new ResourceNotFoundException("Garage with this name exists");
         }
 
         boolean uniqueAdminIdExists;
@@ -68,7 +71,7 @@ public class GarageServiceImpl implements GarageService {
 
             uniqueAdminIdExists = garageRepository.findByGarageId(uniqueAdminId).isPresent();
             if (uniqueAdminIdExists){
-                throw new RuntimeException("A garage with this Admin id already exist");
+                throw new ResourceNotFoundException("A garage with this Admin id already exist");
             }
 
         }while (uniqueAdminIdExists);
@@ -155,13 +158,13 @@ public class GarageServiceImpl implements GarageService {
                     existinggarage.setFacilityPhotos(facilityPhotos.getBytes());
                 }
             } catch (IOException e) {
-                throw new RuntimeException("Failed to read file data", e);
+                throw new BadRequestException("Failed to read file data");
             }
 
             Garage updatedGarage = garageRepository.save(existinggarage);
             return mapper.toResponseDTO(updatedGarage);
 
-        }).orElseThrow(() -> new RuntimeException("Garage not found"));
+        }).orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
     }
 
 
@@ -169,7 +172,7 @@ public class GarageServiceImpl implements GarageService {
     @Override
     public void deleteGarage(Long id) {
         if (!garageRepository.existsById(id)){
-            throw new RuntimeException("Garage with id " + id + " does not exist");
+            throw new ResourceNotFoundException("Garage with id " + id + " does not exist");
         }
         garageRepository.deleteById(id);
     }

@@ -6,6 +6,8 @@ import com.eclectics.Garage.mapper.AutoMobileMapper;
 import com.eclectics.Garage.model.AutoMobiles;
 import com.eclectics.Garage.repository.AutomobilesRepository;
 import com.eclectics.Garage.service.AutomobilesService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,7 +39,7 @@ public class AutomobilesServiceImpl implements AutomobilesService {
     @Override
     public AutoMobileResponseDTO updateAutoMobile(Long id, AutomobileRequestsDTO automobileRequestsDTO) {
         AutoMobiles existing = automobilesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Automobile not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Automobile not found with id: " + id));
 
         mapper.updateEntityFromDTO(automobileRequestsDTO, existing);
         existing.setMake(automobileRequestsDTO.getMake());
@@ -69,7 +71,7 @@ public class AutomobilesServiceImpl implements AutomobilesService {
     @Override
     public void deleteAutoMobile(Long id) {
         if (!automobilesRepository.existsById(id)){
-            throw new RuntimeException("Auto mobile with this id does not exist");
+            throw new ResourceNotFoundException("Auto mobile with this id does not exist");
         }
         automobilesRepository.deleteById(id);
     }

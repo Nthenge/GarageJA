@@ -70,6 +70,20 @@
             this.email = email;
         }
 
+        public String getFirstname() {
+            return firstname;
+        }
+        public void setFirstname(String firstname) {
+            this.firstname = firstname;
+        }
+
+        public String getSecondname() {
+            return secondname;
+        }
+        public void setSecondname(String secondname) {
+            this.secondname = secondname;
+        }
+
         public String getPassword() {
             return password;
         }
@@ -101,11 +115,11 @@
         public Mechanic getMechanic() {return mechanic;}
         public void setMechanic(Mechanic mechanic) {this.mechanic = mechanic;}
 
-        public CarOwner getCarOwner() {return carOwner;}
-        public void setCarOwner(CarOwner carOwner) {this.carOwner = carOwner;}
-
         public Garage getGarage() {return garage;}
         public void setGarage(Garage garage) {this.garage = garage;}
+
+        public User() {
+        }
 
         @Transient
         public boolean isDetailsCompleted() {
@@ -119,23 +133,6 @@
                 default:
                     return false;
             }
-        }
-
-
-        public User() {
-        }
-
-        public String getFirstname() {
-            return firstname;
-        }
-        public void setFirstname(String firstname) {
-            this.firstname = firstname;
-        }
-        public String getSecondname() {
-            return secondname;
-        }
-        public void setSecondname(String secondname) {
-            this.secondname = secondname;
         }
     }
 

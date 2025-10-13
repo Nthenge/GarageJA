@@ -84,9 +84,10 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         return carOwners.stream().map(mapper::toDto).toList();
     }
 
+    //connect it such that it updates dynamically
     @Override
-    public CarOwnerResponseDTO updateCarOwner(Long id, CarOwnerRequestsDTO carOwnerRequestsDTO) {
-        Optional<CarOwner> existingCarOwnerOptional = carOwnerRepository.findById(id);
+    public CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId,CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException {
+        Optional<CarOwner> existingCarOwnerOptional = carOwnerRepository.findByUniqueId(carOwnerUniqueId);
 
         if (existingCarOwnerOptional.isPresent()) {
             CarOwner eco = existingCarOwnerOptional.get();
@@ -101,27 +102,19 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwnerRequestsDTO.getEngineType() != null) eco.setEngineType(carOwnerRequestsDTO.getEngineType());
             if (carOwnerRequestsDTO.getTransmission() != null) eco.setTransmission(carOwnerRequestsDTO.getTransmission());
             if (carOwnerRequestsDTO.getSeverity() != null) eco.setSeverity(carOwnerRequestsDTO.getSeverity());
-            if (carOwnerRequestsDTO.getProfilePic() != null) eco.setProfilePic(carOwnerRequestsDTO.getProfilePic());
+            if (carOwnerRequestsDTO.getProfilePic() != null) eco.setProfilePic(carOwnerRequestsDTO.getProfilePic().getBytes());
+
+            if (profilePic != null && !profilePic.isEmpty()){
+                eco.setProfilePic(profilePic.getBytes());
+            }else {
+                eco.setProfilePic(null);
+            }
 
             CarOwner carOwnerUpdate = carOwnerRepository.save(eco);
             return mapper.toDto(carOwnerUpdate);
         } else {
             throw new ResourceAccessException("Car Owner does not exist");
         }
-    }
-
-    //connect it such that it updates dynamically
-    @Override
-    public CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId, MultipartFile profilePic) throws java.io.IOException {
-        CarOwner exco = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
-                .orElseThrow(()-> new ResourceAccessException("Car Owner not found with this id"));
-        if (profilePic != null && !profilePic.isEmpty()){
-            exco.setProfilePic(profilePic.getBytes());
-        }else {
-            exco.setProfilePic(null);
-        }
-        CarOwner updatedEntity = carOwnerRepository.save(exco);
-        return mapper.toDto(updatedEntity);
     }
 
     @Override

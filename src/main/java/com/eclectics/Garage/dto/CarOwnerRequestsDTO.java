@@ -1,5 +1,7 @@
 package com.eclectics.Garage.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class CarOwnerRequestsDTO {
 
     private String altPhone;
@@ -12,11 +14,11 @@ public class CarOwnerRequestsDTO {
     private String color;
     private String transmission;
     private String severity;
-    private byte[] profilePic;
+    private MultipartFile profilePic;
 
     public CarOwnerRequestsDTO() {}
 
-    public CarOwnerRequestsDTO(String altPhone, String make, String model, String year,byte[] profilePic, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
+    public CarOwnerRequestsDTO(String altPhone, String make, String model, String year,MultipartFile profilePic, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
         this.altPhone = altPhone;
         this.make = make;
         this.model = model;
@@ -100,6 +102,6 @@ public class CarOwnerRequestsDTO {
         this.severity = severity;
     }
 
-    public byte[] getProfilePic() {return profilePic;}
-    public void setProfilePic(byte[] profilePic) {this.profilePic = profilePic;}
+    public MultipartFile getProfilePic() {return profilePic;}
+    public void setProfilePic(MultipartFile profilePic) {this.profilePic = profilePic;}
 }

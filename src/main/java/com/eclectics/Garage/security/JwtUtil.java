@@ -13,8 +13,8 @@ import java.util.Date;
 public class JwtUtil {
 
     private final String SECRET = "ThisIsASecretKeyThatIsAtLeast32CharsLong123";
-    private final long EXPIRATION_TIME = 1000 * 60 * 60;
-    private final long ResetPasswordTime = 1000 * 60 * 15;
+    private final long SESSION_EXPIRATION_TIME = 1000 * 60 * 60;
+    private final long RESET_CONFIRM_TIME = 1000 * 60 * 15;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
@@ -25,7 +25,7 @@ public class JwtUtil {
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + SESSION_EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -35,7 +35,7 @@ public class JwtUtil {
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ResetPasswordTime))
+                .setExpiration(new Date(System.currentTimeMillis() + RESET_CONFIRM_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -90,7 +90,7 @@ public class JwtUtil {
                 .setSubject(email)
                 .claim("type", "reset")
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ResetPasswordTime))
+                .setExpiration(new Date(System.currentTimeMillis() + RESET_CONFIRM_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

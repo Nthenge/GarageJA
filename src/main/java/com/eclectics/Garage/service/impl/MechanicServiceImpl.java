@@ -4,15 +4,16 @@ import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
 import com.eclectics.Garage.mapper.MechanicMapper;
-import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
-import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.MechanicService;
+import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,14 +28,12 @@ public class MechanicServiceImpl implements MechanicService {
 
     private final MechanicRepository mechanicRepository;
     private final GarageRepository garageRepository;
-    private final UsersRepository usersRepository;
     private final AuthenticationService authenticationService;
     private final MechanicMapper mapper;
 
-    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, UsersRepository usersRepository, AuthenticationService authenticationService, MechanicMapper mapper) {
+    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository, AuthenticationService authenticationService, MechanicMapper mapper) {
         this.mechanicRepository = mechanicRepository;
         this.garageRepository = garageRepository;
-        this.usersRepository = usersRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
     }
@@ -67,31 +66,30 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Transactional
     @Override
-    public MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO, MultipartFile profilepic, MultipartFile nationalIdFile, MultipartFile profCert, MultipartFile anyRelCert, MultipartFile polCleCert) throws java.io.IOException {
+    public MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO, MultipartFile profilePic, MultipartFile nationalIDPic, MultipartFile professionalCertfificate, MultipartFile anyRelevantCertificate, MultipartFile policeClearanceCertficate) throws java.io.IOException {
 
         Mechanic mechanic = mapper.toEntity(mechanicRequestDTO);
 
         Optional<Mechanic> mechanicExist = mechanicRepository.findMechanicByNationalIdNumber(mechanic.getNationalIdNumber());
         if (mechanicExist.isPresent()) {
-            throw new RuntimeException("Mechanic with this national ID already exist");
+            throw new ResourceNotFoundException("Mechanic with this national ID already exist");
         }
 
         User userid = authenticationService.getCurrentUser();
         mechanic.setUser(userid);
 
-        if (mechanic.getGarage() != null && mechanic.getGarage().getGarageId() != null) {
-            Long garageAdminId = mechanic.getGarage().getGarageId();
-            Garage garage = garageRepository.findByGarageId(garageAdminId)
-                    .orElseThrow(() -> new RuntimeException("Garage with this id " + garageAdminId + " not found"));
-
+        if (mechanicRequestDTO.getGarageId() != null) {
+            Garage garage = garageRepository.findByGarageId(mechanicRequestDTO.getGarageId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Garage with this id " + mechanicRequestDTO.getGarageId() + " not found"));
             mechanic.setGarage(garage);
         }
 
-        setFileIfPresent(profilepic, mechanic::setProfilePic);
-        setFileIfPresent(nationalIdFile, mechanic::setNationalIDPic);
-        setFileIfPresent(profCert, mechanic::setProfessionalCertfificate);
-        setFileIfPresent(anyRelCert, mechanic::setAnyRelevantCertificate);
-        setFileIfPresent(polCleCert, mechanic::setPoliceClearanceCertficate);
+
+        setFileIfPresent(profilePic, mechanic::setProfilePic);
+        setFileIfPresent(nationalIDPic, mechanic::setNationalIDPic);
+        setFileIfPresent(professionalCertfificate, mechanic::setProfessionalCertfificate);
+        setFileIfPresent(anyRelevantCertificate, mechanic::setAnyRelevantCertificate);
+        setFileIfPresent(policeClearanceCertficate, mechanic::setPoliceClearanceCertficate);
 
         Mechanic savedMechanic = mechanicRepository.save(mechanic);
         return mapper.toResponseDTO(savedMechanic);
@@ -122,21 +120,50 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Transactional
     @Override
-    public MechanicResponseDTO updateMechanic(Long id, MechanicRequestDTO mechanicRequestDTO) {
-        Mechanic mechanic = mechanicRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mechanic not found"));
+    public MechanicResponseDTO updateMechanic(
+            Long id,
+            MechanicRequestDTO mechanicRequestDTO,
+            MultipartFile profilePic,
+            MultipartFile nationalIDPic,
+            MultipartFile professionalCertfificate,
+            MultipartFile anyRelevantCertificate,
+            MultipartFile policeClearanceCertficate) {
 
+        Mechanic mechanic = mechanicRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found"));
         mapper.updateEntityFromDTO(mechanicRequestDTO, mechanic);
 
-        if (mechanicRequestDTO.getGarage() != null && mechanicRequestDTO.getGarage().getGarageId() != null) {
-            Garage garage = garageRepository.findByGarageId(mechanicRequestDTO.getGarage().getGarageId())
-                    .orElseThrow(() -> new RuntimeException("Garage not found"));
+        if (mechanicRequestDTO.getGarageId() != null) {
+            Garage garage = garageRepository.findByGarageId(mechanicRequestDTO.getGarageId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
             mechanic.setGarage(garage);
         }
 
-        Mechanic saved = mechanicRepository.save(mechanic);
-        return mapper.toResponseDTO(saved);
+        try {
+            if (profilePic != null && !profilePic.isEmpty()) {
+                mechanic.setProfilePic(profilePic.getBytes());
+            }
+            if (nationalIDPic != null && !nationalIDPic.isEmpty()) {
+                mechanic.setNationalIDPic(nationalIDPic.getBytes());
+            }
+            if (professionalCertfificate != null && !professionalCertfificate.isEmpty()) {
+                mechanic.setProfessionalCertfificate(professionalCertfificate.getBytes());
+            }
+            if (anyRelevantCertificate != null && !anyRelevantCertificate.isEmpty()) {
+                mechanic.setAnyRelevantCertificate(anyRelevantCertificate.getBytes());
+            }
+            if (policeClearanceCertficate != null && !policeClearanceCertficate.isEmpty()) {
+                mechanic.setPoliceClearanceCertficate(policeClearanceCertficate.getBytes());
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Error reading uploaded file(s)");
+        }
+
+        Mechanic savedMechanic = mechanicRepository.save(mechanic);
+
+        return mapper.toResponseDTO(savedMechanic);
     }
+
 
     @Transactional
     @Override

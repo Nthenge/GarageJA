@@ -51,19 +51,14 @@ public class CarOwnerController {
         }
 
 
-    @PutMapping(value = "/{carOwnerUniqueId}/uploadprofile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/update/{carOwnerUniqueId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<CarOwnerResponseDTO> updateCarOwnerProfilePic(
                 @PathVariable Integer carOwnerUniqueId,
+                @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
                 @RequestPart("profilePic") MultipartFile profilePic
         ) throws IOException {
 
-            CarOwnerResponseDTO updatedOwner = carOwnerService.updateProfilePic(carOwnerUniqueId, profilePic);
-            return ResponseEntity.ok(updatedOwner);
-        }
-
-        @PutMapping("/{carOwnerId}")
-        public ResponseEntity<CarOwnerResponseDTO> updateCarOwner(@PathVariable Long carOwnerId, @RequestBody CarOwnerRequestsDTO carOwnerRequestsDTO){
-            CarOwnerResponseDTO updatedOwner = carOwnerService.updateCarOwner(carOwnerId, carOwnerRequestsDTO);
+            CarOwnerResponseDTO updatedOwner = carOwnerService.updateProfilePic(carOwnerUniqueId,carOwnerRequestsDTO, profilePic);
             return ResponseEntity.ok(updatedOwner);
         }
 
