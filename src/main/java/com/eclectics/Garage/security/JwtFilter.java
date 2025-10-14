@@ -2,6 +2,7 @@ package com.eclectics.Garage.security;
 
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.UsersRepository;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String email = jwtUtil.extractEmail(token);
 
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             CustomUserDetails userDetails = new CustomUserDetails(user);
 

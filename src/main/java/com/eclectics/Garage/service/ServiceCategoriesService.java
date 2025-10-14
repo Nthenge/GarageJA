@@ -8,4 +8,5 @@ public interface ServiceCategoriesService {
     ServiceCategories createCategory(ServiceCategories serviceCategories);
     List<ServiceCategories> getAllServiceCategories();
     ServiceCategories getServiceCategoryByName(String getServiceCategoryByName);
+    void delete(Long id);
 }

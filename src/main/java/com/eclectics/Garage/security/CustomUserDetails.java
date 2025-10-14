@@ -14,20 +14,16 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
-    // Allow access to the underlying User entity
     public User getUser() {
         return user;
     }
 
-    // Convenient method to get logged-in user's ID
     public Long getId() {
         return user.getId();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // For simplicity, we can map roles to authorities if needed
-        // Example: return List.of(new SimpleGrantedAuthority(user.getRole().name()));
         return null;
     }
 

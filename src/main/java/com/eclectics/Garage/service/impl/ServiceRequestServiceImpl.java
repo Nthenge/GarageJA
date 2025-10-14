@@ -80,4 +80,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     public Optional<ServiceRequest> getRequestById(Long requestId) {
         return requestServiceRepository.findById(requestId);
     }
+
+    @Override
+    public void deleteServiceRequest(Long id) {
+        requestServiceRepository.deleteById(id);
+    }
 }

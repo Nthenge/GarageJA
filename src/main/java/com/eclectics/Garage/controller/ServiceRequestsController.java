@@ -57,4 +57,10 @@ public class ServiceRequestsController {
     public Optional<ServiceRequest> getRequestById(@PathVariable Long requestId){
         return serviceRequestService.getRequestById(requestId);
     }
+
+    @DeleteMapping("/{id}")
+    public String deleteById(@PathVariable Long id){
+        serviceRequestService.deleteServiceRequest(id);
+        return "Service request deleted";
+    }
 }

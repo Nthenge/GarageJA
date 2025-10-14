@@ -28,4 +28,9 @@ public class ServiceCategoriesServiceImpl implements ServiceCategoriesService {
         return serviceCategoryRepository.serviceCategoryName(serviceCategoryName)
                 .orElseThrow(()->new RuntimeException("Category not found"));
     }
+
+    @Override
+    public void delete(Long id) {
+    serviceCategoryRepository.deleteById(id);
+    }
 }

@@ -30,4 +30,9 @@ public class ServiceCategoriesController {
     public ResponseEntity<ServiceCategories> getServiceCategoryByName(@PathVariable("serviceCategoryName") String serviceCategoryName){
         return ResponseEntity.ok(serviceCategoriesService.getServiceCategoryByName(serviceCategoryName));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteServiceCategory(@PathVariable Long id){
+        serviceCategoriesService.delete(id);
+        return ResponseEntity.ok("Service category deleted");
+    }
 }
