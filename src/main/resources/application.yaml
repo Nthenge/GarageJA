@@ -5,6 +5,8 @@ spring:
     password: 5047
     hikari:
       auto-commit: false
+  cache:
+    type: simple
 
   mail:
     host: sandbox.smtp.mailtrap.io
@@ -34,12 +36,22 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_schema: public
+        hibernate:
+          cache:
+            use_second_level_cache: true
+            use_query_cache: true
+            region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+            provider: org.ehcache.jsr107.EhcacheCachingProvider
 
 server:
   address: 0.0.0.0
   port: 8083
   ssl:
     enabled: false
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,application/json
+    min-response-size: 1024
 
 springdoc:
   api-docs:

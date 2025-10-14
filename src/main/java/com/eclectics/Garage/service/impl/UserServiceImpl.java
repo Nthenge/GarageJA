@@ -9,6 +9,9 @@ import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException
 import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
@@ -184,18 +187,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "#email")
     public Optional<User> getUserByEmail(String email) {
         logger.debug("Fetching user by email: {}", email);
         return usersRepository.findByEmail(email);
     }
 
     @Override
+    @Cacheable(value = "allUsers")
     public List<User> getAllUsers() {
         logger.info("Fetching all users");
         return usersRepository.findAll();
     }
 
     @Override
+    @CachePut(value = "users", key = "#user.email")
     public User updateUser(Long id, User user) {
         logger.info("Updating user with ID: {}", id);
 
@@ -233,6 +239,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Long id) {
         logger.info("Deleting user with ID: {}", id);
 

@@ -5,6 +5,7 @@
 
     @Entity
     @Table(name = "users")
+    @Cacheable
     public class User {
 
         @Id
