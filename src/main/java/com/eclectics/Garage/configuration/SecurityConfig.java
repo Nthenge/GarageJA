@@ -46,22 +46,14 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers(
-                                "/users/register",
-                                "/users/login",
-                                "/users/**",
-                                "/garages/**",
-                                "/carOwners/**",
-                                "/mechanics/**",
-                                "/automobiles/make",
-                                "/automobiles/year",
-                                "/automobiles/transmission",
-                                "/automobiles/engineType",
+                                "/user/**",
+                                "/carOwner/**",
+                                "/mechanic/**",
+                                "/automobile/**",
                                 "/category/**",
                                 "/service/**",
-                                "/carOwner/**",
                                 "/severity/**",
-                                "/mechanic/**",
-                                "/requests/**",
+                                "/request/**",
                                 "/payment/**",
                                 "/garage/**"
                         ).permitAll()

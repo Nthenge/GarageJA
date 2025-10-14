@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/automobiles")
+@RequestMapping("/automobile")
 public class AutoMobilesController {
 
     AutomobilesService automobilesService;
