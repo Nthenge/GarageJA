@@ -2,6 +2,7 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.model.Service;
 import com.eclectics.Garage.service.ServicesService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class ServiceController {
             this.servicesService = servicesService;
         }
 
+
         @GetMapping("/{serviceId}")
         public Optional<Service> getOneService(@PathVariable("serviceId") Long Id){
             return servicesService.getServiceById(Id);
@@ -25,28 +27,31 @@ public class ServiceController {
         @GetMapping("/search/{garageId}")
         public List<Service> getAllServicesByGarageId(@PathVariable("garageId") Long garageId){
             return servicesService.getServicesByGarageId(garageId);
-    }
+        }
 
         @GetMapping()
         public List<Service> getAllServices(){
             return servicesService.getAllServices();
         }
 
+        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
         @PostMapping()
         public String createService(@RequestBody Service service){
             servicesService.createService(service);
             return "Service created successfully";
         }
 
+        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
         @PutMapping("/{serviceId}")
-        public String updateCustomer(@PathVariable Long serviceId, @RequestBody Service service){
+        public String updateService(@PathVariable Long serviceId, @RequestBody Service service){
             servicesService.updateService(serviceId, service);
             return "Service updated successfully";
         }
 
+        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
         @DeleteMapping("/{serviceId}")
         public String deleteAService(@PathVariable("serviceId") Long serviceId){
             servicesService.deleteService(serviceId);
-            return "Service Deleted Succesfully";
+            return "Service Deleted Successfully";
         }
 }

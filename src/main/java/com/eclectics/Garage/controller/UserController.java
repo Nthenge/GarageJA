@@ -12,6 +12,7 @@ import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -40,6 +41,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -47,7 +49,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @GetMapping()
     public ResponseEntity<List<User>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
@@ -62,7 +64,7 @@ public class UserController {
 
         try {
 //            User savedUser = userService.createUser(user);
-//            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
+//            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name()); delete this in services
 
             return ResponseEntity.ok(Map.of(
                     "message", "User registered successfully"

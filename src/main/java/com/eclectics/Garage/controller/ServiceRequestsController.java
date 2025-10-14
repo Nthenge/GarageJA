@@ -3,6 +3,7 @@ package com.eclectics.Garage.controller;
 import com.eclectics.Garage.model.ServiceRequest;
 import com.eclectics.Garage.model.RequestStatus;
 import com.eclectics.Garage.service.ServiceRequestService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,21 +43,25 @@ public class ServiceRequestsController {
         return serviceRequestService.updateStatus(requestId, status,severityId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/carOwner/{carOwnerUniqueId}")
     public List<ServiceRequest> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
         return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/garage/{garageId}")
     public List<ServiceRequest> getRequestsByGarage(@PathVariable Long garageId){
         return serviceRequestService.getRequestsByGarage(garageId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/{requestId}")
     public Optional<ServiceRequest> getRequestById(@PathVariable Long requestId){
         return serviceRequestService.getRequestById(requestId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @DeleteMapping("/{id}")
     public String deleteById(@PathVariable Long id){
         serviceRequestService.deleteServiceRequest(id);

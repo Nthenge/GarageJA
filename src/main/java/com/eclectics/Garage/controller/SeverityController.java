@@ -2,6 +2,7 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.model.SeverityCategories;
 import com.eclectics.Garage.service.SeverityCategoriesService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -17,17 +18,20 @@ public class SeverityController {
         this.severityCategoriesService = severityCategoriesService;
     }
 
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @PostMapping()
     public String createASeverity(@RequestBody SeverityCategories severityCategories){
         severityCategoriesService.createCategory(severityCategories);
         return "Severity Category created";
     }
 
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @GetMapping
     public List<SeverityCategories> getAllSeverityCategories(){
         return severityCategoriesService.getAllSeverityCategories();
     }
 
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @GetMapping("/{severityName}")
     public SeverityCategories getSeverityCategoryByName(@PathVariable String severityName){
         return severityCategoriesService.getSeverityCategoryByName(severityName);
