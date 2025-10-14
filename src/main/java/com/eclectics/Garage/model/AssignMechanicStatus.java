@@ -1,6 +1,6 @@
 package com.eclectics.Garage.model;
 
-public enum AssignmentStatus {
+public enum AssignMechanicStatus {
     ASSINGED,
     ACCEPTED,
     REJECTED

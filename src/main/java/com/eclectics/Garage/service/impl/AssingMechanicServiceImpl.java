@@ -35,18 +35,18 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
 
         assignRequests.setService(serviceRequest);
         assignRequests.setMechanic(mechanic);
-        assignRequests.setStatus(AssignmentStatus.ASSINGED);
+        assignRequests.setStatus(AssignMechanicStatus.ASSINGED);
         assignRequests.setAssignedAt(LocalDateTime.now());
         assignRequests.setUpdatedAt(LocalDateTime.now());
         return assignMechanicsRepository.save(assignRequests);
     }
 
     @Override
-    public AssignMechanics updateAssignmentStatus(Long assignmentId, AssignmentStatus status) {
+    public AssignMechanics updateAssignmentStatus(Long assignmentId, AssignMechanicStatus status) {
         AssignMechanics assignRequests = assignMechanicsRepository.findById(assignmentId)
                 .orElseThrow(()-> new RuntimeException("Request with this id does not exist"));
 
-        assignRequests.setStatus(AssignmentStatus.ACCEPTED);
+        assignRequests.setStatus(AssignMechanicStatus.ACCEPTED);
         assignRequests.setUpdatedAt(LocalDateTime.now());
         return assignMechanicsRepository.save(assignRequests);
     }

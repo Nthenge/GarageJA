@@ -61,13 +61,13 @@ public class UserController {
         }
 
         try {
-            User savedUser = userService.createUser(user);
-            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
+//            User savedUser = userService.createUser(user);
+//            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
 
             return ResponseEntity.ok(Map.of(
-                    "message", "User registered successfully",
-                    "token", token,
-                    "role", savedUser.getRole().name()
+                    "message", "User registered successfully"
+//                    "token", token,
+//                    "role", savedUser.getRole().name()
             ));
 
         } catch (RuntimeException e) {
@@ -95,7 +95,6 @@ public class UserController {
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("role", user.getRole().name());

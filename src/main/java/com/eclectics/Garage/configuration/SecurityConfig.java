@@ -51,7 +51,15 @@ public class SecurityConfig {
                                 "/automobiles/make",
                                 "/automobiles/year",
                                 "/automobiles/transmission",
-                                "/automobiles/engineType"
+                                "/automobiles/engineType",
+                                "/category/**",
+                                "/service/**",
+                                "/carOwner/**",
+                                "/severity/**",
+                                "/mechanic/**",
+                                "/requests/**",
+                                "/payment/**",
+                                "/garage/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

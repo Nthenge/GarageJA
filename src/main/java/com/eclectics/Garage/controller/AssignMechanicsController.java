@@ -1,12 +1,11 @@
 package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.model.AssignMechanics;
-import com.eclectics.Garage.model.AssignmentStatus;
+import com.eclectics.Garage.model.AssignMechanicStatus;
 import com.eclectics.Garage.service.AssignMechanicService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/assignments")
@@ -26,7 +25,7 @@ public class AssignMechanicsController {
 
     @PutMapping("/{assignmentId}/status")
     public AssignMechanics updateStatus(@PathVariable Long assignmentId,
-                                       @RequestParam AssignmentStatus status) {
+                                       @RequestParam AssignMechanicStatus status) {
         return assignMechanicService.updateAssignmentStatus(assignmentId, status);
     }
 

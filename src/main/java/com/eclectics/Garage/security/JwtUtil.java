@@ -12,7 +12,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "ThisIsASecretKeyThatIsAtLeast32CharsLong123";
+    private final String SECRET = "Garageojbv6789cvbn@65ghjpqowieurytmnvshdhwAJ";
     private final long SESSION_EXPIRATION_TIME = 1000 * 60 * 60;
     private final long RESET_CONFIRM_TIME = 1000 * 60 * 15;
 
@@ -21,6 +21,7 @@ public class JwtUtil {
     }
 
     public String generateToken(String email, String role) {
+//       String jwt =
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
@@ -28,9 +29,11 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + SESSION_EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+//      return TokenEncryptor.encrypt(jwt);
     }
 
     public String generateEmailConfirmToken(String email, String role) {
+//        String jwt =
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
@@ -38,6 +41,7 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + RESET_CONFIRM_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+//        return TokenEncryptor.encrypt(jwt);
     }
 
     public String extractEmail(String token) {
@@ -86,13 +90,15 @@ public class JwtUtil {
     }
 
     public String generateResetPasswordToken(String email){
-        return Jwts.builder()
+//        String  jwt =
+        return   Jwts.builder()
                 .setSubject(email)
                 .claim("type", "reset")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + RESET_CONFIRM_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+//        return TokenEncryptor.encrypt(jwt);
     }
 
 

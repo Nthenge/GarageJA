@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
         User user = usersRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warn("Login failed - user not found for email: {}", email);
-                    return new BadRequestException("User does not exist");
+                    return new BadRequestException("User/Email does not exist, Check your email or register");
                 });
 
         if (!passwordEncoder.matches(password, user.getPassword())) {

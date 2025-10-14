@@ -1,8 +1,7 @@
 package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.model.ServiceRequest;
-import com.eclectics.Garage.model.SeverityCategories;
-import com.eclectics.Garage.model.Status;
+import com.eclectics.Garage.model.RequestStatus;
 import com.eclectics.Garage.service.ServiceRequestService;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,10 +33,10 @@ public class ServiceRequestsController {
         return serviceRequestService.createRequest(carOwnerId, garageId, serviceId, severityId);
     }
 
-    @PutMapping("/{requestId}/status")
+    @PutMapping("/status/{requestId}")
     public ServiceRequest updateRequest(
             @PathVariable Long requestId,
-            @RequestParam Status status,
+            @RequestParam RequestStatus status,
             @RequestParam Long severityId
             ){
         return serviceRequestService.updateStatus(requestId, status,severityId);

@@ -43,7 +43,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         request.setCarOwner(carOwner);
         request.setGarage(garage);
         request.setService(service);
-        request.setStatus(Status.PENDING);
+        request.setStatus(RequestStatus.PENDING);
         request.setCreatedAt(LocalDateTime.now());
         request.setUpdatedAt(LocalDateTime.now());
         request.setSeverityCategories(severityCategory);
@@ -56,7 +56,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     }
 
     @Override
-    public ServiceRequest updateStatus(Long requestId, Status status, Long severityId) {
+    public ServiceRequest updateStatus(Long requestId, RequestStatus status, Long severityId) {
      ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
                 .orElseThrow(()-> new RuntimeException("Service with this id " + requestId + " not found"));
 
