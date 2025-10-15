@@ -9,7 +9,7 @@ import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
-import io.jsonwebtoken.io.IOException;
+import org.springframework.cache.annotation.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
+@CacheConfig(cacheNames = {"carOwners"})
 public class CarOwnerServiceImpl implements CarOwnerService {
 
     private final CarOwnerRepository carOwnerRepository;
@@ -31,18 +32,18 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         this.mapper = mapper;
     }
 
-    public ProfileCompleteDTO checkProfileCompletion(CarOwner carOwner){
+    public ProfileCompleteDTO checkProfileCompletion(CarOwner carOwner) {
         List<String> missingFields = carOwner.getMissingFields();
         return new ProfileCompleteDTO(missingFields.isEmpty(), missingFields);
     }
 
     @Override
-    public CarOwner createCarOwner(CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException{
+    @CacheEvict(value = {"allCarOwners"}, allEntries = true)
+    public CarOwner createCarOwner(CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException {
 
         CarOwner carOwner = mapper.toEntity(carOwnerRequestsDTO);
-
-        User userid = authenticationService.getCurrentUser();
-        carOwner.setUser(userid);
+        User user = authenticationService.getCurrentUser();
+        carOwner.setUser(user);
 
         boolean uniqueCarOwnerExists;
         Integer uniqueCarOwnerId;
@@ -50,12 +51,7 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         do {
             Random random = new Random();
             uniqueCarOwnerId = random.nextInt(8888889) + 1111111;
-
             uniqueCarOwnerExists = carOwnerRepository.findByUniqueId(uniqueCarOwnerId).isPresent();
-            if (uniqueCarOwnerExists) {
-                throw new RuntimeException("A car owner with this id already exist");
-            }
-
         } while (uniqueCarOwnerExists);
 
         if (profilePic != null && !profilePic.isEmpty()) {
@@ -65,13 +61,14 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         carOwner.setUniqueId(uniqueCarOwnerId);
         return carOwnerRepository.save(carOwner);
     }
+
     @Override
+    @Cacheable(value = "carOwnerByUser", key = "#userId")
     public Optional<CarOwnerResponseDTO> findByUserId(Long userId) {
-        Optional<CarOwner> carOwner = carOwnerRepository.findByUserId(userId);
-        return carOwner.map(mapper::toDto);
+        return carOwnerRepository.findByUserId(userId).map(mapper::toDto);
     }
 
-     @Override
+    @Override
     public boolean isDetailsCompleted(Long userId) {
         return carOwnerRepository.findByUserId(userId)
                 .map(CarOwner::isComplete)
@@ -79,14 +76,20 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     }
 
     @Override
+    @Cacheable(value = "allCarOwners")
     public List<CarOwnerResponseDTO> getAllCarOwners() {
-        List<CarOwner> carOwners =  carOwnerRepository.findAll();
-        return carOwners.stream().map(mapper::toDto).toList();
+        return carOwnerRepository.findAll()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
-    //connect it such that it updates dynamically
     @Override
-    public CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId,CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException {
+    @CachePut(value = "carOwnerByUniqueId", key = "#carOwnerUniqueId")
+    @CacheEvict(value = {"allCarOwners", "carOwnerByUser"}, allEntries = true)
+    public CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId,
+                                                CarOwnerRequestsDTO carOwnerRequestsDTO,
+                                                MultipartFile profilePic) throws java.io.IOException {
         Optional<CarOwner> existingCarOwnerOptional = carOwnerRepository.findByUniqueId(carOwnerUniqueId);
 
         if (existingCarOwnerOptional.isPresent()) {
@@ -102,22 +105,22 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwnerRequestsDTO.getEngineType() != null) eco.setEngineType(carOwnerRequestsDTO.getEngineType());
             if (carOwnerRequestsDTO.getTransmission() != null) eco.setTransmission(carOwnerRequestsDTO.getTransmission());
             if (carOwnerRequestsDTO.getSeverity() != null) eco.setSeverity(carOwnerRequestsDTO.getSeverity());
-            if (carOwnerRequestsDTO.getProfilePic() != null) eco.setProfilePic(carOwnerRequestsDTO.getProfilePic().getBytes());
 
-            if (profilePic != null && !profilePic.isEmpty()){
+            if (profilePic != null && !profilePic.isEmpty()) {
                 eco.setProfilePic(profilePic.getBytes());
-            }else {
+            } else {
                 eco.setProfilePic(null);
             }
 
-            CarOwner carOwnerUpdate = carOwnerRepository.save(eco);
-            return mapper.toDto(carOwnerUpdate);
+            CarOwner updatedCarOwner = carOwnerRepository.save(eco);
+            return mapper.toDto(updatedCarOwner);
         } else {
             throw new ResourceAccessException("Car Owner does not exist");
         }
     }
 
     @Override
+    @CacheEvict(value = {"allCarOwners", "carOwnerByUniqueId", "carOwnerByUser"}, allEntries = true)
     public String deleteCarOwner(Long id) {
         Optional<CarOwner> existingCarOwner = carOwnerRepository.findById(id);
         if (existingCarOwner.isPresent()) {
@@ -129,8 +132,8 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     }
 
     @Override
+    @Cacheable(value = "carOwnerByUniqueId", key = "#uniqueId")
     public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId) {
-        Optional<CarOwner> carOwner = carOwnerRepository.findByUniqueId(uniqueId);
-        return carOwner.map(mapper::toDto);
+        return carOwnerRepository.findByUniqueId(uniqueId).map(mapper::toDto);
     }
 }

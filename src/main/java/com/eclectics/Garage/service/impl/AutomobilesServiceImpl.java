@@ -8,6 +8,9 @@ import com.eclectics.Garage.repository.AutomobilesRepository;
 import com.eclectics.Garage.service.AutomobilesService;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,19 +27,34 @@ public class AutomobilesServiceImpl implements AutomobilesService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "allAutomobiles", allEntries = true),
+            @CacheEvict(value = "autoMobileMakes", allEntries = true),
+            @CacheEvict(value = "autoMobileYears", allEntries = true),
+            @CacheEvict(value = "autoMobileEngineTypes", allEntries = true),
+            @CacheEvict(value = "autoMobileTransmissions", allEntries = true)
+    })
     public AutoMobileResponseDTO createAutoMobile(AutomobileRequestsDTO automobileRequestsDTO) {
         AutoMobiles autoMobiles = mapper.toEntity(automobileRequestsDTO);
-        AutoMobiles autoMobilesSaved =automobilesRepository.save(autoMobiles);
-        return mapper.toResponseDTO(autoMobilesSaved);
+        AutoMobiles saved = automobilesRepository.save(autoMobiles);
+        return mapper.toResponseDTO(saved);
     }
 
     @Override
+    @Cacheable(value = "allAutomobiles")
     public List<AutoMobileResponseDTO> getAllAutomobiles() {
         List<AutoMobiles> autoMobiles = automobilesRepository.findAll();
         return mapper.toResponseDTOList(autoMobiles);
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "allAutomobiles", allEntries = true),
+            @CacheEvict(value = "autoMobileMakes", allEntries = true),
+            @CacheEvict(value = "autoMobileYears", allEntries = true),
+            @CacheEvict(value = "autoMobileEngineTypes", allEntries = true),
+            @CacheEvict(value = "autoMobileTransmissions", allEntries = true)
+    })
     public AutoMobileResponseDTO updateAutoMobile(Long id, AutomobileRequestsDTO automobileRequestsDTO) {
         AutoMobiles existing = automobilesRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Automobile not found with id: " + id));
@@ -47,30 +65,44 @@ public class AutomobilesServiceImpl implements AutomobilesService {
         existing.setEngineType(automobileRequestsDTO.getEngineType());
         existing.setTransmission(automobileRequestsDTO.getTransmission());
 
-        AutoMobiles saveAutoMobiles = automobilesRepository.save(existing);
-        return mapper.toResponseDTO(saveAutoMobiles);
-    }
-
-    public List<String> getAllMakes() {
-        List<String> autoMobileMakes = automobilesRepository.findAllMakes();
-        return autoMobileMakes;
-    }
-    public List<String> findAllYears() {
-        List<String> autoMobilesYears = automobilesRepository.findAllYears();
-        return autoMobilesYears;
-    }
-    public List<String> findAllEngineType() {
-        List<String> autoMobilesEngineType = automobilesRepository.findAllEngineType();
-        return autoMobilesEngineType;
-    }
-    public List<String> findAllTransmission() {
-        List<String> autoMobilesTransmission = automobilesRepository.findAllTransmission();
-        return autoMobilesTransmission;
+        AutoMobiles updated = automobilesRepository.save(existing);
+        return mapper.toResponseDTO(updated);
     }
 
     @Override
+    @Cacheable(value = "autoMobileMakes")
+    public List<String> getAllMakes() {
+        return automobilesRepository.findAllMakes();
+    }
+
+    @Override
+    @Cacheable(value = "autoMobileYears")
+    public List<String> findAllYears() {
+        return automobilesRepository.findAllYears();
+    }
+
+    @Override
+    @Cacheable(value = "autoMobileEngineTypes")
+    public List<String> findAllEngineType() {
+        return automobilesRepository.findAllEngineType();
+    }
+
+    @Override
+    @Cacheable(value = "autoMobileTransmissions")
+    public List<String> findAllTransmission() {
+        return automobilesRepository.findAllTransmission();
+    }
+
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "allAutomobiles", allEntries = true),
+            @CacheEvict(value = "autoMobileMakes", allEntries = true),
+            @CacheEvict(value = "autoMobileYears", allEntries = true),
+            @CacheEvict(value = "autoMobileEngineTypes", allEntries = true),
+            @CacheEvict(value = "autoMobileTransmissions", allEntries = true)
+    })
     public void deleteAutoMobile(Long id) {
-        if (!automobilesRepository.existsById(id)){
+        if (!automobilesRepository.existsById(id)) {
             throw new ResourceNotFoundException("Auto mobile with this id does not exist");
         }
         automobilesRepository.deleteById(id);

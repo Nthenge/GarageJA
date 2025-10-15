@@ -6,6 +6,10 @@ import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.service.PaymentService;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -19,7 +23,10 @@ public class PaymentServiceImpl implements PaymentService {
     private final ServiceRepository serviceRepository;
     private final JwtUtil jwtUtil;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, UsersRepository usersRepository, ServiceRepository serviceRepository, JwtUtil jwtUtil) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository,
+                              UsersRepository usersRepository,
+                              ServiceRepository serviceRepository,
+                              JwtUtil jwtUtil) {
         this.paymentRepository = paymentRepository;
         this.usersRepository = usersRepository;
         this.serviceRepository = serviceRepository;
@@ -28,14 +35,19 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "paymentsByOwner", allEntries = true),
+            @CacheEvict(value = "paymentsByService", allEntries = true),
+            @CacheEvict(value = "paymentById", allEntries = true)
+    })
     public Payment initiatePayment(String email, Long serviceId) {
 
         User user = usersRepository.findByEmail(email)
-                .orElseThrow(()-> new RuntimeException("This owner is not found"));
+                .orElseThrow(() -> new RuntimeException("This owner is not found"));
         Long ownerId = user.getId();
 
         Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(()-> new RuntimeException("This service does not exist")); // make this dynamic, frontend should select the service, and it should be loaded here automatically using its id
+                .orElseThrow(() -> new RuntimeException("This service does not exist"));
 
         Double amount = service.getPrice();
         Long idOfService = service.getId();
@@ -48,13 +60,12 @@ public class PaymentServiceImpl implements PaymentService {
             paymentUniqueId = random.nextInt(1000000) + 10000000;
 
             paymentExist = paymentRepository.findByPaymentId(paymentUniqueId).isPresent();
-            if (paymentExist){
-                throw new RuntimeException("Payment with this id already exist");
+            if (paymentExist) {
+                throw new RuntimeException("Payment with this id already exists");
             }
         } while (paymentExist);
 
         Payment payment = new Payment();
-
         payment.setPaymentId(paymentUniqueId);
         payment.setOwnerId(ownerId);
         payment.setServiceId(idOfService);
@@ -71,24 +82,32 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Transactional(readOnly = true)
     @Override
+    @Cacheable(value = "paymentById", key = "#paymentId")
     public Optional<Payment> getPaymentByPaymentId(Integer paymentId) {
         return paymentRepository.findByPaymentId(paymentId);
     }
 
     @Transactional(readOnly = true)
     @Override
+    @Cacheable(value = "paymentsByOwner", key = "#ownerId")
     public List<Payment> getAllPaymentsDoneByOwner(Integer ownerId) {
         return paymentRepository.findAllByOwnerId(ownerId);
     }
 
     @Transactional(readOnly = true)
     @Override
+    @Cacheable(value = "paymentsByService", key = "#serviceId")
     public List<Payment> getAllPaymentsByService(Long serviceId) {
         return paymentRepository.findAllByServiceId(serviceId);
     }
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "paymentsByOwner", allEntries = true),
+            @CacheEvict(value = "paymentsByService", allEntries = true),
+            @CacheEvict(value = "paymentById", key = "#paymentId")
+    })
     public Payment updatePayment(
             Integer paymentId,
             PaymentStatus paymentStatus,
@@ -98,18 +117,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         return paymentRepository.findByPaymentId(paymentId).map(existingPayment -> {
 
-            if (transactionRef != null) {
-                existingPayment.setTransactionRef(transactionRef);
-            }
-            if (paymentCurrency != null) {
-                existingPayment.setCurrency(paymentCurrency);
-            }
-            if (paymentMethod != null) {
-                existingPayment.setPaymentMethod(paymentMethod);
-            }
-            if (paymentStatus != null) {
-                existingPayment.setPaymentStatus(paymentStatus);
-            }
+            if (transactionRef != null) existingPayment.setTransactionRef(transactionRef);
+            if (paymentCurrency != null) existingPayment.setCurrency(paymentCurrency);
+            if (paymentMethod != null) existingPayment.setPaymentMethod(paymentMethod);
+            if (paymentStatus != null) existingPayment.setPaymentStatus(paymentStatus);
 
             existingPayment.setUpdatedAt(String.valueOf(LocalDateTime.now()));
 
@@ -117,9 +128,13 @@ public class PaymentServiceImpl implements PaymentService {
         }).orElseThrow(() -> new RuntimeException("Payment not found"));
     }
 
-
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "paymentsByOwner", allEntries = true),
+            @CacheEvict(value = "paymentsByService", allEntries = true),
+            @CacheEvict(value = "paymentById", key = "#paymentId")
+    })
     public String deletePayment(Integer paymentId) {
         Payment payment = paymentRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
