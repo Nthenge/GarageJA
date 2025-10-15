@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Email is already in use");
         }
 
-        user.setEnabled(true); // set to false for production
+        user.setEnabled(true); // to set this to "false" for production
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         User savedUser = usersRepository.save(user);

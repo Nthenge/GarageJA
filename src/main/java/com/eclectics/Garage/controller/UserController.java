@@ -41,7 +41,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -49,7 +49,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
     public ResponseEntity<List<User>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
@@ -63,11 +63,11 @@ public class UserController {
         }
 
         try {
-//            User savedUser = userService.createUser(user);
+            userService.createUser(user);
 //            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name()); delete this in services
 
             return ResponseEntity.ok(Map.of(
-                    "message", "User registered successfully"
+                    "message", "To finish registration, Please confirm your email"
 //                    "token", token,
 //                    "role", savedUser.getRole().name()
             ));
@@ -105,6 +105,10 @@ public class UserController {
 
         if (!user.isDetailsCompleted()) {
             switch (user.getRole().name()) {
+                case "SYSTEM_ADMIN":
+                    response.put("detailsCompleted", true);
+                    break;
+
                 case "CAR_OWNER":
                     carOwnerRepository.findByUser(user).ifPresent(carOwner ->
                             response.put("missingFields", carOwner.getMissingFields())
