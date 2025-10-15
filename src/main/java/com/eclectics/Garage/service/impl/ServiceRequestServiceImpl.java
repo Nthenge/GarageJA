@@ -11,9 +11,13 @@ import org.springframework.cache.annotation.Caching;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @org.springframework.stereotype.Service
 public class ServiceRequestServiceImpl implements ServiceRequestService {
+
+    private static final Logger logger = Logger.getLogger(ServiceRequestServiceImpl.class.getName());
 
     private final RequestServiceRepository requestServiceRepository;
     private final CarOwnerRepository carOwnerRepository;
@@ -43,17 +47,32 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             @CacheEvict(value = "requestById", allEntries = true)
     })
     public ServiceRequest createRequest(Integer carOwnerUniqueId, Long garageId, Long serviceId, Long severityId) {
+        logger.info(String.format("Creating new service request for CarOwner ID: %d, Garage ID: %d, Service ID: %d, Severity ID: %d",
+                carOwnerUniqueId, garageId, serviceId, severityId));
+
         CarOwner carOwner = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
-                .orElseThrow(() -> new RuntimeException("Car Owner with this id does not exist"));
+                .orElseThrow(() -> {
+                    logger.warning("CarOwner with ID " + carOwnerUniqueId + " not found.");
+                    return new RuntimeException("Car Owner with this id does not exist");
+                });
 
         Garage garage = garageRepository.findByGarageId(garageId)
-                .orElseThrow(() -> new RuntimeException("Garage with this id does not exist"));
+                .orElseThrow(() -> {
+                    logger.warning("Garage with ID " + garageId + " not found.");
+                    return new RuntimeException("Garage with this id does not exist");
+                });
 
         Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new RuntimeException("Service with this id does not exist"));
+                .orElseThrow(() -> {
+                    logger.warning("Service with ID " + serviceId + " not found.");
+                    return new RuntimeException("Service with this id does not exist");
+                });
 
         SeverityCategories severityCategory = severityCategoryRepository.findById(severityId)
-                .orElseThrow(() -> new RuntimeException("Severity with this id does not exist"));
+                .orElseThrow(() -> {
+                    logger.warning("Severity Category with ID " + severityId + " not found.");
+                    return new RuntimeException("Severity with this id does not exist");
+                });
 
         ServiceRequest request = new ServiceRequest();
         request.setCarOwner(carOwner);
@@ -64,13 +83,18 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         request.setUpdatedAt(LocalDateTime.now());
         request.setSeverityCategories(severityCategory);
 
-        return requestServiceRepository.save(request);
+        ServiceRequest savedRequest = requestServiceRepository.save(request);
+        logger.info("Service request successfully created.");
+        return savedRequest;
     }
 
     @Override
     @Cacheable(value = "allServiceRequests")
     public List<ServiceRequest> getAllRequests() {
-        return requestServiceRepository.findAll();
+        logger.info("Fetching all service requests...");
+        List<ServiceRequest> requests = requestServiceRepository.findAll();
+        logger.info("Total service requests fetched: " + requests.size());
+        return requests;
     }
 
     @Override
@@ -81,33 +105,58 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             @CacheEvict(value = "requestById", key = "#requestId")
     })
     public ServiceRequest updateStatus(Long requestId, RequestStatus status, Long severityId) {
+        logger.info(String.format("Updating status for request ID: %d to %s", requestId, status));
+
         ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Service with this id " + requestId + " not found"));
+                .orElseThrow(() -> {
+                    logger.warning("Service request with ID " + requestId + " not found.");
+                    return new RuntimeException("Service with this id " + requestId + " not found");
+                });
 
-        if (serviceRequest.getStatus() != null) serviceRequest.setStatus(status);
-        if (serviceRequest.getUpdatedAt() != null) serviceRequest.setUpdatedAt(LocalDateTime.now());
-        if (serviceRequest.getSeverityCategories() != null)
-            serviceRequest.setSeverityCategories(serviceRequest.getSeverityCategories());
+        if (status != null) serviceRequest.setStatus(status);
+        serviceRequest.setUpdatedAt(LocalDateTime.now());
 
-        return requestServiceRepository.save(serviceRequest);
+        if (severityId != null) {
+            severityCategoryRepository.findById(severityId).ifPresentOrElse(
+                    serviceRequest::setSeverityCategories,
+                    () -> logger.warning("Severity category with ID " + severityId + " not found. Keeping previous severity.")
+            );
+        }
+
+        ServiceRequest updatedRequest = requestServiceRepository.save(serviceRequest);
+        logger.info("Service request updated successfully with ID: " + requestId);
+        return updatedRequest;
     }
 
     @Override
     @Cacheable(value = "requestsByCarOwner", key = "#carOwnerUniqueId")
     public List<ServiceRequest> getRequestsByCarOwner(Integer carOwnerUniqueId) {
-        return requestServiceRepository.getServiceByCarOwner_UniqueId(carOwnerUniqueId);
+        logger.info("Fetching service requests for CarOwner with ID: " + carOwnerUniqueId);
+        List<ServiceRequest> requests = requestServiceRepository.getServiceByCarOwner_UniqueId(carOwnerUniqueId);
+        logger.info("Total requests found for CarOwner " + carOwnerUniqueId + ": " + requests.size());
+        return requests;
     }
 
     @Override
     @Cacheable(value = "requestsByGarage", key = "#garageId")
     public List<ServiceRequest> getRequestsByGarage(Long garageId) {
-        return requestServiceRepository.getServiceByGarage_GarageId(garageId);
+        logger.info("Fetching service requests for Garage with ID: " + garageId);
+        List<ServiceRequest> requests = requestServiceRepository.getServiceByGarage_GarageId(garageId);
+        logger.info("Total requests found for Garage " + garageId + ": " + requests.size());
+        return requests;
     }
 
     @Override
     @Cacheable(value = "requestById", key = "#requestId")
     public Optional<ServiceRequest> getRequestById(Long requestId) {
-        return requestServiceRepository.findById(requestId);
+        logger.info("Fetching service request by ID: " + requestId);
+        Optional<ServiceRequest> request = requestServiceRepository.findById(requestId);
+        if (request.isPresent()) {
+            logger.info("Service request found with ID: " + requestId);
+        } else {
+            logger.warning("No service request found with ID: " + requestId);
+        }
+        return request;
     }
 
     @Override
@@ -118,6 +167,13 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             @CacheEvict(value = "requestById", key = "#id")
     })
     public void deleteServiceRequest(Long id) {
-        requestServiceRepository.deleteById(id);
+        logger.info("Attempting to delete service request with ID: " + id);
+        try {
+            requestServiceRepository.deleteById(id);
+            logger.info("Service request deleted successfully with ID: " + id);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error deleting service request with ID: " + id, e);
+            throw e;
+        }
     }
 }
