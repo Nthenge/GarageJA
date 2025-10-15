@@ -33,7 +33,7 @@ public class MechanicController {
             return mechanicService.getMechanicByNationalId(nationalIdNumber);
         }
 
-        @PreAuthorize("hasRole('SYSTEM_ADMIN)")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
         @GetMapping()
         public List<MechanicResponseDTO> getAllMechanics(){
             return mechanicService.getAllMechanics();
