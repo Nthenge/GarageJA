@@ -42,7 +42,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -56,7 +56,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/register")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         if (user.getEmail() == null || user.getPassword() == null) {
@@ -65,12 +65,8 @@ public class UserController {
 
         try {
             userService.createUser(user);
-//            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name()); delete this in services
-
             return ResponseEntity.ok(Map.of(
                     "message", "To finish registration, Please confirm your email"
-//                    "token", token,
-//                    "role", savedUser.getRole().name()
             ));
 
         } catch (RuntimeException e) {
@@ -81,7 +77,7 @@ public class UserController {
         }
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
@@ -135,6 +131,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/confirm")
     public ResponseEntity<?> confirmAccount(@RequestBody Map<String, Object> payload) {
         String token = (String) payload.get("token");
@@ -159,6 +156,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @GetMapping("/confirm")
     public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
 
@@ -177,6 +175,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/reset-password")
     public ResponseEntity<?> requestResetPassword(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
@@ -192,6 +191,7 @@ public class UserController {
         return success("Password reset link sent to " + email);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/update-password")
     public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> payload) {
         String token = payload.get("token");
@@ -203,13 +203,14 @@ public class UserController {
         return success("Password updated successfully");
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PutMapping("/update/{userId}")
     public  ResponseEntity<?>updateUser(@PathVariable Long userId, @RequestBody User user){
         userService.updateUser(userId, user);
         return success("User updated successfully");
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);

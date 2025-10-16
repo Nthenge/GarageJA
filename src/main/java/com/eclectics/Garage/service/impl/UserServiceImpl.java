@@ -69,15 +69,7 @@ public class UserServiceImpl implements UserService {
     public void confirmEmail(String email, String token) {
         logger.info("Preparing confirmation email for user: {}", email);
 
-        String confirmationLink = "http://192.168.1.65:8083/users/confirm?token=" + token;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Confirm your Garage Account");
-        message.setText("Hello,\n\n" +
-                "Welcome to Garage App! Please confirm your registration by clicking the link below:\n" +
-                confirmationLink + "\n\n" +
-                "If you did not register, please ignore this email.\n\n" +
-                "Regards,\nGarage Team");
+        SimpleMailMessage message = getSimpleMailMessage(email, token);
 
         try {
             javaMailSender.send(message);
@@ -87,12 +79,24 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private static SimpleMailMessage getSimpleMailMessage(String email, String token) {
+        String confirmationLink = "http://192.168.1.65:8083/users/confirm?token=" + token;
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Confirm your Garage Account");
+        message.setText("Hello,\n\n" +
+                "Welcome to Garage App! Please confirm your registration by clicking the link below:\n" +
+                confirmationLink + "\n\n" +
+                "If you did not register, please ignore this email.\n\n" +
+                "Regards,\nGarage Team");
+        return message;
+    }
+
     @Override
     public boolean confirmUser(String token) {
         logger.info("Confirming user with token: {}", token);
         try {
-            String decryptedToken = TokenEncryptor.decrypt(token);
-            String email = jwtUtil.extractEmail(decryptedToken);
+            String email = jwtUtil.extractEmail(token);
             Optional<User> optionalUser = usersRepository.findByEmail(email);
 
             if (optionalUser.isEmpty()) {
@@ -150,6 +154,17 @@ public class UserServiceImpl implements UserService {
     public void sendResetEmail(String email, String token) {
         logger.info("Sending password reset email to: {}", email);
 
+        SimpleMailMessage message = getMailMessage(email, token);
+
+        try {
+            javaMailSender.send(message);
+            logger.info("Password reset email successfully sent to: {}", email);
+        } catch (Exception e) {
+            logger.error("Failed to send reset email to {}: {}", email, e.getMessage());
+        }
+    }
+
+    private static SimpleMailMessage getMailMessage(String email, String token) {
         String resetUrl = "http://192.168.1.65:8083/reset-password?token=" + token;
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
@@ -159,13 +174,7 @@ public class UserServiceImpl implements UserService {
                 resetUrl + "\n\n" +
                 "If you did not request this, please ignore this email.\n\n" +
                 "Regards,\nGarage Team");
-
-        try {
-            javaMailSender.send(message);
-            logger.info("Password reset email successfully sent to: {}", email);
-        } catch (Exception e) {
-            logger.error("Failed to send reset email to {}: {}", email, e.getMessage());
-        }
+        return message;
     }
 
     @Override
