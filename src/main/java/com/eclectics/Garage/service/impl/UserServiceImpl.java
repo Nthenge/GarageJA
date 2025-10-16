@@ -4,6 +4,7 @@ import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.security.JwtUtil;
+import com.eclectics.Garage.security.TokenEncryptor;
 import com.eclectics.Garage.service.UserService;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
@@ -90,7 +91,8 @@ public class UserServiceImpl implements UserService {
     public boolean confirmUser(String token) {
         logger.info("Confirming user with token: {}", token);
         try {
-            String email = jwtUtil.extractEmail(token);
+            String decryptedToken = TokenEncryptor.decrypt(token);
+            String email = jwtUtil.extractEmail(decryptedToken);
             Optional<User> optionalUser = usersRepository.findByEmail(email);
 
             if (optionalUser.isEmpty()) {
@@ -170,8 +172,10 @@ public class UserServiceImpl implements UserService {
     public User updatePassword(String token, String newPassword) {
         logger.info("Updating password for token: {}", token);
 
-        String email = jwtUtil.extractEmailFromToken(token);
-        if (email == null || !jwtUtil.validateResetPasswordToken(token, email)) {
+        String decryptedToken = TokenEncryptor.decrypt(token);
+        String email = jwtUtil.extractEmailFromToken(decryptedToken);
+
+        if (email == null || !jwtUtil.validateResetPasswordToken(decryptedToken, email)) {
             logger.warn("Invalid or expired reset token for password update");
             throw new UnauthorizedException("Invalid or expired reset token");
         }

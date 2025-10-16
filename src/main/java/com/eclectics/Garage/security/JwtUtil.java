@@ -21,27 +21,25 @@ public class JwtUtil {
     }
 
     public String generateToken(String email, String role) {
-//       String jwt =
-        return Jwts.builder()
+       String jwt = Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + SESSION_EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
-//      return TokenEncryptor.encrypt(jwt);
+      return TokenEncryptor.encrypt(jwt);
     }
 
     public String generateEmailConfirmToken(String email, String role) {
-//        String jwt =
-        return Jwts.builder()
+       String jwt = Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + RESET_CONFIRM_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
-//        return TokenEncryptor.encrypt(jwt);
+        return TokenEncryptor.encrypt(jwt);
     }
 
     public String extractEmail(String token) {
@@ -90,15 +88,14 @@ public class JwtUtil {
     }
 
     public String generateResetPasswordToken(String email){
-//        String  jwt =
-        return   Jwts.builder()
+        String  jwt = Jwts.builder()
                 .setSubject(email)
                 .claim("type", "reset")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + RESET_CONFIRM_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
-//        return TokenEncryptor.encrypt(jwt);
+        return TokenEncryptor.encrypt(jwt);
     }
 
 

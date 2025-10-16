@@ -5,6 +5,7 @@ import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.security.JwtUtil;
+import com.eclectics.Garage.security.TokenEncryptor;
 import com.eclectics.Garage.service.UserService;
 
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
@@ -143,7 +144,14 @@ public class UserController {
             throw new UnauthorizedException("Account not enabled");
         }
 
-        boolean confirmed = userService.confirmUser(token);
+        String decryptedToken;
+        try {
+            decryptedToken = TokenEncryptor.decrypt(token);
+        } catch (Exception e) {
+            throw new ForbiddenException("Invalid token format");
+        }
+
+        boolean confirmed = userService.confirmUser(decryptedToken);
         if (confirmed) {
             return success("Account confirmed successfully!");
         } else {
@@ -153,7 +161,15 @@ public class UserController {
 
     @GetMapping("/confirm")
     public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
-        boolean confirmed = userService.confirmUser(token);
+
+        String decryptedToken;
+        try {
+            decryptedToken = TokenEncryptor.decrypt(token);
+        } catch (Exception e) {
+            throw new ForbiddenException("Invalid token format");
+        }
+
+        boolean confirmed = userService.confirmUser(decryptedToken);
         if (confirmed) {
             return success("Your account has been confirmed!");
         } else {
