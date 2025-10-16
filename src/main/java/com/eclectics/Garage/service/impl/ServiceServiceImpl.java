@@ -5,6 +5,8 @@ import com.eclectics.Garage.model.Service;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.service.ServicesService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -43,7 +45,7 @@ public class ServiceServiceImpl implements ServicesService {
             Garage garage = garageRepository.findByGarageId(garageAdminId)
                     .orElseThrow(() -> {
                         logger.error("Garage with ID {} not found", garageAdminId);
-                        return new RuntimeException("Garage with this id " + garageAdminId + " not found");
+                        return new ResourceNotFoundException("Garage with this id " + garageAdminId + " not found");
                     });
 
             service.setGarage(garage);
@@ -105,7 +107,7 @@ public class ServiceServiceImpl implements ServicesService {
             return updated;
         }).orElseThrow(() -> {
             logger.error("Service with ID {} not found for update", id);
-            return new RuntimeException("Service not found");
+            return new ResourceNotFoundException("Service not found");
         });
     }
 

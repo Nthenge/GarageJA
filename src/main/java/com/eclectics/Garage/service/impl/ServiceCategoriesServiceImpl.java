@@ -3,6 +3,7 @@ package com.eclectics.Garage.service.impl;
 import com.eclectics.Garage.model.ServiceCategories;
 import com.eclectics.Garage.repository.ServiceCategoryRepository;
 import com.eclectics.Garage.service.ServiceCategoriesService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class ServiceCategoriesServiceImpl implements ServiceCategoriesService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Service category with name '{}' not found", serviceCategoryName);
-                    return new RuntimeException("Category not found");
+                    return new ResourceNotFoundException("Category not found");
                 });
     }
 

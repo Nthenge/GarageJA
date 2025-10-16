@@ -5,6 +5,7 @@ import com.eclectics.Garage.repository.AssignMechanicsRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.RequestServiceRepository;
 import com.eclectics.Garage.service.AssignMechanicService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +46,13 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
                 .orElseThrow(() -> {
                     logger.error("ServiceRequest with ID {} not found", requestId);
-                    return new RuntimeException("Service with this id does not exist");
+                    return new ResourceNotFoundException("Service with this id does not exist");
                 });
 
         Mechanic mechanic = mechanicRepository.findById(mechanicId)
                 .orElseThrow(() -> {
                     logger.error("Mechanic with ID {} not found", mechanicId);
-                    return new RuntimeException("Mechanic with this id does not exist");
+                    return new ResourceNotFoundException("Mechanic with this id does not exist");
                 });
 
         AssignMechanics assignRequests = new AssignMechanics();
@@ -78,7 +79,7 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         AssignMechanics assignRequests = assignMechanicsRepository.findById(assignmentId)
                 .orElseThrow(() -> {
                     logger.error("Assignment with ID {} not found", assignmentId);
-                    return new RuntimeException("Request with this id does not exist");
+                    return new ResourceNotFoundException("Request with this id does not exist");
                 });
 
         assignRequests.setStatus(status);

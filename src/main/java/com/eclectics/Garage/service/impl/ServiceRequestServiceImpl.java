@@ -3,6 +3,7 @@ package com.eclectics.Garage.service.impl;
 import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.*;
 import com.eclectics.Garage.service.ServiceRequestService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
@@ -53,25 +54,25 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         CarOwner carOwner = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
                 .orElseThrow(() -> {
                     logger.warning("CarOwner with ID " + carOwnerUniqueId + " not found.");
-                    return new RuntimeException("Car Owner with this id does not exist");
+                    return new ResourceNotFoundException("Car Owner with this id does not exist");
                 });
 
         Garage garage = garageRepository.findByGarageId(garageId)
                 .orElseThrow(() -> {
                     logger.warning("Garage with ID " + garageId + " not found.");
-                    return new RuntimeException("Garage with this id does not exist");
+                    return new ResourceNotFoundException("Garage with this id does not exist");
                 });
 
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> {
                     logger.warning("Service with ID " + serviceId + " not found.");
-                    return new RuntimeException("Service with this id does not exist");
+                    return new ResourceNotFoundException("Service with this id does not exist");
                 });
 
         SeverityCategories severityCategory = severityCategoryRepository.findById(severityId)
                 .orElseThrow(() -> {
                     logger.warning("Severity Category with ID " + severityId + " not found.");
-                    return new RuntimeException("Severity with this id does not exist");
+                    return new ResourceNotFoundException("Severity with this id does not exist");
                 });
 
         ServiceRequest request = new ServiceRequest();
@@ -110,7 +111,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
                 .orElseThrow(() -> {
                     logger.warning("Service request with ID " + requestId + " not found.");
-                    return new RuntimeException("Service with this id " + requestId + " not found");
+                    return new ResourceNotFoundException("Service with this id " + requestId + " not found");
                 });
 
         if (status != null) serviceRequest.setStatus(status);

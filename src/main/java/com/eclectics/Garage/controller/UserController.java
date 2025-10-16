@@ -69,7 +69,7 @@ public class UserController {
                     "message", "To finish registration, Please confirm your email"
             ));
 
-        } catch (RuntimeException e) {
+        } catch (BadRequestException e) {
             if ("Email is already in use".equals(e.getMessage())) {
                 throw new BadRequestException("Email is already in use");
             }

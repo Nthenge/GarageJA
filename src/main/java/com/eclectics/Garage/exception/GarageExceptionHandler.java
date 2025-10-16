@@ -54,4 +54,10 @@ public class GarageExceptionHandler {
         logger.warn("Forbidden action: {}", ex.getMessage());
         return buildResponseEntity(ex, HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(GarageExceptions.FailedToReadMultiPartFile.class)
+    public ResponseEntity<Object> handleFailedMultiPart(GarageExceptions.FailedToReadMultiPartFile ex) {
+        logger.warn("Failed to map Multipart file to byte: {}", ex.getMessage());
+        return buildResponseEntity(ex, HttpStatus.MULTIPLE_CHOICES);
+    }
 }

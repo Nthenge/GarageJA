@@ -6,6 +6,7 @@ import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.service.PaymentService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +51,7 @@ public class PaymentServiceImpl implements PaymentService {
         User user = usersRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.error("User with email '{}' not found", email);
-                    return new RuntimeException("This owner is not found");
+                    return new ResourceNotFoundException("This owner is not found");
                 });
 
         Long ownerId = user.getId();
@@ -59,7 +60,7 @@ public class PaymentServiceImpl implements PaymentService {
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> {
                     logger.error("Service with ID '{}' not found", serviceId);
-                    return new RuntimeException("This service does not exist");
+                    return new ResourceNotFoundException("This service does not exist");
                 });
 
         Double amount = service.getPrice();
@@ -159,7 +160,7 @@ public class PaymentServiceImpl implements PaymentService {
             return updatedPayment;
         }).orElseThrow(() -> {
             logger.error("Payment with ID {} not found for update", paymentId);
-            return new RuntimeException("Payment not found");
+            return new ResourceNotFoundException("Payment not found");
         });
     }
 
@@ -175,7 +176,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> {
                     logger.error("Payment with ID {} not found for deletion", paymentId);
-                    return new RuntimeException("Payment not found");
+                    return new ResourceNotFoundException("Payment not found");
                 });
         paymentRepository.delete(payment);
         logger.info("Payment with ID {} deleted successfully", paymentId);

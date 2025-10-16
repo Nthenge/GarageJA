@@ -3,6 +3,7 @@ package com.eclectics.Garage.service.impl;
 import com.eclectics.Garage.model.SeverityCategories;
 import com.eclectics.Garage.repository.SeverityCategoryRepository;
 import com.eclectics.Garage.service.SeverityCategoriesService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,7 @@ public class SeverityCategoriesServiceImpl implements SeverityCategoriesService 
                 })
                 .orElseThrow(() -> {
                     logger.error("Severity category not found: {}", severityName);
-                    return new RuntimeException("Severity category not found");
+                    return new ResourceNotFoundException("Severity category not found");
                 });
     }
 }
