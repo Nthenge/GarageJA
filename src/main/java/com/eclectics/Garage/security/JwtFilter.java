@@ -58,12 +58,17 @@ public class JwtFilter extends OncePerRequestFilter {
                         List<SimpleGrantedAuthority> authorities = List.of(authority);
 
                         if (jwtUtil.validateToken(decryptedToken, email)) {
+
+                            CustomUserDetails userDetails = new CustomUserDetails(user);
+
                             UsernamePasswordAuthenticationToken authToken =
                                     new UsernamePasswordAuthenticationToken(
-                                            user, null, authorities);
+                                            userDetails, null, userDetails.getAuthorities()
+                                    );
 
                             SecurityContextHolder.getContext().setAuthentication(authToken);
                         }
+
                     }
                 } catch (MalformedJwtException e) {
                     System.err.println("JWT validation failed after decryption: " + e.getMessage());
