@@ -178,8 +178,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updatePassword(String token, String newPassword) {
-        logger.info("Updating password for token: {}", token);
+    public void updatePassword(String token, String newPassword) {
+        logger.info("Updating password for token");
 
         String decryptedToken = TokenEncryptor.decrypt(token);
         String email = jwtUtil.extractEmailFromToken(decryptedToken);
@@ -196,7 +196,6 @@ public class UserServiceImpl implements UserService {
         usersRepository.save(user);
 
         logger.info("Password successfully updated for user: {}", email);
-        return user;
     }
 
     @Override

@@ -200,6 +200,9 @@ public class UserController {
         if (token == null || newPassword == null) {
             throw new BadRequestException("Token and new password are required");
         }
+
+        userService.updatePassword(token, newPassword);
+
         return success("Password updated successfully");
     }
 

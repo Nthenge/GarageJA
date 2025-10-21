@@ -1,6 +1,5 @@
 package com.eclectics.Garage.service;
 
-import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
 
 import java.util.List;
@@ -15,7 +14,7 @@ public interface UserService {
     User loginUser(String email, String password);
     User resetPassword(String email);
     void sendResetEmail(String email, String token);
-    User updatePassword(String token, String newPassword);
+    void updatePassword(String token, String newPassword);
     void confirmEmail(String token, String email);
     boolean confirmUser(String token);
 }
