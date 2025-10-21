@@ -3,7 +3,11 @@ spring:
     url: ${SPRING_DATASOURCE_URL} for production
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
-
+  cache:
+    type: caffeine
+    cache-names: users, allUsers, mechanics, allMechanics, mechanicsByGarage, mechanicsByUser, mechanicsByNationalId,  "garages", "allGarages", "garageById", "garageByName", "garageByUser", "carOwners", "allCarOwners", "carOwnerByUser", "carOwnerByUniqueId","allAutomobiles", "autoMobileMakes", "autoMobileYears", "autoMobileEngineTypes", "autoMobileTransmissions","allServiceCategories", "serviceCategoryByName","allSeverityCategories", "severityCategoryByName", "allServiceRequests", "requestsByGarage", "requestsByCarOwner", "requestById","allServices", "servicesByGarage", "serviceById","paymentById", "paymentsByOwner", "paymentsByService","allAssignments", "assignmentsByMechanic", "assignmentsByRequest"
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
   mail:
     host: ${MAILTRAP_HOST}
     port: ${MAILTRAP_PORT}
@@ -56,3 +60,11 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+
+alibaba:
+  cloud:
+    oss:
+      endpoint: https://oss-eu-west-1.aliyuncs.com
+      access-key-id: ${ALIBABA_ACCESS_KEY_ID}
+      access-key-secret: ${ALIBABA_ACCESS_KEY_SECRET}
+      bucket-name: jagarage
