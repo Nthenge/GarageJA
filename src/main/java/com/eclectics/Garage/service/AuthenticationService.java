@@ -33,11 +33,6 @@ public class AuthenticationService {
             throw new UnauthorizedException("User is not authenticated");
         }
 
-        if (!(auth.getPrincipal() instanceof CustomUserDetails)) {
-            logger.error("Authentication principal is not of type CustomUserDetails. Principal: {}", auth.getPrincipal());
-            throw new UnauthorizedException("User is not authenticated");
-        }
-
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         logger.debug("Authenticated user ID: {}", userDetails.getId());
 
