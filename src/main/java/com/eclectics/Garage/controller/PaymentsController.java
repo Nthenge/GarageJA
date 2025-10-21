@@ -6,6 +6,7 @@ import com.eclectics.Garage.model.PaymentMethod;
 import com.eclectics.Garage.model.PaymentStatus;
 import com.eclectics.Garage.security.CustomUserDetails;
 import com.eclectics.Garage.service.PaymentService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,7 @@ public class PaymentsController {
         return paymentService.getPaymentByPaymentId(paymentId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
     @GetMapping("/owner/{ownerId}")
     public List<Payment> ownerPayments(@PathVariable Integer ownerId){
         return paymentService.getAllPaymentsDoneByOwner(ownerId);
@@ -48,6 +50,7 @@ public class PaymentsController {
         return paymentService.getAllPaymentsByService(serviceId);
     }
 
+    @PreAuthorize("hasRole('CAR_OWNER')")
     @PutMapping("/update/{paymentId}")
     public Payment updateAPayment(
             @PathVariable Integer paymentId,
@@ -60,6 +63,7 @@ public class PaymentsController {
     }
 
 
+    @PreAuthorize("hasRole('CAR_OWNER')")
     @DeleteMapping("/delete/{paymentId}")
     public String deletePayment(@PathVariable Integer paymentId){
         return paymentService.deletePayment(paymentId);

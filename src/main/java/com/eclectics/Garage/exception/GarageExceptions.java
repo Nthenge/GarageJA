@@ -32,4 +32,10 @@ public class GarageExceptions extends RuntimeException {
           super(message);
       }
     }
+
+    public static class FailedToReadMultiPartFile extends RuntimeException{
+        public FailedToReadMultiPartFile(String message){
+            super(message);
+        }
+    }
 }

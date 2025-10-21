@@ -1,6 +1,5 @@
 package com.eclectics.Garage.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -25,7 +24,7 @@ public class ServiceRequest {
     private Service service;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private RequestStatus status;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -39,7 +38,7 @@ public class ServiceRequest {
 
     public ServiceRequest() {}
 
-    public ServiceRequest(long id, CarOwner carOwner,SeverityCategories severityCategories, Garage garage, Service service, Status status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ServiceRequest(long id, CarOwner carOwner, SeverityCategories severityCategories, Garage garage, Service service, RequestStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.carOwner = carOwner;
         this.garage = garage;
@@ -59,8 +58,8 @@ public class ServiceRequest {
     public Garage getGarage() { return garage; }
     public void setGarage(Garage garage) { this.garage = garage;}
 
-    public Status getStatus() {return status;}
-    public void setStatus(Status status) { this.status = status;}
+    public RequestStatus getStatus() {return status;}
+    public void setStatus(RequestStatus status) { this.status = status;}
 
     public LocalDateTime getCreatedAt() { return createdAt;}
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt;}

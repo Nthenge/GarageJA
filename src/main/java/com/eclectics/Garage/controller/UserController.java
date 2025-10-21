@@ -5,6 +5,7 @@ import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.security.JwtUtil;
+import com.eclectics.Garage.security.TokenEncryptor;
 import com.eclectics.Garage.service.UserService;
 
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
@@ -12,6 +13,7 @@ import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -19,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
@@ -40,6 +42,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -47,13 +50,13 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
     public ResponseEntity<List<User>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/register")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         if (user.getEmail() == null || user.getPassword() == null) {
@@ -61,16 +64,12 @@ public class UserController {
         }
 
         try {
-            User savedUser = userService.createUser(user);
-            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
-
+            userService.createUser(user);
             return ResponseEntity.ok(Map.of(
-                    "message", "User registered successfully",
-                    "token", token,
-                    "role", savedUser.getRole().name()
+                    "message", "To finish registration, Please confirm your email"
             ));
 
-        } catch (RuntimeException e) {
+        } catch (BadRequestException e) {
             if ("Email is already in use".equals(e.getMessage())) {
                 throw new BadRequestException("Email is already in use");
             }
@@ -78,7 +77,7 @@ public class UserController {
         }
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
@@ -95,7 +94,6 @@ public class UserController {
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("role", user.getRole().name());
@@ -104,6 +102,10 @@ public class UserController {
 
         if (!user.isDetailsCompleted()) {
             switch (user.getRole().name()) {
+                case "SYSTEM_ADMIN":
+                    response.put("detailsCompleted", true);
+                    break;
+
                 case "CAR_OWNER":
                     carOwnerRepository.findByUser(user).ifPresent(carOwner ->
                             response.put("missingFields", carOwner.getMissingFields())
@@ -129,6 +131,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/confirm")
     public ResponseEntity<?> confirmAccount(@RequestBody Map<String, Object> payload) {
         String token = (String) payload.get("token");
@@ -138,7 +141,14 @@ public class UserController {
             throw new UnauthorizedException("Account not enabled");
         }
 
-        boolean confirmed = userService.confirmUser(token);
+        String decryptedToken;
+        try {
+            decryptedToken = TokenEncryptor.decrypt(token);
+        } catch (Exception e) {
+            throw new ForbiddenException("Invalid token format");
+        }
+
+        boolean confirmed = userService.confirmUser(decryptedToken);
         if (confirmed) {
             return success("Account confirmed successfully!");
         } else {
@@ -146,9 +156,18 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @GetMapping("/confirm")
     public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
-        boolean confirmed = userService.confirmUser(token);
+
+        String decryptedToken;
+        try {
+            decryptedToken = TokenEncryptor.decrypt(token);
+        } catch (Exception e) {
+            throw new ForbiddenException("Invalid token format");
+        }
+
+        boolean confirmed = userService.confirmUser(decryptedToken);
         if (confirmed) {
             return success("Your account has been confirmed!");
         } else {
@@ -156,6 +175,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/reset-password")
     public ResponseEntity<?> requestResetPassword(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
@@ -171,6 +191,7 @@ public class UserController {
         return success("Password reset link sent to " + email);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PostMapping("/update-password")
     public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> payload) {
         String token = payload.get("token");
@@ -179,16 +200,20 @@ public class UserController {
         if (token == null || newPassword == null) {
             throw new BadRequestException("Token and new password are required");
         }
+
+        userService.updatePassword(token, newPassword);
+
         return success("Password updated successfully");
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @PutMapping("/update/{userId}")
     public  ResponseEntity<?>updateUser(@PathVariable Long userId, @RequestBody User user){
         userService.updateUser(userId, user);
         return success("User updated successfully");
     }
 
-
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER','MECHANIC')")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);

@@ -5,6 +5,7 @@ import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.service.MechanicService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,21 +23,23 @@ public class MechanicController {
         this.mechanicService = mechanicService;
     }
 
-    @GetMapping("/search/{nationalIdNumber}")
-    public Optional<MechanicResponseDTO> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
-        return mechanicService.getMechanicByNationalId(nationalIdNumber);
-    }
-
     private ResponseEntity<Map<String, String>> success(String message) {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+        @GetMapping("/search/{nationalIdNumber}")
+        public Optional<MechanicResponseDTO> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
+            return mechanicService.getMechanicByNationalId(nationalIdNumber);
+        }
 
-    @GetMapping()
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+        @GetMapping()
         public List<MechanicResponseDTO> getAllMechanics(){
             return mechanicService.getAllMechanics();
         }
 
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_OCTET_STREAM_VALUE})
         public ResponseEntity<String> createMechanic(
                 @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
@@ -49,6 +52,7 @@ public class MechanicController {
             return ResponseEntity.ok("Mechanic created successfully");
         }
 
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @PutMapping("/{mechanicId}")
         public ResponseEntity<MechanicResponseDTO> updateMechanic(
                 @PathVariable Long mechanicId,
@@ -62,8 +66,9 @@ public class MechanicController {
             return ResponseEntity.ok(updatedMechanic);
         }
 
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @DeleteMapping("/{MechanicId}")
-        public String deleteAGarage(@PathVariable("MechanicId") Long MechanicId){
+        public String deleteMechanic(@PathVariable("MechanicId") Long MechanicId){
             mechanicService.deleteMechanic(MechanicId);
             return "Mechanic Deleted Successfully";
         }

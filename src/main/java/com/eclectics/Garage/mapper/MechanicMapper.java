@@ -3,6 +3,8 @@ package com.eclectics.Garage.mapper;
 import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.model.Mechanic;
+import com.eclectics.Garage.exception.GarageExceptions.FailedToReadMultiPartFile;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -38,7 +40,7 @@ public interface MechanicMapper {
         try {
             return file.getBytes();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to map MultipartFile to byte[]", e);
+            throw new FailedToReadMultiPartFile("Failed to map MultipartFile to byte[]");
         }
     }
 

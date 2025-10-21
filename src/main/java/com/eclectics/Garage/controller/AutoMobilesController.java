@@ -4,13 +4,14 @@ import com.eclectics.Garage.dto.AutoMobileResponseDTO;
 import com.eclectics.Garage.dto.AutomobileRequestsDTO;
 import com.eclectics.Garage.model.AutoMobiles;
 import com.eclectics.Garage.service.AutomobilesService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/automobiles")
+@RequestMapping("/automobile")
 public class AutoMobilesController {
 
     AutomobilesService automobilesService;
@@ -43,17 +44,19 @@ public class AutoMobilesController {
                 .toList();
     }
 
-
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @PostMapping
     public AutoMobileResponseDTO createAutoMobile(@RequestBody AutomobileRequestsDTO automobileRequestsDTO){
         return automobilesService.createAutoMobile(automobileRequestsDTO);
     }
 
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @PutMapping("/{id}")
     public AutoMobileResponseDTO updateAutoMobile(@PathVariable Long id, @RequestBody AutomobileRequestsDTO autoMobiles){
         return automobilesService.updateAutoMobile(id, autoMobiles);
     }
 
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @DeleteMapping("/{id}")
     public void deleteAutoMobile(@PathVariable Long id){
         automobilesService.deleteAutoMobile(id);

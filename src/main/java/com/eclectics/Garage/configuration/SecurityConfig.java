@@ -4,7 +4,9 @@ import com.eclectics.Garage.security.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +19,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -42,16 +46,16 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers(
-                                "/users/register",
-                                "/users/login",
-                                "/users/**",
-                                "/garages/**",
-                                "/carOwners/**",
-                                "/mechanics/**",
-                                "/automobiles/make",
-                                "/automobiles/year",
-                                "/automobiles/transmission",
-                                "/automobiles/engineType"
+                                "/user/**",
+                                "/carOwner/**",
+                                "/mechanic/**",
+                                "/automobile/**",
+                                "/category/**",
+                                "/service/**",
+                                "/severity/**",
+                                "/request/**",
+                                "/payment/**",
+                                "/garage/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -64,7 +68,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://10.20.33.84:4200","http://10.20.33.60:4200", "http://192.168.1.65:4200","http://192.168.1.69:4200"));
+        configuration.setAllowedOrigins(List.of("http://10.20.33.84:4200","http://10.20.33.60:4200", "http://192.168.1.66:4200","http://192.168.1.69:4200"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
