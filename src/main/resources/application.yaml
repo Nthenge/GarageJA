@@ -45,13 +45,14 @@ spring:
 
 server:
   address: 0.0.0.0
-  port: 8083
+  port: ${PORT:8080}
   ssl:
     enabled: false
   compression:
     enabled: true
     mime-types: text/html,text/xml,text/plain,application/json
     min-response-size: 1024
+
 
 springdoc:
   api-docs:
