@@ -76,7 +76,7 @@ public class Mechanic {
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (areasofSpecialization != null && !areasofSpecialization.isBlank()) {missingFields.add("areasofSpecialization");};
+        if (areasofSpecialization == null || areasofSpecialization.isEmpty()) {missingFields.add("areasofSpecialization");};
         if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalAddress");
         if (yearsofExperience == null || yearsofExperience.isBlank()) missingFields.add("yearsofExperience");
         if (vehicleBrands == null || vehicleBrands.isBlank()) missingFields.add("vehicleBrands");
