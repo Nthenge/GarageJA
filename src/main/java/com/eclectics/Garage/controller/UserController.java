@@ -42,7 +42,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -50,7 +50,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
     public ResponseEntity<List<User>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());

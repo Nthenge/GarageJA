@@ -18,7 +18,8 @@ public class Garage {
     @Lob
     @Basic(fetch = FetchType.LAZY)
     private byte[] professionalCertificate;
-    @Lob@Basic(fetch = FetchType.LAZY)
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] facilityPhotos;
 
     @Column(unique = true, nullable = false)
