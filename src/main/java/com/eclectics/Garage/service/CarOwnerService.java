@@ -18,5 +18,6 @@ public interface CarOwnerService {
     CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId,CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException;
     String deleteCarOwner(Long id);
     Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId);
+    Optional<String> getProfilePictureUrlByUniqueId(Integer uniqueId, int expiryMinutes);
 }
 

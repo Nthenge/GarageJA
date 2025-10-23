@@ -1,9 +1,9 @@
 package com.eclectics.Garage.dto;
 
 public class GarageResponseDTO {
-    private byte[] businessLicense;
-    private byte[] professionalCertificate;
-    private byte[] facilityPhotos;
+    private String businessLicense;
+    private String professionalCertificate;
+    private String facilityPhotos;
 
     private Long garageId;
     private Long operatingHours;
@@ -24,7 +24,7 @@ public class GarageResponseDTO {
 
     public GarageResponseDTO() {}
 
-    public GarageResponseDTO(byte[] businessLicense, byte[] professionalCertificate, byte[] facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
+    public GarageResponseDTO(String businessLicense, String professionalCertificate, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
         this.businessLicense = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -43,27 +43,27 @@ public class GarageResponseDTO {
         this.mpesaTill = mpesaTill;
     }
 
-    public byte[] getBusinessLicense() {
+    public String getBusinessLicense() {
         return businessLicense;
     }
 
-    public void setBusinessLicense(byte[] businessLicense) {
+    public void setBusinessLicense(String businessLicense) {
         this.businessLicense = businessLicense;
     }
 
-    public byte[] getProfessionalCertificate() {
+    public String getProfessionalCertificate() {
         return professionalCertificate;
     }
 
-    public void setProfessionalCertificate(byte[] professionalCertificate) {
+    public void setProfessionalCertificate(String professionalCertificate) {
         this.professionalCertificate = professionalCertificate;
     }
 
-    public byte[] getFacilityPhotos() {
+    public String getFacilityPhotos() {
         return facilityPhotos;
     }
 
-    public void setFacilityPhotos(byte[] facilityPhotos) {
+    public void setFacilityPhotos(String facilityPhotos) {
         this.facilityPhotos = facilityPhotos;
     }
 

@@ -26,6 +26,10 @@ public class OSSService {
         this.ossClient = ossClient;
     }
 
+    public String getBucketName() { return bucketName;}
+
+    public String getEndpoint() { return endpoint;}
+
     public String uploadFile(String objectName, InputStream inputStream) {
         ossClient.putObject(bucketName, objectName, inputStream);
         return "https://" + bucketName + "." + endpoint.replace("https://", "") + "/" + objectName;
@@ -52,4 +56,5 @@ public class OSSService {
     public void deleteFile(String objectName) {
         ossClient.deleteObject(bucketName, objectName);
     }
+
 }

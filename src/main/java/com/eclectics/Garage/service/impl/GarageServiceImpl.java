@@ -12,6 +12,7 @@ import com.eclectics.Garage.service.GarageService;
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
+import com.eclectics.Garage.service.OSSService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @CacheConfig(cacheNames = {"garages"})
@@ -32,17 +34,26 @@ public class GarageServiceImpl implements GarageService {
     private final GarageRepository garageRepository;
     private final AuthenticationService authenticationService;
     private final GarageMapper mapper;
+    private final OSSService ossService;
 
-    public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService, GarageMapper mapper) {
+    public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService, GarageMapper mapper, OSSService ossService) {
         this.garageRepository = garageRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
+        this.ossService = ossService;
     }
 
     public ProfileCompleteDTO checkProfileCompletion(Garage garage) {
         logger.debug("Checking profile completion for garage ID: {}", garage.getGarageId());
         List<String> missingFields = garage.getMissingFields();
         return new ProfileCompleteDTO(missingFields.isEmpty(), missingFields);
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename != null && filename.lastIndexOf(".") != -1) {
+            return filename.substring(filename.lastIndexOf("."));
+        }
+        return "";
     }
 
     @Override
@@ -65,16 +76,31 @@ public class GarageServiceImpl implements GarageService {
 
         try {
             if (businessLicense != null && !businessLicense.isEmpty()) {
-                garage.setBusinessLicense(businessLicense.getBytes());
-                logger.debug("Attached business license file: {}", businessLicense.getOriginalFilename());
+                String fileExtension = getFileExtension(businessLicense.getOriginalFilename());
+                String uniqueFileName = "Garages/licences/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+
+                String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
+                garage.setBusinessLicense(fileUrl);
+
+                logger.debug("Attached business license file: {}", fileUrl);
             }
             if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
-                garage.setProfessionalCertificate(professionalCertificate.getBytes());
-                logger.debug("Attached professional certificate: {}", professionalCertificate.getOriginalFilename());
+                String fileExtension = getFileExtension(professionalCertificate.getOriginalFilename());
+                String uniqueFileName = "Garages/profCerts/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+
+                String fileUrl = ossService.uploadFile(uniqueFileName, professionalCertificate.getInputStream());
+                garage.setProfessionalCertificate(fileUrl);
+
+                logger.debug("Attached professional certificate: {}", fileUrl);
             }
             if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
-                garage.setFacilityPhotos(facilityPhotos.getBytes());
-                logger.debug("Attached facility photos: {}", facilityPhotos.getOriginalFilename());
+                String fileExtension = getFileExtension(facilityPhotos.getOriginalFilename());
+                String uniqueFileName = "Garages/photos/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+
+                String fileUrl = ossService.uploadFile(uniqueFileName, facilityPhotos.getInputStream());
+                garage.setFacilityPhotos(fileUrl);
+
+                logger.debug("Attached facility photos: {}", fileUrl);
             }
         } catch (IOException e) {
             logger.error("Failed to read uploaded files during garage creation: {}", e.getMessage());
@@ -148,6 +174,14 @@ public class GarageServiceImpl implements GarageService {
         return mapper.toResponseDTOList(garages);
     }
 
+    private String getObjectNameFromUrl(String fileUrl, String bucketName, String endpoint) {
+        String baseUrl = "https://" + bucketName + "." + endpoint.replace("https://", "") + "/";
+        if (fileUrl.startsWith(baseUrl)) {
+            return fileUrl.substring(baseUrl.length());
+        }
+        return null; // The URL format is unexpected
+    }
+
     @Override
     @CachePut(value = "garageById", key = "#garageId")
     @CacheEvict(value = {"allGarages", "garageByUser", "garageByName"}, allEntries = true)
@@ -183,16 +217,67 @@ public class GarageServiceImpl implements GarageService {
 
             try {
                 if (businessLicense != null && !businessLicense.isEmpty()) {
-                    existingGarage.setBusinessLicense(businessLicense.getBytes());
-                    logger.debug("Updated business license for garage ID {}", garageId);
+                    String oldUrl = existingGarage.getBusinessLicense();
+                    if (oldUrl != null && !oldUrl.isBlank()) {
+                        try {
+                            String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
+                            if (objectName != null) {
+                                ossService.deleteFile(objectName);
+                                logger.debug("[UPDATE] Old business license deleted from OSS: {}", objectName);
+                            }
+                        } catch (Exception e) {
+                            logger.warn("[UPDATE] Failed to delete old business license from OSS: {}", e.getMessage());
+                        }
+                    }
+                    String fileExtension = getFileExtension(businessLicense.getOriginalFilename());
+                    String uniqueFileName = "Garages/licences/" + existingGarage.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+                    String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
+                    existingGarage.setBusinessLicense(fileUrl);
+
+                    logger.debug("[UPDATE] New business license uploaded to OSS at: {}", fileUrl);
+
                 }
                 if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
-                    existingGarage.setProfessionalCertificate(professionalCertificate.getBytes());
-                    logger.debug("Updated professional certificate for garage ID {}", garageId);
+                    String oldUrl = existingGarage.getProfessionalCertificate();
+                    if (oldUrl != null && !oldUrl.isBlank()) {
+                        try {
+                            String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
+                            if (objectName != null) {
+                                ossService.deleteFile(objectName);
+                                logger.debug("[UPDATE] Old professional certificate  deleted from OSS: {}", objectName);
+                            }
+                        } catch (Exception e) {
+                            logger.warn("[UPDATE] Failed to delete old professional certificate  from OSS: {}", e.getMessage());
+                        }
+                    }
+                    String fileExtension = getFileExtension(professionalCertificate.getOriginalFilename());
+                    String uniqueFileName = "Garages/profCerts/" + existingGarage.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+                    String fileUrl = ossService.uploadFile(uniqueFileName, professionalCertificate.getInputStream());
+                    existingGarage.setProfessionalCertificate(fileUrl);
+
+                    logger.debug("[UPDATE] New professional certificate  uploaded to OSS at: {}", fileUrl);
+
                 }
                 if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
-                    existingGarage.setFacilityPhotos(facilityPhotos.getBytes());
-                    logger.debug("Updated facility photos for garage ID {}", garageId);
+                    String oldUrl = existingGarage.getFacilityPhotos();
+                    if (oldUrl != null && !oldUrl.isBlank()) {
+                        try {
+                            String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
+                            if (objectName != null) {
+                                ossService.deleteFile(objectName);
+                                logger.debug("[UPDATE] Old profile garage deleted from OSS: {}", objectName);
+                            }
+                        } catch (Exception e) {
+                            logger.warn("[UPDATE] Failed to delete old garage picture from OSS: {}", e.getMessage());
+                        }
+                    }
+                    String fileExtension = getFileExtension(facilityPhotos.getOriginalFilename());
+                    String uniqueFileName = "Garages/photos/" + existingGarage.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+                    String fileUrl = ossService.uploadFile(uniqueFileName, facilityPhotos.getInputStream());
+                    existingGarage.setFacilityPhotos(fileUrl);
+
+                    logger.debug("[UPDATE] New Garage facility picture uploaded to OSS at: {}", fileUrl);
+
                 }
             } catch (IOException e) {
                 logger.error("Failed to process uploaded files for garage update (ID {}): {}", garageId, e.getMessage());
@@ -221,5 +306,25 @@ public class GarageServiceImpl implements GarageService {
 
         garageRepository.deleteById(id);
         logger.info("Garage with ID {} deleted successfully", id);
+    }
+
+    @Override
+    public Optional<String> getGarageUrlByUniqueId(Long uniqueId, int expiryMinutes) {
+        logger.info("[OSS URL] Generating presigned URL for Garage uniqueId={}", uniqueId);
+
+        return garageRepository.findByGarageId(uniqueId)
+                .map(garage -> {
+                    String objectKey = garage.getBusinessLicense();
+
+                    if (objectKey == null || objectKey.isBlank()) {
+                        logger.warn("[OSS URL] No Business License key found for CarOwner uniqueId={}", uniqueId);
+                        return null;
+                    }
+
+                    String presignedUrl = ossService.generatePresignedUrl(objectKey, expiryMinutes);
+
+                    logger.debug("[OSS URL] Generated URL for {} will expire in {} minutes", objectKey, expiryMinutes);
+                    return presignedUrl;
+                });
     }
 }

@@ -14,16 +14,16 @@ public class MechanicRequestDTO {
     private String availability;
     private Integer nationalIdNumber;
 
-    private MultipartFile profilePic;
-    private MultipartFile nationalIDPic;
-    private MultipartFile professionalCertfificate;
-    private MultipartFile anyRelevantCertificate;
-    private MultipartFile policeClearanceCertficate;
+    private String profilePic;
+    private String nationalIDPic;
+    private String professionalCertfificate;
+    private String anyRelevantCertificate;
+    private String policeClearanceCertficate;
     private Long garageId;
 
     public MechanicRequestDTO() {}
 
-    public MechanicRequestDTO(String areasofSpecialization,Long garageId, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, Integer nationalIdNumber, MultipartFile profilePic, MultipartFile nationalIDPic, MultipartFile professionalCertfificate, MultipartFile anyRelevantCertificate, MultipartFile policeClearanceCertficate) {
+    public MechanicRequestDTO(String areasofSpecialization,Long garageId, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, Integer nationalIdNumber, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate) {
         this.areasofSpecialization = areasofSpecialization;
         this.alternativePhone = alternativePhone;
         this.physicalAddress = physicalAddress;
@@ -113,43 +113,43 @@ public class MechanicRequestDTO {
         this.availability = availability;
     }
 
-    public MultipartFile getProfilePic() {
+    public String getProfilePic() {
         return profilePic;
     }
 
-    public void setProfilePic(MultipartFile profilePic) {
+    public void setProfilePic(String profilePic) {
         this.profilePic = profilePic;
     }
 
-    public MultipartFile getNationalIDPic() {
+    public String getNationalIDPic() {
         return nationalIDPic;
     }
 
-    public void setNationalIDPic(MultipartFile nationalIDPic) {
+    public void setNationalIDPic(String nationalIDPic) {
         this.nationalIDPic = nationalIDPic;
     }
 
-    public MultipartFile getProfessionalCertfificate() {
+    public String getProfessionalCertfificate() {
         return professionalCertfificate;
     }
 
-    public void setProfessionalCertfificate(MultipartFile professionalCertfificate) {
+    public void setProfessionalCertfificate(String professionalCertfificate) {
         this.professionalCertfificate = professionalCertfificate;
     }
 
-    public MultipartFile getAnyRelevantCertificate() {
+    public String getAnyRelevantCertificate() {
         return anyRelevantCertificate;
     }
 
-    public void setAnyRelevantCertificate(MultipartFile anyRelevantCertificate) {
+    public void setAnyRelevantCertificate(String anyRelevantCertificate) {
         this.anyRelevantCertificate = anyRelevantCertificate;
     }
 
-    public MultipartFile getPoliceClearanceCertficate() {
+    public String getPoliceClearanceCertficate() {
         return policeClearanceCertficate;
     }
 
-    public void setPoliceClearanceCertficate(MultipartFile policeClearanceCertficate) {
+    public void setPoliceClearanceCertficate(String policeClearanceCertficate) {
         this.policeClearanceCertficate = policeClearanceCertficate;
     }
 

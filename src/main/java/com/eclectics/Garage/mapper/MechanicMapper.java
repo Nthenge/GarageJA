@@ -32,19 +32,4 @@ public interface MechanicMapper {
     MechanicResponseDTO toResponseDTO(Mechanic entity);
     List<MechanicResponseDTO> toResponseDTOList(List<Mechanic> mechanics);
     void updateEntityFromDTO(MechanicRequestDTO dto, @MappingTarget Mechanic entity);
-
-    default byte[] map(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
-        try {
-            return file.getBytes();
-        } catch (IOException e) {
-            throw new FailedToReadMultiPartFile("Failed to map MultipartFile to byte[]");
-        }
-    }
-
-    default MultipartFile map(byte[] bytes) {
-        return null;
-    }
 }

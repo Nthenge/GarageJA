@@ -13,14 +13,11 @@ public class Garage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Lob
-    @Basic(fetch = FetchType.LAZY)
-    private byte[] businessLicense;
+    private String businessLicense;
     @Lob
-    @Basic(fetch = FetchType.LAZY)
-    private byte[] professionalCertificate;
+    private String professionalCertificate;
     @Lob
-    @Basic(fetch = FetchType.LAZY)
-    private byte[] facilityPhotos;
+    private String facilityPhotos;
 
     @Column(unique = true, nullable = false)
     private Long garageId;
@@ -51,7 +48,7 @@ public class Garage {
     @JsonBackReference
     private User user;
 
-    public Garage(Integer mpesaTill, Integer mpesaPayBill, User user, String businessPhoneNumber, String physicalBusinessAddress, String businessName, String specialisedServices, String serviceCategories, String twentyFourHours, Long operatingHours, Integer yearsInOperation, String businessEmailAddress, String businessRegNumber, Long garageId, byte[] facilityPhotos, byte[] professionalCertificate, byte[] businessLicense, Long id) {
+    public Garage(Integer mpesaTill, Integer mpesaPayBill, User user, String businessPhoneNumber, String physicalBusinessAddress, String businessName, String specialisedServices, String serviceCategories, String twentyFourHours, Long operatingHours, Integer yearsInOperation, String businessEmailAddress, String businessRegNumber, Long garageId, String facilityPhotos, String professionalCertificate, String businessLicense, Long id) {
         this.mpesaTill = mpesaTill;
         this.mpesaPayBill = mpesaPayBill;
         this.businessPhoneNumber = businessPhoneNumber;
@@ -81,6 +78,9 @@ public class Garage {
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
+        if (businessLicense == null || businessLicense.isEmpty()) missingFields.add("businessLicense");
+        if (professionalCertificate == null || professionalCertificate.isEmpty()) missingFields.add("professionalCertificate");
+        if (facilityPhotos == null || facilityPhotos.isEmpty()) missingFields.add("facilityPhotos");
         if (operatingHours == null) missingFields.add("operatingHours");
         if (businessRegNumber == null || businessRegNumber.isBlank()) missingFields.add("businessRegNumber");
         if (businessEmailAddress == null || businessEmailAddress.isBlank()) missingFields.add("businessEmailAddress");
@@ -99,14 +99,14 @@ public class Garage {
     public Long getId() { return id;}
     public void setId(Long id) { this.id = id;}
 
-    public byte[] getBusinessLicense() { return businessLicense;}
-    public void setBusinessLicense(byte[] businessLicense) { this.businessLicense = businessLicense;}
+    public String getBusinessLicense() { return businessLicense;}
+    public void setBusinessLicense(String businessLicense) { this.businessLicense = businessLicense;}
 
-    public byte[] getProfessionalCertificate() { return professionalCertificate;}
-    public void setProfessionalCertificate(byte[] professionalCertificate) {this.professionalCertificate = professionalCertificate;}
+    public String getProfessionalCertificate() { return professionalCertificate;}
+    public void setProfessionalCertificate(String professionalCertificate) {this.professionalCertificate = professionalCertificate;}
 
-    public byte[] getFacilityPhotos() { return facilityPhotos;}
-    public void setFacilityPhotos(byte[] facilityPhotos) {this.facilityPhotos = facilityPhotos;}
+    public String getFacilityPhotos() { return facilityPhotos;}
+    public void setFacilityPhotos(String facilityPhotos) {this.facilityPhotos = facilityPhotos;}
 
     public Long getGarageId() { return garageId;}
     public void setGarageId(Long garageId) { this.garageId = garageId;}

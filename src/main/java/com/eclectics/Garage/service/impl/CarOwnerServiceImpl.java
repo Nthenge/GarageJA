@@ -9,6 +9,7 @@ import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
+import com.eclectics.Garage.service.OSSService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @CacheConfig(cacheNames = {"carOwners"})
@@ -29,11 +31,13 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     private final CarOwnerRepository carOwnerRepository;
     private final AuthenticationService authenticationService;
     private final CarOwnerMapper mapper;
+    private final OSSService ossService;
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService, CarOwnerMapper mapper) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService, CarOwnerMapper mapper, OSSService ossService) {
         this.carOwnerRepository = carOwnerRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
+        this.ossService = ossService;
     }
 
     public ProfileCompleteDTO checkProfileCompletion(CarOwner carOwner) {
@@ -41,6 +45,13 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         boolean isComplete = missingFields.isEmpty();
         logger.info("[PROFILE CHECK] CarOwner ID={} → complete={}", carOwner.getId(), isComplete);
         return new ProfileCompleteDTO(isComplete, missingFields);
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename != null && filename.lastIndexOf(".") != -1) {
+            return filename.substring(filename.lastIndexOf("."));
+        }
+        return "";
     }
 
     @Override
@@ -62,8 +73,13 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         } while (uniqueCarOwnerExists);
 
         if (profilePic != null && !profilePic.isEmpty()) {
-            carOwner.setProfilePic(profilePic.getBytes());
-            logger.debug("[CREATE] Profile picture uploaded for user={}", user.getEmail());
+            String fileExtension = getFileExtension(profilePic.getOriginalFilename());
+            String uniqueFileName = "car-owner-profiles/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+
+            String fileUrl = ossService.uploadFile(uniqueFileName, profilePic.getInputStream());
+            carOwner.setProfilePic(fileUrl);
+
+            logger.debug("[CREATE] Profile picture uploaded to OSS at: {}", fileUrl);
         }
 
         carOwner.setUniqueId(uniqueCarOwnerId);
@@ -99,6 +115,14 @@ public class CarOwnerServiceImpl implements CarOwnerService {
                 .toList();
     }
 
+    private String getObjectNameFromUrl(String fileUrl, String bucketName, String endpoint) {
+        String baseUrl = "https://" + bucketName + "." + endpoint.replace("https://", "") + "/";
+        if (fileUrl.startsWith(baseUrl)) {
+            return fileUrl.substring(baseUrl.length());
+        }
+        return null; // The URL format is unexpected
+    }
+
     @Override
     @CachePut(value = "carOwnerByUniqueId", key = "#carOwnerUniqueId")
     @CacheEvict(value = {"allCarOwners", "carOwnerByUser"}, allEntries = true)
@@ -117,8 +141,25 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             if (carOwnerRequestsDTO.getMake() != null) logger.debug("[UPDATE] make={}", carOwnerRequestsDTO.getMake());
 
             if (profilePic != null && !profilePic.isEmpty()) {
-                eco.setProfilePic(profilePic.getBytes());
-                logger.debug("[UPDATE] Profile picture updated for carOwnerUniqueId={}", carOwnerUniqueId);
+                String oldUrl = eco.getProfilePic();
+                if (oldUrl != null && !oldUrl.isBlank()) {
+                    try {
+                        String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
+                        if (objectName != null) {
+                            ossService.deleteFile(objectName);
+                            logger.debug("[UPDATE] Old profile picture deleted from OSS: {}", objectName);
+                        }
+                    } catch (Exception e) {
+                        logger.warn("[UPDATE] Failed to delete old profile picture from OSS: {}", e.getMessage());
+                    }
+                }
+                String fileExtension = getFileExtension(profilePic.getOriginalFilename());
+                String uniqueFileName = "car-owner-profiles/" + eco.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
+                String fileUrl = ossService.uploadFile(uniqueFileName, profilePic.getInputStream());
+                eco.setProfilePic(fileUrl);
+
+                logger.debug("[UPDATE] New profile picture uploaded to OSS at: {}", fileUrl);
+
             }
 
             CarOwner updatedCarOwner = carOwnerRepository.save(eco);
@@ -151,5 +192,25 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId) {
         logger.info("[FETCH] Fetching CarOwner by uniqueId={}", uniqueId);
         return carOwnerRepository.findByUniqueId(uniqueId).map(mapper::toDto);
+    }
+
+    @Override
+    public Optional<String> getProfilePictureUrlByUniqueId(Integer uniqueId, int expiryMinutes) {
+        logger.info("[OSS URL] Generating presigned URL for CarOwner uniqueId={}", uniqueId);
+
+        return carOwnerRepository.findByUniqueId(uniqueId)
+                .map(carOwner -> {
+                    String objectKey = carOwner.getProfilePic();
+
+                    if (objectKey == null || objectKey.isBlank()) {
+                        logger.warn("[OSS URL] No profile picture key found for CarOwner uniqueId={}", uniqueId);
+                        return null;
+                    }
+
+                    String presignedUrl = ossService.generatePresignedUrl(objectKey, expiryMinutes);
+
+                    logger.debug("[OSS URL] Generated URL for {} will expire in {} minutes", objectKey, expiryMinutes);
+                    return presignedUrl;
+                });
     }
 }

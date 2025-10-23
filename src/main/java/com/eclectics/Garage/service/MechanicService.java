@@ -18,4 +18,5 @@ public interface MechanicService {
     List<MechanicResponseDTO> getMechanicsByGarageId(Long garageId);
     MechanicResponseDTO updateMechanic(Long id, MechanicRequestDTO mechanic,MultipartFile profilePic, MultipartFile nationalIDPic, MultipartFile professionalCertfificate, MultipartFile anyRelevantCertificate, MultipartFile policeClearanceCertficate);
     String deleteMechanic(Long id);
+    Optional<String> getMechanicFilesUrlByNationalId(Integer nationalId, int expiryMinutes);
 }

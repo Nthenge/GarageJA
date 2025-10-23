@@ -14,11 +14,11 @@ public class CarOwnerRequestsDTO {
     private String color;
     private String transmission;
     private String severity;
-    private MultipartFile profilePic;
+    private String profilePic;
 
     public CarOwnerRequestsDTO() {}
 
-    public CarOwnerRequestsDTO(String altPhone, String make, String model, String year,MultipartFile profilePic, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
+    public CarOwnerRequestsDTO(String altPhone, String make, String model, String year,String profilePic, String licensePlate, String engineType, String engineCapacity, String color, String transmission, String severity) {
         this.altPhone = altPhone;
         this.make = make;
         this.model = model;
@@ -102,6 +102,6 @@ public class CarOwnerRequestsDTO {
         this.severity = severity;
     }
 
-    public MultipartFile getProfilePic() {return profilePic;}
-    public void setProfilePic(MultipartFile profilePic) {this.profilePic = profilePic;}
+    public String getProfilePic() {return profilePic;}
+    public void setProfilePic(String profilePic) {this.profilePic = profilePic;}
 }

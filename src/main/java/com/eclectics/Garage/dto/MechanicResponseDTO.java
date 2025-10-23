@@ -15,16 +15,16 @@ public class MechanicResponseDTO {
     private String vehicleBrands;
     private String availability;
     private Integer nationalIdNumber;
-    private byte[] profilePic;
-    private byte[] nationalIDPic;
-    private byte[] professionalCertfificate;
-    private byte[] anyRelevantCertificate;
-    private byte[] policeClearanceCertficate;
+    private String profilePic;
+    private String nationalIDPic;
+    private String professionalCertfificate;
+    private String anyRelevantCertificate;
+    private String policeClearanceCertficate;
     private Garage garage;
 
     public MechanicResponseDTO() {}
 
-    public MechanicResponseDTO(Long id, String areasofSpecialization, String emergencyContactNumber,Garage garage, Integer nationalIdNumber, byte[] profilePic,byte[] nationalIDPic,byte[] professionalCertfificate, byte[] anyRelevantCertificate, byte[] policeClearanceCertficate, String availability, String vehicleBrands, String yearsofExperience, String emergencyContactName, String physicalAddress, String alternativePhone) {
+    public MechanicResponseDTO(Long id, String areasofSpecialization, String emergencyContactNumber,Garage garage, Integer nationalIdNumber, String profilePic,String nationalIDPic,String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate, String availability, String vehicleBrands, String yearsofExperience, String emergencyContactName, String physicalAddress, String alternativePhone) {
         this.id = id;
         this.areasofSpecialization = areasofSpecialization;
         this.emergencyContactNumber = emergencyContactNumber;
@@ -115,11 +115,11 @@ public class MechanicResponseDTO {
         this.vehicleBrands = vehicleBrands;
     }
 
-    public byte[] getProfilePic() {
+    public String getProfilePic() {
         return profilePic;
     }
 
-    public void setProfilePic(byte[] profilePic) {
+    public void setProfilePic(String profilePic) {
         this.profilePic = profilePic;
     }
 
@@ -131,35 +131,35 @@ public class MechanicResponseDTO {
         this.nationalIdNumber = nationalIdNumber;
     }
 
-    public byte[] getNationalIDPic() {
+    public String getNationalIDPic() {
         return nationalIDPic;
     }
 
-    public void setNationalIDPic(byte[] nationalIDPic) {
+    public void setNationalIDPic(String nationalIDPic) {
         this.nationalIDPic = nationalIDPic;
     }
 
-    public byte[] getProfessionalCertfificate() {
+    public String getProfessionalCertfificate() {
         return professionalCertfificate;
     }
 
-    public void setProfessionalCertfificate(byte[] professionalCertfificate) {
+    public void setProfessionalCertfificate(String professionalCertfificate) {
         this.professionalCertfificate = professionalCertfificate;
     }
 
-    public byte[] getAnyRelevantCertificate() {
+    public String getAnyRelevantCertificate() {
         return anyRelevantCertificate;
     }
 
-    public void setAnyRelevantCertificate(byte[] anyRelevantCertificate) {
+    public void setAnyRelevantCertificate(String anyRelevantCertificate) {
         this.anyRelevantCertificate = anyRelevantCertificate;
     }
 
-    public byte[] getPoliceClearanceCertficate() {
+    public String getPoliceClearanceCertficate() {
         return policeClearanceCertficate;
     }
 
-    public void setPoliceClearanceCertficate(byte[] policeClearanceCertficate) {
+    public void setPoliceClearanceCertficate(String policeClearanceCertficate) {
         this.policeClearanceCertficate = policeClearanceCertficate;
     }
 
