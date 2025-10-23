@@ -22,7 +22,7 @@ public class GarageController {
         this.garageService = garageService;
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
     @GetMapping("/search/{garageId}")
     public ResponseEntity<GarageResponseDTO> getGarageById(@PathVariable Long garageId){
         Optional<GarageResponseDTO> garage = garageService.getGarageById(garageId);
@@ -33,13 +33,13 @@ public class GarageController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN','CAR_OWNER')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN','CAR_OWNER')")
     @GetMapping()
     public List<GarageResponseDTO> getAllGarages(){
         return garageService.getAllGarages();
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public String createGarage(
             @RequestPart("garage") GarageRequestsDTO garageRequestsDTO,
@@ -54,7 +54,7 @@ public class GarageController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @PutMapping("/{garageId}")
     public String updateGarage(
             @PathVariable Long garageId,
@@ -66,7 +66,7 @@ public class GarageController {
         return "Garage updated successfully";
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @DeleteMapping("/{garageId}")
     public String deleteAGarage(@PathVariable("garageId") Long garageId){
         garageService.deleteGarage(garageId);

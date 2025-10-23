@@ -13,10 +13,13 @@ public class Garage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] businessLicense;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] professionalCertificate;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] facilityPhotos;
 
     @Column(unique = true, nullable = false)
@@ -78,9 +81,6 @@ public class Garage {
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (businessLicense == null || businessLicense.length == 0) missingFields.add("businessLicense");
-        if (professionalCertificate == null || professionalCertificate.length == 0) missingFields.add("professionalCertificate");
-        if (facilityPhotos == null || facilityPhotos.length == 0) missingFields.add("facilityPhotos");
         if (operatingHours == null) missingFields.add("operatingHours");
         if (businessRegNumber == null || businessRegNumber.isBlank()) missingFields.add("businessRegNumber");
         if (businessEmailAddress == null || businessEmailAddress.isBlank()) missingFields.add("businessEmailAddress");

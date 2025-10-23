@@ -23,14 +23,19 @@ public class Mechanic {
     private String availability;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] profilePic;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] nationalIDPic;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] professionalCertfificate;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] anyRelevantCertificate;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] policeClearanceCertficate;
 
     @Column(unique = true)
@@ -76,13 +81,11 @@ public class Mechanic {
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (areasofSpecialization != null && !areasofSpecialization.isBlank()) {missingFields.add("areasofSpecialization");};
+        if (areasofSpecialization == null || areasofSpecialization.isBlank()) {missingFields.add("areasofSpecialization");};
         if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalAddress");
         if (yearsofExperience == null || yearsofExperience.isBlank()) missingFields.add("yearsofExperience");
         if (vehicleBrands == null || vehicleBrands.isBlank()) missingFields.add("vehicleBrands");
         if (availability == null || availability.isBlank()) missingFields.add("availability");
-        if (professionalCertfificate == null || professionalCertfificate.length == 0) missingFields.add("professionalCertfificate");
-        if (policeClearanceCertficate == null || policeClearanceCertficate.length == 0) missingFields.add("policeClearanceCertficate");
         if (nationalIdNumber == null) missingFields.add("nationalIdNumber");
 //        if (garage == null) missingFields.add("garage"); return it to be a must
 
