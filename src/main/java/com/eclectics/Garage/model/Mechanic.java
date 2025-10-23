@@ -81,8 +81,8 @@ public class Mechanic {
         if (yearsofExperience == null || yearsofExperience.isBlank()) missingFields.add("yearsofExperience");
         if (vehicleBrands == null || vehicleBrands.isBlank()) missingFields.add("vehicleBrands");
         if (availability == null || availability.isBlank()) missingFields.add("availability");
-        if (professionalCertfificate == null || professionalCertfificate.length == 0) missingFields.add("professionalCertfificate");
-        if (policeClearanceCertficate == null || policeClearanceCertficate.length == 0) missingFields.add("policeClearanceCertficate");
+//        if (professionalCertfificate == null || professionalCertfificate.length == 0) missingFields.add("professionalCertfificate");
+//        if (policeClearanceCertficate == null || policeClearanceCertficate.length == 0) missingFields.add("policeClearanceCertficate");
         if (nationalIdNumber == null) missingFields.add("nationalIdNumber");
 //        if (garage == null) missingFields.add("garage"); return it to be a must
 
