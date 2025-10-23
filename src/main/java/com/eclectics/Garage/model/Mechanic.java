@@ -23,14 +23,19 @@ public class Mechanic {
     private String availability;
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] profilePic;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] nationalIDPic;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] professionalCertfificate;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] anyRelevantCertificate;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] policeClearanceCertficate;
 
     @Column(unique = true)

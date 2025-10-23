@@ -13,10 +13,12 @@ public class Garage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] businessLicense;
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     private byte[] professionalCertificate;
-    @Lob
+    @Lob@Basic(fetch = FetchType.LAZY)
     private byte[] facilityPhotos;
 
     @Column(unique = true, nullable = false)
