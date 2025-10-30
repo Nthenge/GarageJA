@@ -124,16 +124,12 @@
 
         @Transient
         public boolean isDetailsCompleted() {
-            switch (this.role) {
-                case MECHANIC:
-                    return mechanic != null && mechanic.isComplete();
-                case CAR_OWNER:
-                    return carOwner != null && carOwner.isComplete();
-                case GARAGE_ADMIN:
-                    return garage != null && garage.isComplete();
-                default:
-                    return false;
-            }
+            return switch (this.role) {
+                case MECHANIC -> mechanic != null && mechanic.isComplete();
+                case CAR_OWNER -> carOwner != null && carOwner.isComplete();
+                case GARAGE_ADMIN -> garage != null && garage.isComplete();
+                default -> false;
+            };
         }
     }
 

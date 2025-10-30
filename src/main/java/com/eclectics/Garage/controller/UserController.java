@@ -1,22 +1,15 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.model.User;
-import com.eclectics.Garage.repository.CarOwnerRepository;
-import com.eclectics.Garage.repository.GarageRepository;
-import com.eclectics.Garage.repository.MechanicRepository;
-import com.eclectics.Garage.security.JwtUtil;
-import com.eclectics.Garage.security.TokenEncryptor;
 import com.eclectics.Garage.service.UserService;
 
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
-import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,24 +18,16 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
-    private final CarOwnerRepository carOwnerRepository;
-    private final GarageRepository garageRepository;
-    private final MechanicRepository mechanicRepository;
 
-    public UserController(UserService userService, JwtUtil jwtUtil, CarOwnerRepository carOwnerRepository, GarageRepository garageRepository, MechanicRepository mechanicRepository) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.jwtUtil = jwtUtil;
-        this.carOwnerRepository = carOwnerRepository;
-        this.garageRepository = garageRepository;
-        this.mechanicRepository = mechanicRepository;
     }
 
     private ResponseEntity<Map<String, String>> success(String message) {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
+    //    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -50,14 +35,14 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+    //    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
-    public ResponseEntity<List<User>> getAllUsers(){
+    public ResponseEntity<List<UserRegistrationResponseDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(@RequestBody UserRegistrationRequestDTO user) {
         if (user.getEmail() == null || user.getPassword() == null) {
             throw new BadRequestException("Email and password are required");
         }
@@ -69,83 +54,29 @@ public class UserController {
             ));
 
         } catch (BadRequestException e) {
-            if ("Email is already in use".equals(e.getMessage())) {
-                throw new BadRequestException("Email is already in use");
-            }
-            throw new BadRequestException("Unable to register user: " + e.getMessage());
+            throw new BadRequestException(e.getMessage());
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
-        String password = payload.get("password");
-
-        if (email == null || password == null) {
+    public ResponseEntity<UserDetailsAuthDTO> login(@RequestBody UserLoginRequestDTO requestDTO) {
+        if (requestDTO.getEmail() == null || requestDTO.getPassword() == null) {
             throw new BadRequestException("Email and password are required");
         }
-
-        User user = userService.loginUser(email, password);
-
-        if (!user.isEnabled()) {
-            throw new UnauthorizedException("Please verify your email before logging in.");
-        }
-
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("role", user.getRole().name());
-        response.put("firstname", user.getFirstname());
-        response.put("detailsCompleted", user.isDetailsCompleted());
-
-        if (!user.isDetailsCompleted()) {
-            switch (user.getRole().name()) {
-                case "SYSTEM_ADMIN":
-                    response.put("detailsCompleted", true);
-                    break;
-
-                case "CAR_OWNER":
-                    carOwnerRepository.findByUser(user).ifPresent(carOwner ->
-                            response.put("missingFields", carOwner.getMissingFields())
-                    );
-                    break;
-
-                case "GARAGE_ADMIN":
-                    garageRepository.findByUser(user).ifPresent(garage ->
-                            response.put("missingFields", garage.getMissingFields())
-                    );
-                    break;
-
-                case "MECHANIC":
-                    mechanicRepository.findByUser(user).ifPresent(mechanic ->
-                            response.put("missingFields", mechanic.getMissingFields())
-                    );
-                    break;
-
-                default:
-                    response.put("missingFields", List.of("Unknown role – cannot determine missing fields"));
-            }
-        }
-        return ResponseEntity.ok(response);
+        UserDetailsAuthDTO responseDTO = (UserDetailsAuthDTO) userService.loginUser(requestDTO);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/confirm")
     public ResponseEntity<?> confirmAccount(@RequestBody Map<String, Object> payload) {
         String token = (String) payload.get("token");
-        boolean enabled = payload.get("enabled") != null && (boolean) payload.get("enabled");
 
-        if (!enabled) {
-            throw new UnauthorizedException("Account not enabled");
+        if (token == null) {
+            throw new BadRequestException("Token is required");
         }
 
-        String decryptedToken;
-        try {
-            decryptedToken = TokenEncryptor.decrypt(token);
-        } catch (Exception e) {
-            throw new ForbiddenException("Invalid token format");
-        }
+        boolean confirmed = userService.confirmUser(token);
 
-        boolean confirmed = userService.confirmUser(decryptedToken);
         if (confirmed) {
             return success("Account confirmed successfully!");
         } else {
@@ -156,14 +87,8 @@ public class UserController {
     @GetMapping("/confirm")
     public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
 
-        String decryptedToken;
-        try {
-            decryptedToken = TokenEncryptor.decrypt(token);
-        } catch (Exception e) {
-            throw new ForbiddenException("Invalid token format");
-        }
+        boolean confirmed = userService.confirmUser(token);
 
-        boolean confirmed = userService.confirmUser(decryptedToken);
         if (confirmed) {
             return success("Your account has been confirmed!");
         } else {
@@ -172,30 +97,24 @@ public class UserController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> requestResetPassword(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
+    public ResponseEntity<UserPasswordResetResponseDTO> requestResetPassword(
+            @RequestBody UserPasswordResetRequestDTO requestDTO) {
 
-        if (email == null || email.isEmpty()) {
+        if (requestDTO.getEmail() == null || requestDTO.getEmail().isEmpty()) {
             throw new BadRequestException("Email is required");
         }
 
-        User user = userService.resetPassword(email);
-        String resetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
-        userService.sendResetEmail(user.getEmail(), resetToken);
-
-        return success("Password reset link sent to " + email);
+        UserPasswordResetResponseDTO responseDTO = userService.resetPassword(requestDTO);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/update-password")
-    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> payload) {
-        String token = payload.get("token");
-        String newPassword = payload.get("newPassword");
+    public ResponseEntity<?> updatePassword(@RequestBody UserPasswordUpdateDTO updateDTO) {
 
-        if (token == null || newPassword == null) {
-            throw new BadRequestException("Token and new password are required");
+        if (updateDTO.getToken() == null || updateDTO.getNewPassword() == null) {
+            throw new BadRequestException("Token, and new password are required");
         }
-
-        userService.updatePassword(token, newPassword);
+        userService.updatePassword(updateDTO);
 
         return success("Password updated successfully");
     }

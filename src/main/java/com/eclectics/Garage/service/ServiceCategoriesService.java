@@ -1,12 +1,14 @@
 package com.eclectics.Garage.service;
 
+import com.eclectics.Garage.dto.ServiceCategoriesResponseDTO;
+import com.eclectics.Garage.dto.ServiceCategoriestRequestDTO;
 import com.eclectics.Garage.model.ServiceCategories;
 
 import java.util.List;
 
 public interface ServiceCategoriesService {
-    ServiceCategories createCategory(ServiceCategories serviceCategories);
-    List<ServiceCategories> getAllServiceCategories();
-    ServiceCategories getServiceCategoryByName(String getServiceCategoryByName);
+    ServiceCategories createCategory(ServiceCategoriestRequestDTO serviceCategoriestRequestDTO);
+    List<ServiceCategoriesResponseDTO> getAllServiceCategories();
+    ServiceCategoriesResponseDTO getServiceCategoryByName(String getServiceCategoryByName);
     void delete(Long id);
 }

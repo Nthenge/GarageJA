@@ -1,5 +1,7 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.PaymentsResponseDTO;
+import com.eclectics.Garage.mapper.PaymentsMapper;
 import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.PaymentRepository;
 import com.eclectics.Garage.repository.ServiceRepository;
@@ -27,15 +29,17 @@ public class PaymentServiceImpl implements PaymentService {
     private final UsersRepository usersRepository;
     private final ServiceRepository serviceRepository;
     private final JwtUtil jwtUtil;
+    private final PaymentsMapper mapper;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               UsersRepository usersRepository,
                               ServiceRepository serviceRepository,
-                              JwtUtil jwtUtil) {
+                              JwtUtil jwtUtil, PaymentsMapper mapper) {
         this.paymentRepository = paymentRepository;
         this.usersRepository = usersRepository;
         this.serviceRepository = serviceRepository;
         this.jwtUtil = jwtUtil;
+        this.mapper = mapper;
     }
 
     @Transactional
@@ -45,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
             @CacheEvict(value = "paymentsByService", allEntries = true),
             @CacheEvict(value = "paymentById", allEntries = true)
     })
-    public Payment initiatePayment(String email, Long serviceId) {
+    public PaymentsResponseDTO initiatePayment(String email, Long serviceId) {
         logger.info("Initiating payment for user email: {} and service ID: {}", email, serviceId);
 
         User user = usersRepository.findByEmail(email)
@@ -94,13 +98,13 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
         logger.info("Payment initiated successfully with Payment ID: {}", savedPayment.getPaymentId());
-        return savedPayment;
+        return mapper.toResponseDTO(savedPayment);
     }
 
     @Transactional(readOnly = true)
     @Override
     @Cacheable(value = "paymentById", key = "#paymentId")
-    public Optional<Payment> getPaymentByPaymentId(Integer paymentId) {
+    public Optional<PaymentsResponseDTO> getPaymentByPaymentId(Integer paymentId) {
         logger.info("Fetching payment by payment ID: {}", paymentId);
         Optional<Payment> payment = paymentRepository.findByPaymentId(paymentId);
         if (payment.isPresent()) {
@@ -108,27 +112,27 @@ public class PaymentServiceImpl implements PaymentService {
         } else {
             logger.warn("No payment found for ID: {}", paymentId);
         }
-        return payment;
+        return mapper.toOptionalResponse(payment);
     }
 
     @Transactional(readOnly = true)
     @Override
     @Cacheable(value = "paymentsByOwner", key = "#ownerId")
-    public List<Payment> getAllPaymentsDoneByOwner(Integer ownerId) {
+    public List<PaymentsResponseDTO> getAllPaymentsDoneByOwner(Integer ownerId) {
         logger.info("Fetching all payments made by owner ID: {}", ownerId);
         List<Payment> payments = paymentRepository.findAllByOwnerId(ownerId);
         logger.debug("Total payments found for owner {}: {}", ownerId, payments.size());
-        return payments;
+        return mapper.toResponseDTOList(payments);
     }
 
     @Transactional(readOnly = true)
     @Override
     @Cacheable(value = "paymentsByService", key = "#serviceId")
-    public List<Payment> getAllPaymentsByService(Long serviceId) {
+    public List<PaymentsResponseDTO> getAllPaymentsByService(Long serviceId) {
         logger.info("Fetching all payments for service ID: {}", serviceId);
         List<Payment> payments = paymentRepository.findAllByServiceId(serviceId);
         logger.debug("Total payments found for service {}: {}", serviceId, payments.size());
-        return payments;
+        return mapper.toResponseDTOList(payments);
     }
 
     @Transactional
@@ -138,7 +142,7 @@ public class PaymentServiceImpl implements PaymentService {
             @CacheEvict(value = "paymentsByService", allEntries = true),
             @CacheEvict(value = "paymentById", key = "#paymentId")
     })
-    public Payment updatePayment(
+    public PaymentsResponseDTO updatePayment(
             Integer paymentId,
             PaymentStatus paymentStatus,
             String transactionRef,
@@ -157,7 +161,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             Payment updatedPayment = paymentRepository.save(existingPayment);
             logger.info("Payment with ID {} updated successfully", paymentId);
-            return updatedPayment;
+            return mapper.toResponseDTO(updatedPayment);
         }).orElseThrow(() -> {
             logger.error("Payment with ID {} not found for update", paymentId);
             return new ResourceNotFoundException("Payment not found");
@@ -171,7 +175,7 @@ public class PaymentServiceImpl implements PaymentService {
             @CacheEvict(value = "paymentsByService", allEntries = true),
             @CacheEvict(value = "paymentById", key = "#paymentId")
     })
-    public String deletePayment(Integer paymentId) {
+    public void deletePayment(Integer paymentId) {
         logger.warn("Deleting payment with ID: {}", paymentId);
         Payment payment = paymentRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> {
@@ -180,6 +184,5 @@ public class PaymentServiceImpl implements PaymentService {
                 });
         paymentRepository.delete(payment);
         logger.info("Payment with ID {} deleted successfully", paymentId);
-        return "Payment deleted";
     }
 }

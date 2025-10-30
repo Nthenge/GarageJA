@@ -1,5 +1,6 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.dto.PaymentsResponseDTO;
 import com.eclectics.Garage.model.Payment;
 import com.eclectics.Garage.model.PaymentCurrency;
 import com.eclectics.Garage.model.PaymentMethod;
@@ -24,35 +25,35 @@ public class PaymentsController {
     }
 
     @PostMapping(value = "/initiate")
-    public Payment initiatePayment(
+    public PaymentsResponseDTO initiatePayment(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long serviceId,
             @RequestParam(required = false)PaymentCurrency paymentCurrency,
             @RequestParam(required = false)PaymentMethod paymentMethod
             ){
-        Payment payment = paymentService.initiatePayment(customUserDetails.getUsername(), serviceId);
+        PaymentsResponseDTO payment = paymentService.initiatePayment(customUserDetails.getUsername(), serviceId);
         return payment;
     }
 
     @GetMapping("/payment/{paymentId}")
-    public Optional<Payment> paymentByPaymentId(@PathVariable Integer paymentId){
+    public Optional<PaymentsResponseDTO> paymentByPaymentId(@PathVariable Integer paymentId){
         return paymentService.getPaymentByPaymentId(paymentId);
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
+//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
     @GetMapping("/owner/{ownerId}")
-    public List<Payment> ownerPayments(@PathVariable Integer ownerId){
+    public List<PaymentsResponseDTO> ownerPayments(@PathVariable Integer ownerId){
         return paymentService.getAllPaymentsDoneByOwner(ownerId);
     }
 
     @GetMapping("/service/{ownerId}")
-    public List<Payment> allServicePayments(@PathVariable Long serviceId){
+    public List<PaymentsResponseDTO> allServicePayments(@PathVariable Long serviceId){
         return paymentService.getAllPaymentsByService(serviceId);
     }
 
-    @PreAuthorize("hasRole('CAR_OWNER')")
+//    @PreAuthorize("hasRole('CAR_OWNER')")
     @PutMapping("/update/{paymentId}")
-    public Payment updateAPayment(
+    public PaymentsResponseDTO updateAPayment(
             @PathVariable Integer paymentId,
             @RequestParam(required = true) PaymentStatus paymentStatus,
             @RequestParam(required = false) String transactionRef,
@@ -63,9 +64,9 @@ public class PaymentsController {
     }
 
 
-    @PreAuthorize("hasRole('CAR_OWNER')")
+//    @PreAuthorize("hasRole('CAR_OWNER')")
     @DeleteMapping("/delete/{paymentId}")
-    public String deletePayment(@PathVariable Integer paymentId){
-        return paymentService.deletePayment(paymentId);
+    public void deletePayment(@PathVariable Integer paymentId){
+        paymentService.deletePayment(paymentId);
     }
 }

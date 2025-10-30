@@ -1,5 +1,8 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.ServiceRequestDTO;
+import com.eclectics.Garage.dto.ServiceResponseDTO;
+import com.eclectics.Garage.mapper.ServiceMapper;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Service;
 import com.eclectics.Garage.repository.GarageRepository;
@@ -23,10 +26,12 @@ public class ServiceServiceImpl implements ServicesService {
 
     private final ServiceRepository serviceRepository;
     private final GarageRepository garageRepository;
+    private final ServiceMapper mapper;
 
-    public ServiceServiceImpl(ServiceRepository serviceRepository, GarageRepository garageRepository) {
+    public ServiceServiceImpl(ServiceRepository serviceRepository, GarageRepository garageRepository, ServiceMapper mapper) {
         this.serviceRepository = serviceRepository;
         this.garageRepository = garageRepository;
+        this.mapper = mapper;
     }
 
     @Override
@@ -35,9 +40,10 @@ public class ServiceServiceImpl implements ServicesService {
             @CacheEvict(value = "servicesByGarage", allEntries = true),
             @CacheEvict(value = "serviceById", allEntries = true)
     })
-    public Service createService(Service service) {
-        logger.info("Creating new service: {}", service.getServiceName());
+    public void createService(ServiceRequestDTO serviceRequestDTO) {
+        logger.info("Creating new service: {}", serviceRequestDTO.getServiceName());
 
+        Service service = mapper.toEntity(serviceRequestDTO);
         if (service.getGarage() != null && service.getGarage().getGarageId() != null) {
             Long garageAdminId = service.getGarage().getGarageId();
             logger.debug("Fetching garage with ID: {}", garageAdminId);
@@ -53,12 +59,11 @@ public class ServiceServiceImpl implements ServicesService {
 
         Service savedService = serviceRepository.save(service);
         logger.info("Service created successfully with ID: {}", savedService.getId());
-        return savedService;
     }
 
     @Override
     @Cacheable(value = "serviceById", key = "#id")
-    public Optional<Service> getServiceById(Long id) {
+    public Optional<ServiceResponseDTO> getServiceById(Long id) {
         logger.info("Fetching service by ID: {}", id);
         Optional<Service> service = serviceRepository.findById(id);
         if (service.isPresent()) {
@@ -66,25 +71,25 @@ public class ServiceServiceImpl implements ServicesService {
         } else {
             logger.warn("No service found with ID: {}", id);
         }
-        return service;
+        return mapper.toOptionalResponseDTO(service);
     }
 
     @Override
     @Cacheable(value = "allServices")
-    public List<Service> getAllServices() {
+    public List<ServiceResponseDTO> getAllServices() {
         logger.info("Fetching all services");
         List<Service> services = serviceRepository.findAll();
         logger.debug("Total services found: {}", services.size());
-        return services;
+        return mapper.toResponseDTOList(services);
     }
 
     @Override
     @Cacheable(value = "servicesByGarage", key = "#garageId")
-    public List<Service> getServicesByGarageId(Long garageId) {
+    public List<ServiceResponseDTO> getServicesByGarageId(Long garageId) {
         logger.info("Fetching services for garage ID: {}", garageId);
         List<Service> services = serviceRepository.findByGarage_GarageId(garageId);
         logger.debug("Found {} services for garage ID {}", services.size(), garageId);
-        return services;
+        return mapper.toResponseDTOList(services);
     }
 
     @Override
@@ -93,18 +98,14 @@ public class ServiceServiceImpl implements ServicesService {
             @CacheEvict(value = "servicesByGarage", allEntries = true),
             @CacheEvict(value = "serviceById", key = "#id")
     })
-    public Service updateService(Long id, Service service) {
+    public void updateService(Long id, ServiceRequestDTO serviceRequestDTO) {
         logger.info("Updating service with ID: {}", id);
-        return serviceRepository.findById(id).map(existingService -> {
-            if (service.getServiceName() != null) existingService.setServiceName(service.getServiceName());
-            if (service.getDescription() != null) existingService.setDescription(service.getDescription());
-            if (service.getPrice() != null) existingService.setPrice(service.getPrice());
-            if (service.getGarage() != null) existingService.setGarage(service.getGarage());
-            if (service.getServiceCategories() != null) existingService.setServiceCategories(service.getServiceCategories());
+        serviceRepository.findById(id).map(existingService -> {
+            mapper.updateFromDTO(serviceRequestDTO, existingService);
 
             Service updated = serviceRepository.save(existingService);
             logger.info("Service with ID {} updated successfully", id);
-            return updated;
+            return mapper.toResponseDTO(updated);
         }).orElseThrow(() -> {
             logger.error("Service with ID {} not found for update", id);
             return new ResourceNotFoundException("Service not found");
@@ -117,10 +118,9 @@ public class ServiceServiceImpl implements ServicesService {
             @CacheEvict(value = "servicesByGarage", allEntries = true),
             @CacheEvict(value = "serviceById", key = "#id")
     })
-    public String deleteService(Long id) {
+    public void deleteService(Long id) {
         logger.warn("Deleting service with ID: {}", id);
         serviceRepository.deleteById(id);
         logger.info("Service with ID {} deleted successfully", id);
-        return "Service Deleted";
     }
 }

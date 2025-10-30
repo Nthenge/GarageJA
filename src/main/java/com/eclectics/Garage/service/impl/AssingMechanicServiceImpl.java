@@ -1,5 +1,7 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.AssignMechanicsResponseDTO;
+import com.eclectics.Garage.mapper.AssignMechanicsMapper;
 import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.AssignMechanicsRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
@@ -25,13 +27,15 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
     private final AssignMechanicsRepository assignMechanicsRepository;
     private final MechanicRepository mechanicRepository;
     private final RequestServiceRepository requestServiceRepository;
+    private final AssignMechanicsMapper mapper;
 
     public AssingMechanicServiceImpl(AssignMechanicsRepository assignMechanicsRepository,
                                      MechanicRepository mechanicRepository,
-                                     RequestServiceRepository requestServiceRepository) {
+                                     RequestServiceRepository requestServiceRepository, AssignMechanicsMapper mapper) {
         this.assignMechanicsRepository = assignMechanicsRepository;
         this.mechanicRepository = mechanicRepository;
         this.requestServiceRepository = requestServiceRepository;
+        this.mapper = mapper;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
             @CacheEvict(value = "assignmentsByMechanic", allEntries = true),
             @CacheEvict(value = "assignmentsByRequest", allEntries = true)
     })
-    public AssignMechanics assignRequestToMechanic(Long requestId, Long mechanicId) {
+    public AssignMechanicsResponseDTO assignRequestToMechanic(Long requestId, Long mechanicId) {
         logger.info("Assigning service request ID {} to mechanic ID {}", requestId, mechanicId);
 
         ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
@@ -64,7 +68,7 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
 
         AssignMechanics savedAssignment = assignMechanicsRepository.save(assignRequests);
         logger.info("Successfully assigned mechanic ID {} to service request ID {}", mechanicId, requestId);
-        return savedAssignment;
+        return mapper.toResponseDTO(savedAssignment);
     }
 
     @Override
@@ -73,7 +77,7 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
             @CacheEvict(value = "assignmentsByMechanic", allEntries = true),
             @CacheEvict(value = "assignmentsByRequest", allEntries = true)
     })
-    public AssignMechanics updateAssignmentStatus(Long assignmentId, AssignMechanicStatus status) {
+    public AssignMechanicsResponseDTO updateAssignmentStatus(Long assignmentId, AssignMechanicStatus status) {
         logger.info("Updating assignment ID {} to status {}", assignmentId, status);
 
         AssignMechanics assignRequests = assignMechanicsRepository.findById(assignmentId)
@@ -87,33 +91,33 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
 
         AssignMechanics updatedAssignment = assignMechanicsRepository.save(assignRequests);
         logger.info("Assignment ID {} updated to status {}", assignmentId, status);
-        return updatedAssignment;
+        return mapper.toResponseDTO(updatedAssignment);
     }
 
     @Override
     @Cacheable(value = "assignmentsByMechanic", key = "#mechanicId")
-    public List<AssignMechanics> getAssignmentsByMechanic(Long mechanicId) {
+    public List<AssignMechanicsResponseDTO> getAssignmentsByMechanic(Long mechanicId) {
         logger.info("Fetching assignments for mechanic ID {}", mechanicId);
         List<AssignMechanics> assignments = assignMechanicsRepository.findByMechanicId(mechanicId);
         logger.debug("Found {} assignments for mechanic ID {}", assignments.size(), mechanicId);
-        return assignments;
+        return mapper.toResponseList(assignments);
     }
 
     @Override
     @Cacheable(value = "assignmentsByRequest", key = "#requestId")
-    public List<AssignMechanics> getAssignmentByRequest(Long requestId) {
+    public List<AssignMechanicsResponseDTO> getAssignmentByRequest(Long requestId) {
         logger.info("Fetching assignments for service request ID {}", requestId);
         List<AssignMechanics> assignments = assignMechanicsRepository.findByService_Id(requestId);
         logger.debug("Found {} assignments for request ID {}", assignments.size(), requestId);
-        return assignments;
+        return mapper.toResponseList(assignments);
     }
 
     @Override
     @Cacheable(value = "allAssignments")
-    public List<AssignMechanics> getAllAssignments() {
+    public List<AssignMechanicsResponseDTO> getAllAssignments() {
         logger.info("Fetching all mechanic assignments");
         List<AssignMechanics> assignments = assignMechanicsRepository.findAll();
         logger.debug("Total assignments found: {}", assignments.size());
-        return assignments;
+        return mapper.toResponseList(assignments);
     }
 }

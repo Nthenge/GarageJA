@@ -25,12 +25,8 @@ public class ServiceRequest {
 
     @Enumerated(EnumType.STRING)
     private RequestStatus status;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    @OneToOne(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
-    private AssignMechanics assignRequests;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "severity_id", nullable = false)

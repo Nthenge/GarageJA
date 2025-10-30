@@ -1,7 +1,12 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.*;
+import com.eclectics.Garage.mapper.UserMapper;
 import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
+import com.eclectics.Garage.repository.CarOwnerRepository;
+import com.eclectics.Garage.repository.GarageRepository;
+import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.security.TokenEncryptor;
@@ -9,6 +14,7 @@ import com.eclectics.Garage.service.UserService;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
+import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -36,24 +42,55 @@ public class UserServiceImpl implements UserService {
     private final JavaMailSender javaMailSender;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper mapper;
+    private final CarOwnerRepository carOwnerRepository;
+    private final GarageRepository garageRepository;
+    private final MechanicRepository mechanicRepository;
 
-    public UserServiceImpl(UsersRepository usersRepository, JavaMailSender javaMailSender, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UsersRepository usersRepository, JavaMailSender javaMailSender, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserMapper mapper, CarOwnerRepository carOwnerRepository, GarageRepository garageRepository, MechanicRepository mechanicRepository) {
         this.usersRepository = usersRepository;
         this.javaMailSender = javaMailSender;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.mapper = mapper;
+        this.carOwnerRepository = carOwnerRepository;
+        this.garageRepository = garageRepository;
+        this.mechanicRepository = mechanicRepository;
+    }
+
+    private String decryptToken(String token) {
+        try {
+            return TokenEncryptor.decrypt(token);
+        } catch (Exception e) {
+            logger.error("Token decryption failed: {}", e.getMessage());
+            throw new ForbiddenException("Invalid token format");
+        }
+    }
+
+    private static SimpleMailMessage getMailMessage(String email, String token, String subject, String urlPath) {
+        String fullUrl = "http://192.168.1.65:8083" + urlPath + "?token=" + token;
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject(subject);
+        message.setText("Hello,\n\n" +
+                "Please click the link below:\n" +
+                fullUrl + "\n\n" +
+                "If you did not request this, please ignore this email.\n\n" +
+                "Regards,\nGarage Team");
+        return message;
     }
 
     @Override
-    public User createUser(User user) {
-        logger.info("Creating new user with email: {}", user.getEmail());
+    public UserRegistrationResponseDTO createUser(UserRegistrationRequestDTO requestDTO) {
+        logger.info("Creating new user with email: {}", requestDTO.getEmail());
 
-        if (getUserByEmail(user.getEmail()).isPresent()) {
-            logger.warn("Attempted to create user with existing email: {}", user.getEmail());
+        if (getUserByEmail(requestDTO.getEmail()).isPresent()) {
+            logger.warn("Attempted to create user with existing email: {}", requestDTO.getEmail());
             throw new BadRequestException("Email is already in use");
         }
 
-        user.setEnabled(true); // to set this to "false" for production
+        User user = mapper.toEntity(requestDTO);
+        user.setEnabled(false);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         User savedUser = usersRepository.save(user);
@@ -63,14 +100,19 @@ public class UserServiceImpl implements UserService {
         confirmEmail(savedUser.getEmail(), token);
 
         logger.info("Confirmation email sent to: {}", savedUser.getEmail());
-        return savedUser;
+        return mapper.toResponseDTO(savedUser);
     }
 
     @Override
     public void confirmEmail(String email, String token) {
         logger.info("Preparing confirmation email for user: {}", email);
 
-        SimpleMailMessage message = getSimpleMailMessage(email, token);
+        SimpleMailMessage message = getMailMessage(
+                email,
+                token,
+                "Confirm your Garage Account",
+                "/user/confirm"
+        );
 
         try {
             javaMailSender.send(message);
@@ -80,22 +122,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private static SimpleMailMessage getSimpleMailMessage(String email, String token) {
-        String confirmationLink = "http://192.168.1.65:8083/users/confirm?token=" + token;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Confirm your Garage Account");
-        message.setText("Hello,\n\n" +
-                "Welcome to Garage App! Please confirm your registration by clicking the link below:\n" +
-                confirmationLink + "\n\n" +
-                "If you did not register, please ignore this email.\n\n" +
-                "Regards,\nGarage Team");
-        return message;
-    }
-
     @Override
-    public boolean confirmUser(String token) {
-        logger.info("Confirming user with token: {}", token);
+    public boolean confirmUser(String rawToken) {
+        logger.info("Confirming user with raw token.");
+
+        String token = decryptToken(rawToken);
+
         try {
             String email = jwtUtil.extractEmail(token);
             Optional<User> optionalUser = usersRepository.findByEmail(email);
@@ -117,46 +149,102 @@ public class UserServiceImpl implements UserService {
             logger.info("User {} confirmed successfully", user.getEmail());
             return true;
         } catch (Exception e) {
-            logger.error("Error confirming user with token {}: {}", token, e.getMessage());
+            logger.error("Error confirming user with token {}: {}", rawToken, e.getMessage());
             return false;
         }
     }
 
     @Override
-    @Transactional
-    public User loginUser(String email, String password) {
+    @Transactional(readOnly = true)
+    public UserDetailsAuthDTO loginUser(UserLoginRequestDTO requestDTO) {
+        String email = requestDTO.getEmail();
+        String password = requestDTO.getPassword();
+
         logger.info("Attempting login for email: {}", email);
 
         User user = usersRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warn("Login failed - user not found for email: {}", email);
-                    return new BadRequestException("User/Email does not exist, Check your email or register");
+                    return new BadRequestException("Invalid credentials.");
                 });
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             logger.warn("Invalid password attempt for user: {}", email);
-            throw new BadRequestException("Invalid password");
+            throw new BadRequestException("Invalid credentials.");
+        }
+
+        if (!user.isEnabled()) {
+            throw new UnauthorizedException("Please verify your email before logging in.");
         }
 
         logger.info("Login successful for user: {}", email);
-        return user;
+
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        UserDetailsAuthDTO responseDTO = mapper.toAuthDetailsResponseDTO(user);
+        responseDTO.setToken(token);
+        boolean detailsCompleted = user.isDetailsCompleted();
+        responseDTO.setDetailsCompleted(detailsCompleted);
+
+        if (!detailsCompleted) {
+            switch (user.getRole()) {
+                case SYSTEM_ADMIN:
+                    responseDTO.setDetailsCompleted(true);
+                    break;
+
+                case CAR_OWNER:
+                    carOwnerRepository.findByUser(user).ifPresent(carOwner ->
+                            responseDTO.setMissingFields(carOwner.getMissingFields())
+                    );
+                    break;
+
+                case GARAGE_ADMIN:
+                    garageRepository.findByUser(user).ifPresent(garage ->
+                            responseDTO.setMissingFields(garage.getMissingFields())
+                    );
+                    break;
+
+                case MECHANIC:
+                    mechanicRepository.findByUser(user).ifPresent(mechanic ->
+                            responseDTO.setMissingFields(mechanic.getMissingFields())
+                    );
+                    break;
+
+                default:
+                    responseDTO.setMissingFields(List.of("Unknown role – cannot determine missing fields"));
+            }
+        }
+
+        return responseDTO;
     }
 
     @Override
-    public User resetPassword(String email) {
+    public UserPasswordResetResponseDTO resetPassword(UserPasswordResetRequestDTO resetRequestDTO) {
+        String email = resetRequestDTO.getEmail();
         logger.info("Reset password request for email: {}", email);
-        return usersRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    logger.warn("Password reset failed - user not found for email: {}", email);
-                    return new ResourceNotFoundException("Email does not exist");
-                });
+
+        usersRepository.findByEmail(email).ifPresent(user -> {
+
+            String resetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
+
+            sendResetEmail(user.getEmail(), resetToken);
+
+            logger.info("Password reset flow successfully initiated for user: {}", email);
+        });
+        return new UserPasswordResetResponseDTO(
+                "If an account with that email address exists, a password reset link has been sent."
+        );
     }
 
     @Override
     public void sendResetEmail(String email, String token) {
         logger.info("Sending password reset email to: {}", email);
 
-        SimpleMailMessage message = getMailMessage(email, token);
+        SimpleMailMessage message = getMailMessage(
+                email,
+                token,
+                "Reset Your Password",
+                "/reset-password"
+        );
 
         try {
             javaMailSender.send(message);
@@ -166,24 +254,14 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private static SimpleMailMessage getMailMessage(String email, String token) {
-        String resetUrl = "http://192.168.1.65:8083/reset-password?token=" + token;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Reset Your Password");
-        message.setText("Hello,\n\n" +
-                "You requested to reset your password. Please click the link below:\n" +
-                resetUrl + "\n\n" +
-                "If you did not request this, please ignore this email.\n\n" +
-                "Regards,\nGarage Team");
-        return message;
-    }
-
     @Override
-    public void updatePassword(String token, String newPassword) {
-        logger.info("Updating password for token");
+    public void updatePassword(UserPasswordUpdateDTO updateDTO) {
+        String token = updateDTO.getToken();
+        String newPassword = updateDTO.getNewPassword();
 
-        String decryptedToken = TokenEncryptor.decrypt(token);
+        logger.info("Attempting password update using token.");
+
+        String decryptedToken = decryptToken(token);
         String email = jwtUtil.extractEmailFromToken(decryptedToken);
 
         if (email == null || !jwtUtil.validateResetPasswordToken(decryptedToken, email)) {
@@ -192,7 +270,10 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Invalid or expired token"));
+                .orElseThrow(() -> {
+                    logger.warn("Password update failed: User not found despite valid token signature.");
+                    return new UnauthorizedException("Invalid or expired token.");
+                });
 
         user.setPassword(passwordEncoder.encode(newPassword));
         usersRepository.save(user);
@@ -202,21 +283,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Cacheable(value = "users", key = "#email")
-    public Optional<User> getUserByEmail(String email) {
+    public Optional<UserRegistrationResponseDTO> getUserByEmail(String email) {
         logger.debug("Fetching user by email: {}", email);
-        return usersRepository.findByEmail(email);
+        return mapper.toOptionalResponse(usersRepository.findByEmail(email));
     }
 
     @Override
     @Cacheable(value = "allUsers")
-    public List<User> getAllUsers() {
+    public List<UserRegistrationResponseDTO> getAllUsers() {
         logger.info("Fetching all users");
-        return usersRepository.findAll();
+        return mapper.toResponseList(usersRepository.findAll());
     }
 
     @Override
     @CachePut(value = "users", key = "#user.email")
-    public User updateUser(Long id, User user) {
+    public UserRegistrationResponseDTO updateUser(Long id, User user) {
         logger.info("Updating user with ID: {}", id);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -245,7 +326,7 @@ public class UserServiceImpl implements UserService {
 
             User updatedUser = usersRepository.save(existingUser);
             logger.info("User {} updated successfully", updatedUser.getEmail());
-            return updatedUser;
+            return mapper.toResponseDTO(updatedUser);
         }).orElseThrow(() -> {
             logger.error("User with ID {} not found for update", id);
             return new ResourceNotFoundException("User with id " + id + " not found.");
