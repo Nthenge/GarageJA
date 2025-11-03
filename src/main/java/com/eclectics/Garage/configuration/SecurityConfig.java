@@ -63,11 +63,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/**").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/user/**",
+                                "/carOwner/**",
+                                "/mechanic/**",
+                                "/automobile/**",
+                                "/category/**",
+                                "/service/**",
+                                "/severity/**",
+                                "/request/**",
+                                "/payment/**",
+                                "/garage/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
