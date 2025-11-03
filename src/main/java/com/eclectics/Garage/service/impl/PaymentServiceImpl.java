@@ -125,6 +125,11 @@ public class PaymentServiceImpl implements PaymentService {
         return mapper.toResponseDTOList(payments);
     }
 
+    @Override
+    public List<Payment> getAllPayments() {
+        return paymentRepository.findAll();
+    }
+
     @Transactional(readOnly = true)
     @Override
     @Cacheable(value = "paymentsByService", key = "#serviceId")

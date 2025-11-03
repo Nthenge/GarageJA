@@ -24,6 +24,11 @@ public class PaymentsController {
         this.paymentService = paymentService;
     }
 
+    @GetMapping
+    public List<Payment> allPayments(){
+        return paymentService.getAllPayments();
+    }
+
     @PostMapping(value = "/initiate")
     public PaymentsResponseDTO initiatePayment(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,

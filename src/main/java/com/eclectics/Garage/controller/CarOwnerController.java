@@ -28,13 +28,13 @@ public class CarOwnerController {
             this.mapper = mapper;
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
+//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
         @GetMapping("/search/{carOwnerUniqueId}")
         public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
             return carOwnerService.getCarOwnerByUniqueId(carOwnerUniqueId);
         }
 
-        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+//        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
         @GetMapping()
         public List<CarOwnerResponseDTO> getAllCarOwners(){
             return carOwnerService.getAllCarOwners();
@@ -53,7 +53,7 @@ public class CarOwnerController {
             return ResponseEntity.ok(response);
         }
 
-        @PreAuthorize("hasRole('CAR_OWNER)")
+//        @PreAuthorize("hasRole('CAR_OWNER)")
         @PutMapping(value = "/update/{carOwnerUniqueId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<CarOwnerResponseDTO> updateCarOwnerProfilePic(
                 @PathVariable Integer carOwnerUniqueId,
@@ -65,7 +65,7 @@ public class CarOwnerController {
             return ResponseEntity.ok(updatedOwner);
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER)")
+//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER)")
         @DeleteMapping("/{carOwnerId}")
         public String deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
             carOwnerService.deleteCarOwner(carOwnerId);
