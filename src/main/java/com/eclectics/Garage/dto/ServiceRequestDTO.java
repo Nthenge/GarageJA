@@ -8,25 +8,17 @@ public class ServiceRequestDTO {
     private String serviceName;
     private String description;
     private Double price;
-    private Garage garage;
-    private ServiceCategories serviceCategories;
+    private Long garageId;
+    private Long categoryId;
 
     public ServiceRequestDTO() {}
 
-    public ServiceRequestDTO(String serviceName, String description, Double price, Garage garage, ServiceCategories serviceCategories) {
+    public ServiceRequestDTO(String serviceName, String description, Double price, Long garageId, Long categoryId) {
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
-        this.garage = garage;
-        this.serviceCategories = serviceCategories;
-    }
-
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+        this.garageId = garageId;
+        this.categoryId = categoryId;
     }
 
     public String getDescription() {
@@ -45,19 +37,27 @@ public class ServiceRequestDTO {
         this.price = price;
     }
 
-    public Garage getGarage() {
-        return garage;
+    public Long getGarageId() {
+        return garageId;
     }
 
-    public void setGarage(Garage garage) {
-        this.garage = garage;
+    public void setGarageId(Long garageId) {
+        this.garageId = garageId;
     }
 
-    public ServiceCategories getServiceCategories() {
-        return serviceCategories;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public void setServiceCategories(ServiceCategories serviceCategories) {
-        this.serviceCategories = serviceCategories;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 }

@@ -12,17 +12,18 @@ import org.mapstruct.factory.Mappers;
 import java.util.List;
 import java.util.Optional;
 
-@Mapper(
-        componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
-)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ServiceMapper {
 
-    ServiceMapper INSTANCE = Mappers.getMapper(ServiceMapper.class);
-
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "garage", ignore = true)
+    @Mapping(target = "serviceCategories", ignore = true)
     Service toEntity(ServiceRequestDTO dto);
 
+    @Mapping(source = "garage.garageId", target = "garageId")
+    @Mapping(source = "garage.businessName", target = "garageName")
+    @Mapping(source = "serviceCategories.id", target = "categoryId")
+    @Mapping(source = "serviceCategories.serviceCategoryName", target = "categoryName")
     ServiceResponseDTO toResponseDTO(Service entity);
 
     List<ServiceResponseDTO> toResponseDTOList(List<Service> services);
@@ -32,5 +33,6 @@ public interface ServiceMapper {
     }
 
     @Mapping(target = "id", ignore = true)
-    void updateFromDTO(ServiceRequestDTO serviceRequestDTO, @MappingTarget Service entity);
+    void updateFromDTO(ServiceRequestDTO dto, @MappingTarget Service entity);
 }
+

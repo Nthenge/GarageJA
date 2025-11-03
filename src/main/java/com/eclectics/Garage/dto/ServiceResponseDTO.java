@@ -5,20 +5,34 @@ import com.eclectics.Garage.model.ServiceCategories;
 
 public class ServiceResponseDTO {
 
+    private Long id;
     private String serviceName;
     private String description;
     private Double price;
-    private Garage garage;
-    private ServiceCategories serviceCategories;
+    private Long garageId;
+    private String garageName;
+    private Long categoryId;
+    private String categoryName;
 
     public ServiceResponseDTO() {}
 
-    public ServiceResponseDTO(String serviceName, String description, Double price, Garage garage, ServiceCategories serviceCategories) {
+    public ServiceResponseDTO(Long id, String serviceName, String description, Long garageId, String garageName, Long categoryId, String categoryName, Double price) {
+        this.id = id;
         this.serviceName = serviceName;
         this.description = description;
+        this.garageId = garageId;
+        this.garageName = garageName;
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
         this.price = price;
-        this.garage = garage;
-        this.serviceCategories = serviceCategories;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getServiceName() {
@@ -45,20 +59,36 @@ public class ServiceResponseDTO {
         this.price = price;
     }
 
-    public Garage getGarage() {
-        return garage;
+    public Long getGarageId() {
+        return garageId;
     }
 
-    public void setGarage(Garage garage) {
-        this.garage = garage;
+    public void setGarageId(Long garageId) {
+        this.garageId = garageId;
     }
 
-    public ServiceCategories getServiceCategories() {
-        return serviceCategories;
+    public String getGarageName() {
+        return garageName;
     }
 
-    public void setServiceCategories(ServiceCategories serviceCategories) {
-        this.serviceCategories = serviceCategories;
+    public void setGarageName(String garageName) {
+        this.garageName = garageName;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }
 

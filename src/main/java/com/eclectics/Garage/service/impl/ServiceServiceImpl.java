@@ -5,7 +5,9 @@ import com.eclectics.Garage.dto.ServiceResponseDTO;
 import com.eclectics.Garage.mapper.ServiceMapper;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Service;
+import com.eclectics.Garage.model.ServiceCategories;
 import com.eclectics.Garage.repository.GarageRepository;
+import com.eclectics.Garage.repository.ServiceCategoryRepository;
 import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.service.ServicesService;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
@@ -26,11 +28,13 @@ public class ServiceServiceImpl implements ServicesService {
 
     private final ServiceRepository serviceRepository;
     private final GarageRepository garageRepository;
+    private final ServiceCategoryRepository serviceCategoryRepository;
     private final ServiceMapper mapper;
 
-    public ServiceServiceImpl(ServiceRepository serviceRepository, GarageRepository garageRepository, ServiceMapper mapper) {
+    public ServiceServiceImpl(ServiceRepository serviceRepository, GarageRepository garageRepository, ServiceCategoryRepository serviceCategoryRepository, ServiceMapper mapper) {
         this.serviceRepository = serviceRepository;
         this.garageRepository = garageRepository;
+        this.serviceCategoryRepository = serviceCategoryRepository;
         this.mapper = mapper;
     }
 
@@ -48,11 +52,13 @@ public class ServiceServiceImpl implements ServicesService {
             Long garageAdminId = service.getGarage().getGarageId();
             logger.debug("Fetching garage with ID: {}", garageAdminId);
 
-            Garage garage = garageRepository.findByGarageId(garageAdminId)
-                    .orElseThrow(() -> {
-                        logger.error("Garage with ID {} not found", garageAdminId);
-                        return new ResourceNotFoundException("Garage with this id " + garageAdminId + " not found");
-                    });
+            Garage garage = garageRepository.findByGarageId(serviceRequestDTO.getGarageId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
+            ServiceCategories category = serviceCategoryRepository.findById(serviceRequestDTO.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+            service.setGarage(garage);
+            service.setServiceCategories(category);
 
             service.setGarage(garage);
         }
