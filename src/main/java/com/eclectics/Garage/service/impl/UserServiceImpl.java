@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private static SimpleMailMessage getMailMessage(String email, String token, String subject, String urlPath) {
-        String fullUrl = "http://192.168.1.65:8083" + urlPath + "?token=" + token;
+        String fullUrl = "http://10.20.33.74:4200" + urlPath + "?token=" + token;
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setSubject(subject);
