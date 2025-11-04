@@ -31,7 +31,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://10.20.33.84:4200",
+                "http://10.20.33.74:4200",
                 "http://10.20.33.60:4200",
                 "http://192.168.1.66:4200",
                 "http://192.168.1.69:4200",
