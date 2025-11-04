@@ -6,48 +6,38 @@ import java.time.LocalDateTime;
 
 public class ServiceRequestsResponseDTO {
 
-    private CarOwner carOwner;
-    private Garage garage;
-    private Service service;
+    private Long carId;
+    private Long garageId;
+    private String garageName;
+    private Long serviceId;
+    private String serviceName;
+    private Long severityId;
+    private String severityName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private SeverityCategories severity;
     private RequestStatus status;
 
     public ServiceRequestsResponseDTO() {}
 
-    public ServiceRequestsResponseDTO(CarOwner carOwner, Garage garage, Service service, LocalDateTime createdAt, LocalDateTime updatedAt, SeverityCategories severity, RequestStatus status) {
-        this.carOwner = carOwner;
-        this.garage = garage;
-        this.service = service;
+    public ServiceRequestsResponseDTO(Long carId, Long garageId, String garageName, Long serviceId, String serviceName, Long severityId, LocalDateTime createdAt, RequestStatus status, LocalDateTime updatedAt, String severityName) {
+        this.carId = carId;
+        this.garageId = garageId;
+        this.garageName = garageName;
+        this.serviceId = serviceId;
+        this.serviceName = serviceName;
+        this.severityId = severityId;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.severity = severity;
         this.status = status;
+        this.updatedAt = updatedAt;
+        this.severityName = severityName;
     }
 
-    public CarOwner getCarOwner() {
-        return carOwner;
+    public Long getCarId() {
+        return carId;
     }
 
-    public void setCarOwner(CarOwner carOwner) {
-        this.carOwner = carOwner;
-    }
-
-    public Garage getGarage() {
-        return garage;
-    }
-
-    public void setGarage(Garage garage) {
-        this.garage = garage;
-    }
-
-    public Service getService() {
-        return service;
-    }
-
-    public void setService(Service service) {
-        this.service = service;
+    public void setCarId(Long carId) {
+        this.carId = carId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -58,20 +48,12 @@ public class ServiceRequestsResponseDTO {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public Long getSeverityId() {
+        return severityId;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public SeverityCategories getSeverityCategories() {
-        return severity;
-    }
-
-    public void setSeverityCategories(SeverityCategories severity) {
-        this.severity = severity;
+    public void setSeverityId(Long severityId) {
+        this.severityId = severityId;
     }
 
     public RequestStatus getStatus() {
@@ -80,5 +62,53 @@ public class ServiceRequestsResponseDTO {
 
     public void setStatus(RequestStatus status) {
         this.status = status;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Long getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public Long getGarageId() {
+        return garageId;
+    }
+
+    public void setGarageId(Long garageId) {
+        this.garageId = garageId;
+    }
+
+    public String getGarageName() {
+        return garageName;
+    }
+
+    public void setGarageName(String garageName) {
+        this.garageName = garageName;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getSeverityName() {
+        return severityName;
+    }
+
+    public void setSeverityName(String severityName) {
+        this.severityName = severityName;
     }
 }

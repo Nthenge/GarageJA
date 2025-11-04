@@ -1,5 +1,6 @@
 package com.eclectics.Garage.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -13,14 +14,17 @@ public class ServiceRequest {
 
     @ManyToOne
     @JoinColumn(name = "carOwner_id", referencedColumnName = "uniqueId")
+    @JsonBackReference()
     private CarOwner carOwner;
 
     @ManyToOne
     @JoinColumn(name = "garage_id", referencedColumnName = "garageId")
+    @JsonBackReference()
     private Garage garage;
 
     @ManyToOne
     @JoinColumn(name = "service_definition_id", referencedColumnName = "id")
+    @JsonBackReference()
     private Service service;
 
     @Enumerated(EnumType.STRING)
@@ -30,6 +34,7 @@ public class ServiceRequest {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "severity_id", nullable = false)
+    @JsonBackReference()
     private SeverityCategories severityCategories;
 
     public ServiceRequest() {}
