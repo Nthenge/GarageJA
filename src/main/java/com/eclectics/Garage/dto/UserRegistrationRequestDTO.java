@@ -1,12 +1,17 @@
 package com.eclectics.Garage.dto;
 
 import com.eclectics.Garage.model.Role;
+import jakarta.validation.constraints.Pattern;
 
 public class UserRegistrationRequestDTO {
 
     private String email;
     private String firstname;
     private String secondname;
+    @Pattern(
+            regexp = "^(?=.*\\d.*\\d)(?=.*[^a-zA-Z0-9]).{7,}$",
+            message = "Password must contain at least 7 characters, including at least two numbers and one special character."
+    )
     private String password;
     private String phoneNumber;
     private Role role;

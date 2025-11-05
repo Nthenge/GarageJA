@@ -8,15 +8,17 @@ public class ServiceRequestDTO {
     private String serviceName;
     private String description;
     private Double price;
+    private Double avgDuration;
     private Long garageId;
     private Long categoryId;
 
     public ServiceRequestDTO() {}
 
-    public ServiceRequestDTO(String serviceName, String description, Double price, Long garageId, Long categoryId) {
+    public ServiceRequestDTO(String serviceName, String description, Double price, Double avgDuration, Long garageId, Long categoryId) {
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
+        this.avgDuration = avgDuration;
         this.garageId = garageId;
         this.categoryId = categoryId;
     }
@@ -35,6 +37,14 @@ public class ServiceRequestDTO {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Double getAvgDuration() {
+        return avgDuration;
+    }
+
+    public void setAvgDuration(Double avgDuration) {
+        this.avgDuration = avgDuration;
     }
 
     public Long getGarageId() {

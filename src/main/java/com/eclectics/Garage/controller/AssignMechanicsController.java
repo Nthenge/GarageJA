@@ -19,33 +19,33 @@ public class AssignMechanicsController {
         this.assignMechanicService = assignMechanicService;
     }
 
-//    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasRole('GARAGE_ADMIN')")
     @PostMapping
     public AssignMechanicsResponseDTO assignRequest(@RequestParam Long requestId,
                                          @RequestParam Long mechanicId) {
         return assignMechanicService.assignRequestToMechanic(requestId, mechanicId);
     }
 
-//    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN','MECHANIC')")
+    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN','MECHANIC')")
     @PutMapping("/{assignmentId}/status")
     public AssignMechanicsResponseDTO updateStatus(@PathVariable Long assignmentId,
                                        @RequestParam AssignMechanicStatus status) {
         return assignMechanicService.updateAssignmentStatus(assignmentId, status);
     }
 
-//    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasRole('GARAGE_ADMIN')")
     @GetMapping("/mechanic/{mechanicId}")
     public List<AssignMechanicsResponseDTO> getAssignmentsByMechanic(@PathVariable Long mechanicId) {
         return assignMechanicService.getAssignmentsByMechanic(mechanicId);
     }
 
-//    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasRole('GARAGE_ADMIN')")
     @GetMapping("/request/{requestId}")
     public List<AssignMechanicsResponseDTO> getAssignmentByRequest(@PathVariable Long requestId) {
         return assignMechanicService.getAssignmentByRequest(requestId);
     }
 
-//    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasRole('GARAGE_ADMIN')")
     @GetMapping
     public List<AssignMechanicsResponseDTO> getAllAssignments() {
         return assignMechanicService.getAllAssignments();

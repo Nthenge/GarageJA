@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -23,6 +25,31 @@ public class GarageExceptionHandler {
         response.put("error", ex.getClass().getSimpleName());
         response.put("message", ex.getMessage());
         return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+
+        logger.warn("Request failed validation: {} errors found", ex.getBindingResult().getErrorCount());
+
+        Map<String, String> errors = new HashMap<>();
+
+        // Loop through all field errors and map them to the response
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        // Use a standard HTTP 400 BAD REQUEST status
+        Map<String, Object> response = new HashMap<>();
+        response.put("time", new Date());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("error", "ValidationFailed");
+        response.put("messages", errors);
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)

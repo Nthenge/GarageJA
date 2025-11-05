@@ -45,7 +45,7 @@ public class PaymentsController {
         return paymentService.getPaymentByPaymentId(paymentId);
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
     @GetMapping("/owner/{ownerId}")
     public List<PaymentsResponseDTO> ownerPayments(@PathVariable Integer ownerId){
         return paymentService.getAllPaymentsDoneByOwner(ownerId);
@@ -56,7 +56,7 @@ public class PaymentsController {
         return paymentService.getAllPaymentsByService(serviceId);
     }
 
-//    @PreAuthorize("hasRole('CAR_OWNER')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')") //think of this authorization
     @PutMapping("/update/{paymentId}")
     public PaymentsResponseDTO updateAPayment(
             @PathVariable Integer paymentId,
@@ -69,7 +69,7 @@ public class PaymentsController {
     }
 
 
-//    @PreAuthorize("hasRole('CAR_OWNER')")
+    @PreAuthorize("hasRole('CAR_OWNER')")
     @DeleteMapping("/delete/{paymentId}")
     public void deletePayment(@PathVariable Integer paymentId){
         paymentService.deletePayment(paymentId);

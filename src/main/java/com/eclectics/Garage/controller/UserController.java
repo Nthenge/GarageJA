@@ -7,7 +7,9 @@ import com.eclectics.Garage.service.UserService;
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,14 +37,14 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
     public ResponseEntity<List<UserRegistrationResponseDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@RequestBody UserRegistrationRequestDTO user) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserRegistrationRequestDTO user) {
         if (user.getEmail() == null || user.getPassword() == null) {
             throw new BadRequestException("Email and password are required");
         }

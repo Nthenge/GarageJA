@@ -20,22 +20,31 @@ public class AutoMobilesController {
         this.automobilesService = automobilesService;
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping
     public List<AutoMobileResponseDTO> getAllAutomobiles(){
         return automobilesService.getAllAutomobiles();
     }
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/make")
     public List<String> getAllMakes() {
         return automobilesService.getAllMakes();
     }
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/year")
     public List<String> getAllYea() {
         return automobilesService.findAllYears();
     }
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/engineType")
     public List<String> getAllEngineType() {
         return automobilesService.findAllEngineType();
     }
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/transmission")
     public List<String> getTransmissions() {
         return automobilesService.findAllTransmission()

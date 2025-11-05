@@ -5,6 +5,7 @@ import com.eclectics.Garage.dto.ServiceRequestsResponseDTO;
 import com.eclectics.Garage.model.ServiceRequest;
 import com.eclectics.Garage.model.RequestStatus;
 import com.eclectics.Garage.service.ServiceRequestService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +25,7 @@ public class ServiceRequestsController {
     public List<ServiceRequestsResponseDTO> getAllReguests(){
         return serviceRequestService.getAllRequests();
     }
-
+    @PreAuthorize("hasRole('CAR_OWNER')")
     @PostMapping
     public ServiceRequest createRequest(
             @RequestParam Integer carOwnerId,
@@ -35,6 +36,7 @@ public class ServiceRequestsController {
         return serviceRequestService.createRequest(carOwnerId, garageId, serviceId, severityId);
     }
 
+    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
     @PutMapping("/status/{requestId}")
     public ServiceRequestsResponseDTO updateRequest(
             @PathVariable Long requestId,
@@ -45,25 +47,25 @@ public class ServiceRequestsController {
         return serviceRequestService.updateStatus(requestId, status,severityId, serviceRequestsRequestDTO);
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/carOwner/{carOwnerUniqueId}")
     public List<ServiceRequestsResponseDTO> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
         return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/garage/{garageId}")
     public List<ServiceRequestsResponseDTO> getRequestsByGarage(@PathVariable Long garageId){
         return serviceRequestService.getRequestsByGarage(garageId);
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/{requestId}")
     public Optional<ServiceRequestsResponseDTO> getRequestById(@PathVariable Long requestId){
         return serviceRequestService.getRequestById(requestId);
     }
 
-//    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @DeleteMapping("/{id}")
     public String deleteById(@PathVariable Long id){
         serviceRequestService.deleteServiceRequest(id);

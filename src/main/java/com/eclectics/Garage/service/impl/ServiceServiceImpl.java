@@ -129,4 +129,14 @@ public class ServiceServiceImpl implements ServicesService {
         serviceRepository.deleteById(id);
         logger.info("Service with ID {} deleted successfully", id);
     }
+
+    @Override
+    public long countGaragesByServiceName(String serviceName) {
+        logger.info("Counting services (representing garages) with name: {}", serviceName);
+
+        long count = serviceRepository.countByServiceName(serviceName);
+
+        logger.debug("Found {} services matching name: {}", count, serviceName);
+        return count;
+    }
 }

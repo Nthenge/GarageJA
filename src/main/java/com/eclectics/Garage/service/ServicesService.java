@@ -13,5 +13,6 @@ public interface ServicesService {
     List<ServiceResponseDTO> getServicesByGarageId(Long garageId);
     void updateService(Long id, ServiceRequestDTO serviceRequestDTO);
     void deleteService(Long id);
+    long countGaragesByServiceName(String serviceName);
 }
 

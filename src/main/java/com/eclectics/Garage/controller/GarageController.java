@@ -22,6 +22,12 @@ public class GarageController {
         this.garageService = garageService;
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> getGarageCount() {
+        long count = garageService.countAllGarages();
+        return ResponseEntity.ok(count);
+    }
+
 //    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
     @GetMapping("/search/{garageId}")
     public ResponseEntity<GarageResponseDTO> getGarageById(@PathVariable Long garageId){

@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
 
         if (getUserByEmail(requestDTO.getEmail()).isPresent()) {
             logger.warn("Attempted to create user with existing email: {}", requestDTO.getEmail());
-            throw new BadRequestException("Email is already in use");
+            throw new BadRequestException("Email is already in registered.");
         }
 
         User user = mapper.toEntity(requestDTO);

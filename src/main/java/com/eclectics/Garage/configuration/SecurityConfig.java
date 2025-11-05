@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -35,7 +37,7 @@ public class SecurityConfig {
                 "http://10.20.33.60:4200",
                 "http://192.168.1.66:4200",
                 "http://192.168.1.69:4200",
-                "http://192.168.100.86:4200"
+                "http://192.168.100.87:4200"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -64,21 +66,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/user/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/user/**",
-                                "/carOwner/**",
-                                "/mechanic/**",
-                                "/automobile/**",
-                                "/category/**",
-                                "/service/**",
-                                "/severity/**",
-                                "/request/**",
-                                "/payment/**",
-                                "/garage/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

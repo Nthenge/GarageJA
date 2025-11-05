@@ -174,6 +174,13 @@ public class GarageServiceImpl implements GarageService {
         return mapper.toResponseDTOList(garages);
     }
 
+    @Override
+    public long countAllGarages() {
+        long count = garageRepository.count();
+        logger.debug("Total number of garages: {}", count);
+        return count;
+    }
+
     private String getObjectNameFromUrl(String fileUrl, String bucketName, String endpoint) {
         String baseUrl = "https://" + bucketName + "." + endpoint.replace("https://", "") + "/";
         if (fileUrl.startsWith(baseUrl)) {

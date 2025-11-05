@@ -20,20 +20,20 @@ public class SeverityController {
         this.severityCategoriesService = severityCategoriesService;
     }
 
-//    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @PostMapping()
     public String createASeverity(@RequestBody SeverityRequestDTO severityRequestDTO){
         severityCategoriesService.createCategory(severityRequestDTO);
         return "Severity Category created";
     }
 
-//    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @GetMapping
     public List<SeverityResponseDTO> getAllSeverityCategories(){
         return severityCategoriesService.getAllSeverityCategories();
     }
 
-//    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @GetMapping("/{severityName}")
     public SeverityResponseDTO getSeverityCategoryByName(@PathVariable String severityName){
         return severityCategoriesService.getSeverityCategoryByName(severityName);

@@ -27,19 +27,19 @@ public class MechanicController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
         @GetMapping("/search/{nationalIdNumber}")
         public Optional<MechanicResponseDTO> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
             return mechanicService.getMechanicByNationalId(nationalIdNumber);
         }
 
-//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
         @GetMapping()
         public List<MechanicResponseDTO> getAllMechanics(){
             return mechanicService.getAllMechanics();
         }
 
-//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_OCTET_STREAM_VALUE})
         public ResponseEntity<String> createMechanic(
                 @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
@@ -52,7 +52,7 @@ public class MechanicController {
             return ResponseEntity.ok("Mechanic created successfully");
         }
 
-//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @PutMapping("/{mechanicId}")
         public ResponseEntity<MechanicResponseDTO> updateMechanic(
                 @PathVariable Long mechanicId,
@@ -66,7 +66,7 @@ public class MechanicController {
             return ResponseEntity.ok(updatedMechanic);
         }
 
-//        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @DeleteMapping("/{MechanicId}")
         public String deleteMechanic(@PathVariable("MechanicId") Long MechanicId){
             mechanicService.deleteMechanic(MechanicId);
