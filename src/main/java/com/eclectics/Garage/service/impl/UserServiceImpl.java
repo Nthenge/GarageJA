@@ -4,9 +4,6 @@ import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.mapper.UserMapper;
 import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
-import com.eclectics.Garage.repository.CarOwnerRepository;
-import com.eclectics.Garage.repository.GarageRepository;
-import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.security.TokenEncryptor;
@@ -43,19 +40,13 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper mapper;
-    private final CarOwnerRepository carOwnerRepository;
-    private final GarageRepository garageRepository;
-    private final MechanicRepository mechanicRepository;
 
-    public UserServiceImpl(UsersRepository usersRepository, JavaMailSender javaMailSender, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserMapper mapper, CarOwnerRepository carOwnerRepository, GarageRepository garageRepository, MechanicRepository mechanicRepository) {
+    public UserServiceImpl(UsersRepository usersRepository, JavaMailSender javaMailSender, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserMapper mapper) {
         this.usersRepository = usersRepository;
         this.javaMailSender = javaMailSender;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.mapper = mapper;
-        this.carOwnerRepository = carOwnerRepository;
-        this.garageRepository = garageRepository;
-        this.mechanicRepository = mechanicRepository;
     }
 
     private String decryptToken(String token) {
