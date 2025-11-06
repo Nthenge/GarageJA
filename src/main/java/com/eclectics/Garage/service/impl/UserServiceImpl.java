@@ -22,18 +22,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private final Map<String, User> userCache = new ConcurrentHashMap<>();
+    private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
+    private final Map<String, Long> resetTokenCache = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Queue<String> recentLogins = new LinkedList<>();
 
     private final UsersRepository usersRepository;
     private final JavaMailSender javaMailSender;
@@ -77,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
         if (getUserByEmail(requestDTO.getEmail()).isPresent()) {
             logger.warn("Attempted to create user with existing email: {}", requestDTO.getEmail());
-            throw new BadRequestException("Email is already in registered.");
+            throw new BadRequestException("Email is already registered.");
         }
 
         User user = mapper.toEntity(requestDTO);
@@ -85,6 +89,8 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         User savedUser = usersRepository.save(user);
+        userCache.put(savedUser.getEmail(), savedUser); // cache the user
+
         logger.debug("User saved successfully with ID: {}", savedUser.getId());
 
         String token = jwtUtil.generateEmailConfirmToken(savedUser.getEmail(), savedUser.getRole().name());
@@ -137,6 +143,8 @@ public class UserServiceImpl implements UserService {
 
             user.setEnabled(true);
             usersRepository.save(user);
+            userCache.put(user.getEmail(), user);
+
             logger.info("User {} confirmed successfully", user.getEmail());
             return true;
         } catch (Exception e) {
@@ -153,29 +161,39 @@ public class UserServiceImpl implements UserService {
 
         logger.info("Attempting login for email: {}", email);
 
-        User user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    logger.warn("Login failed - user not found for email: {}", email);
-                    return new BadRequestException("Login failed, email not found");
-                });
+        int attempts = loginAttempts.getOrDefault(email, 0);
+        if (attempts >= 5) {
+            throw new UnauthorizedException("Too many failed attempts. Try again later.");
+        }
+
+        User user = userCache.getOrDefault(email,
+                usersRepository.findByEmail(email)
+                        .orElseThrow(() -> new BadRequestException("Login failed, email not found"))
+        );
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            loginAttempts.put(email, attempts + 1);
             logger.warn("Invalid password attempt for user: {}", email);
             throw new BadRequestException("Login failed, Invalid password");
         }
+
+        loginAttempts.remove(email);
+
+        if (recentLogins.size() >= 10) {
+            recentLogins.poll();
+        }
+        recentLogins.offer(email);
 
         if (!user.isEnabled()) {
             throw new UnauthorizedException("Please verify your email before logging in.");
         }
 
-        logger.info("Login successful for user: {}", email);
-
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         UserDetailsAuthDTO responseDTO = mapper.toAuthDetailsResponseDTO(user);
         responseDTO.setToken(token);
-        boolean detailsCompleted = user.isDetailsCompleted();
-        responseDTO.setDetailsCompleted(detailsCompleted);
+        responseDTO.setDetailsCompleted(user.isDetailsCompleted());
 
+        logger.info("Login successful for user: {}", email);
         return responseDTO;
     }
 
@@ -185,15 +203,14 @@ public class UserServiceImpl implements UserService {
         logger.info("Reset password request for email: {}", email);
 
         usersRepository.findByEmail(email).ifPresent(user -> {
-
             String resetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
-
             sendResetEmail(user.getEmail(), resetToken);
-
-            logger.info("Password reset flow successfully initiated for user: {}", email);
+            resetTokenCache.put(resetToken, System.currentTimeMillis() + (15 * 60 * 1000));
+            logger.info("Password reset token cached for {}", email);
         });
+
         return new UserPasswordResetResponseDTO(
-                "If an account with that email address exists, a password reset link has been sent."
+                "If an account with that email exists, a reset link has been sent."
         );
     }
 
@@ -210,7 +227,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             javaMailSender.send(message);
-            logger.info("Password reset email successfully sent to: {}", email);
+            logger.info("Password reset email sent to: {}", email);
         } catch (Exception e) {
             logger.error("Failed to send reset email to {}: {}", email, e.getMessage());
         }
@@ -223,22 +240,20 @@ public class UserServiceImpl implements UserService {
 
         logger.info("Attempting password update using token.");
 
+        if (!resetTokenCache.containsKey(token) || System.currentTimeMillis() > resetTokenCache.get(token)) {
+            throw new UnauthorizedException("Invalid or expired reset token");
+        }
+        resetTokenCache.remove(token);
+
         String decryptedToken = decryptToken(token);
         String email = jwtUtil.extractEmailFromToken(decryptedToken);
 
-        if (email == null || !jwtUtil.validateResetPasswordToken(decryptedToken, email)) {
-            logger.warn("Invalid or expired reset token for password update");
-            throw new UnauthorizedException("Invalid or expired reset token");
-        }
-
         User user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    logger.warn("Password update failed: User not found despite valid token signature.");
-                    return new UnauthorizedException("Invalid or expired token.");
-                });
+                .orElseThrow(() -> new UnauthorizedException("Invalid or expired token."));
 
         user.setPassword(passwordEncoder.encode(newPassword));
         usersRepository.save(user);
+        userCache.put(email, user);
 
         logger.info("Password successfully updated for user: {}", email);
     }
@@ -247,7 +262,15 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users", key = "#email")
     public Optional<UserRegistrationResponseDTO> getUserByEmail(String email) {
         logger.debug("Fetching user by email: {}", email);
-        return mapper.toOptionalResponse(usersRepository.findByEmail(email));
+
+        if (userCache.containsKey(email)) {
+            logger.debug("Cache hit for user email: {}", email);
+            return Optional.of(mapper.toResponseDTO(userCache.get(email)));
+        }
+
+        Optional<User> userOpt = usersRepository.findByEmail(email);
+        userOpt.ifPresent(user -> userCache.put(email, user));
+        return mapper.toOptionalResponse(userOpt);
     }
 
     @Override
@@ -277,7 +300,6 @@ public class UserServiceImpl implements UserService {
                     logger.warn("Unauthorized role change attempt by user: {}", currentUserEmail);
                     throw new UnauthorizedException("You are not authorized to change roles");
                 }
-                logger.info("User {} updated role to {}", existingUser.getEmail(), user.getRole());
                 existingUser.setRole(user.getRole());
             }
 
@@ -287,12 +309,11 @@ public class UserServiceImpl implements UserService {
             if (user.getPhoneNumber() != null) existingUser.setPhoneNumber(user.getPhoneNumber());
 
             User updatedUser = usersRepository.save(existingUser);
+            userCache.put(updatedUser.getEmail(), updatedUser);
+
             logger.info("User {} updated successfully", updatedUser.getEmail());
             return mapper.toResponseDTO(updatedUser);
-        }).orElseThrow(() -> {
-            logger.error("User with ID {} not found for update", id);
-            return new ResourceNotFoundException("User with id " + id + " not found.");
-        });
+        }).orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
     }
 
     @Override
@@ -305,7 +326,14 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException("User with id " + id + " not found");
         }
 
+        usersRepository.findById(id).ifPresent(user -> userCache.remove(user.getEmail()));
         usersRepository.deleteById(id);
+
         logger.info("User with ID {} deleted successfully", id);
+    }
+
+    //monitoring
+    public List<String> getRecentLogins() {
+        return new ArrayList<>(recentLogins);
     }
 }

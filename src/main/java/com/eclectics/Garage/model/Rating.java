@@ -102,4 +102,8 @@ public class Rating {
     public void setMechanic(Mechanic mechanic) {
         this.mechanic = mechanic;
     }
+
+    public double getRatingValue() {
+        return 0;
+    }
 }

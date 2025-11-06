@@ -9,6 +9,10 @@ import com.eclectics.Garage.repository.*;
 import com.eclectics.Garage.service.RatingService;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 @Service
 public class RatingServiceImpl implements RatingService {
 
@@ -17,6 +21,12 @@ public class RatingServiceImpl implements RatingService {
     private final GarageRepository garageRepository;
     private final MechanicRepository mechanicRepository;
     private final RatingMapper mapper;
+
+    private final Set<String> ratedRequests = Collections.synchronizedSet(new HashSet<>());
+    private final Map<Long, List<Rating>> garageRatingsMap = new ConcurrentHashMap<>();
+    private final Map<Long, List<Rating>> mechanicRatingsMap = new ConcurrentHashMap<>();
+    private final Map<Long, Double> averageGarageRatings = new ConcurrentHashMap<>();
+    private final Map<Long, Double> averageMechanicRatings = new ConcurrentHashMap<>();
 
     public RatingServiceImpl(RatingRepository ratingRepository,
                              RequestServiceRepository requestRepository,
@@ -31,7 +41,12 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public RatingResponseDTO rateService(Long requestId, RatingRequestsDTO dto) {
+    public synchronized RatingResponseDTO rateService(Long requestId, RatingRequestsDTO dto) {
+        String key = requestId + "-" + dto.getGarageId() + "-" + dto.getMechanicId();
+        if (ratedRequests.contains(key)) {
+            throw new IllegalStateException("This service request has already been rated by the user.");
+        }
+
         ServiceRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service Request not found"));
 
@@ -47,6 +62,60 @@ public class RatingServiceImpl implements RatingService {
         rating.setMechanic(mechanic);
 
         Rating saved = ratingRepository.save(rating);
+
+        ratedRequests.add(key);
+        updateGarageRatingsCache(garage.getGarageId(), saved);
+        updateMechanicRatingsCache(mechanic.getId(), saved);
+
+        computeGarageAverage(garage.getGarageId());
+        computeMechanicAverage(mechanic.getId());
+
         return mapper.toResponse(saved);
+    }
+
+    private void updateGarageRatingsCache(Long garageId, Rating newRating) {
+        garageRatingsMap.computeIfAbsent(garageId, k -> new ArrayList<>()).add(newRating);
+    }
+
+    private void updateMechanicRatingsCache(Long mechanicId, Rating newRating) {
+        mechanicRatingsMap.computeIfAbsent(mechanicId, k -> new ArrayList<>()).add(newRating);
+    }
+
+    private void computeGarageAverage(Long garageId) {
+        List<Rating> ratings = garageRatingsMap.getOrDefault(garageId, Collections.emptyList());
+        if (!ratings.isEmpty()) {
+            double avg = ratings.stream()
+                    .collect(Collectors.summarizingDouble(Rating::getRatingValue))
+                    .getAverage();
+            averageGarageRatings.put(garageId, avg);
+        }
+    }
+
+    private void computeMechanicAverage(Long mechanicId) {
+        List<Rating> ratings = mechanicRatingsMap.getOrDefault(mechanicId, Collections.emptyList());
+        if (!ratings.isEmpty()) {
+            double avg = ratings.stream()
+                    .collect(Collectors.summarizingDouble(Rating::getRatingValue))
+                    .getAverage();
+            averageMechanicRatings.put(mechanicId, avg);
+        }
+    }
+
+    public double getAverageRatingForGarage(Long garageId) {
+        return averageGarageRatings.getOrDefault(garageId, 0.0);
+    }
+
+    public double getAverageRatingForMechanic(Long mechanicId) {
+        return averageMechanicRatings.getOrDefault(mechanicId, 0.0);
+    }
+
+    public List<RatingResponseDTO> getRatingsByMechanic(Long mechanicId) {
+        List<Rating> ratings = mechanicRatingsMap.getOrDefault(mechanicId, ratingRepository.findByMechanicId(mechanicId));
+        return ratings.stream().map(mapper::toResponse).collect(Collectors.toList());
+    }
+
+    public List<RatingResponseDTO> getRatingsByGarage(Long garageId) {
+        List<Rating> ratings = garageRatingsMap.getOrDefault(garageId, ratingRepository.findByGarageId(garageId));
+        return ratings.stream().map(mapper::toResponse).collect(Collectors.toList());
     }
 }

@@ -3,15 +3,14 @@ package com.eclectics.Garage.service.impl;
 import com.eclectics.Garage.dto.GarageRequestsDTO;
 import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
+import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 import com.eclectics.Garage.mapper.GarageMapper;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.GarageService;
-import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
-import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
-
 import com.eclectics.Garage.service.OSSService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @CacheConfig(cacheNames = {"garages"})
@@ -36,15 +33,39 @@ public class GarageServiceImpl implements GarageService {
     private final GarageMapper mapper;
     private final OSSService ossService;
 
-    public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService, GarageMapper mapper, OSSService ossService) {
+    private final Map<Long, Garage> garageCacheById = new ConcurrentHashMap<>();
+    private final Map<String, Garage> garageCacheByName = new ConcurrentHashMap<>();
+    private final Map<Long, Garage> garageCacheByUser = new ConcurrentHashMap<>();
+    private final List<Garage> allGaragesCache = Collections.synchronizedList(new ArrayList<>());
+
+    public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService,
+                             GarageMapper mapper, OSSService ossService) {
         this.garageRepository = garageRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
         this.ossService = ossService;
+        loadCaches();
     }
 
+    private synchronized void loadCaches() {
+        logger.info("Loading garages into in-memory cache...");
+        List<Garage> garages = garageRepository.findAll();
+        garageCacheById.clear();
+        garageCacheByName.clear();
+        garageCacheByUser.clear();
+        allGaragesCache.clear();
+
+        for (Garage g : garages) {
+            garageCacheById.put(g.getGarageId(), g);
+            garageCacheByName.put(g.getBusinessName(), g);
+            garageCacheByUser.put(g.getUser().getId(), g);
+            allGaragesCache.add(g);
+        }
+        logger.info("✅ Loaded {} garages into memory.", garages.size());
+    }
+
+    @Override
     public ProfileCompleteDTO checkProfileCompletion(Garage garage) {
-        logger.debug("Checking profile completion for garage ID: {}", garage.getGarageId());
         List<String> missingFields = garage.getMissingFields();
         return new ProfileCompleteDTO(missingFields.isEmpty(), missingFields);
     }
@@ -58,86 +79,70 @@ public class GarageServiceImpl implements GarageService {
 
     @Override
     @CacheEvict(value = {"allGarages"}, allEntries = true)
-    public Garage createGarage(GarageRequestsDTO garageRequestsDTO, MultipartFile businessLicense,
-                               MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws IOException {
-
-        logger.info("Creating new garage with name: {}", garageRequestsDTO.getBusinessName());
+    public synchronized Garage createGarage(GarageRequestsDTO garageRequestsDTO, MultipartFile businessLicense,
+                                            MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws IOException {
 
         Garage garage = mapper.toEntity(garageRequestsDTO);
         User user = authenticationService.getCurrentUser();
         garage.setUser(user);
-        logger.debug("Linked garage to user: {}", user.getEmail());
 
-        Optional<Garage> existingGarage = garageRepository.findByBusinessName(garage.getBusinessName());
-        if (existingGarage.isPresent()) {
-            logger.warn("Garage creation failed - name '{}' already exists", garage.getBusinessName());
-            throw new ResourceNotFoundException("Garage with this name exists");
+        if (garageCacheByName.containsKey(garage.getBusinessName())) {
+            throw new ResourceNotFoundException("Garage with this name already exists");
         }
 
         try {
             if (businessLicense != null && !businessLicense.isEmpty()) {
-                String fileExtension = getFileExtension(businessLicense.getOriginalFilename());
-                String uniqueFileName = "Garages/licences/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
-
-                String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
-                garage.setBusinessLicense(fileUrl);
-
-                logger.debug("Attached business license file: {}", fileUrl);
+                String ext = getFileExtension(businessLicense.getOriginalFilename());
+                String path = "Garages/licences/" + user.getId() + "-" + UUID.randomUUID() + ext;
+                garage.setBusinessLicense(ossService.uploadFile(path, businessLicense.getInputStream()));
             }
             if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
-                String fileExtension = getFileExtension(professionalCertificate.getOriginalFilename());
-                String uniqueFileName = "Garages/profCerts/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
-
-                String fileUrl = ossService.uploadFile(uniqueFileName, professionalCertificate.getInputStream());
-                garage.setProfessionalCertificate(fileUrl);
-
-                logger.debug("Attached professional certificate: {}", fileUrl);
+                String ext = getFileExtension(professionalCertificate.getOriginalFilename());
+                String path = "Garages/profCerts/" + user.getId() + "-" + UUID.randomUUID() + ext;
+                garage.setProfessionalCertificate(ossService.uploadFile(path, professionalCertificate.getInputStream()));
             }
             if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
-                String fileExtension = getFileExtension(facilityPhotos.getOriginalFilename());
-                String uniqueFileName = "Garages/photos/" + user.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
-
-                String fileUrl = ossService.uploadFile(uniqueFileName, facilityPhotos.getInputStream());
-                garage.setFacilityPhotos(fileUrl);
-
-                logger.debug("Attached facility photos: {}", fileUrl);
+                String ext = getFileExtension(facilityPhotos.getOriginalFilename());
+                String path = "Garages/photos/" + user.getId() + "-" + UUID.randomUUID() + ext;
+                garage.setFacilityPhotos(ossService.uploadFile(path, facilityPhotos.getInputStream()));
             }
         } catch (IOException e) {
-            logger.error("Failed to read uploaded files during garage creation: {}", e.getMessage());
-            throw new BadRequestException("Failed to process uploaded files");
+            throw new BadRequestException("Failed to upload garage files");
         }
 
-        // Generate a unique garage ID
-        boolean uniqueAdminIdExists;
-        long uniqueAdminId;
+        long uniqueId;
+        Random random = new Random();
         do {
-            Random random = new Random();
-            uniqueAdminId = random.nextInt(90000) + 10000;
-            uniqueAdminIdExists = garageRepository.findByGarageId(uniqueAdminId).isPresent();
-        } while (uniqueAdminIdExists);
+            uniqueId = random.nextInt(90000) + 10000;
+        } while (garageCacheById.containsKey(uniqueId));
 
-        garage.setGarageId(uniqueAdminId);
-        logger.debug("Generated unique garage ID: {}", uniqueAdminId);
+        garage.setGarageId(uniqueId);
+        Garage saved = garageRepository.save(garage);
 
-        Garage savedGarage = garageRepository.save(garage);
-        logger.info("Garage '{}' created successfully with ID: {}", savedGarage.getBusinessName(), savedGarage.getGarageId());
-        return savedGarage;
+        garageCacheById.put(saved.getGarageId(), saved);
+        garageCacheByName.put(saved.getBusinessName(), saved);
+        garageCacheByUser.put(saved.getUser().getId(), saved);
+        allGaragesCache.add(saved);
+
+        return saved;
     }
 
     @Override
     @Cacheable(value = "garageByUser", key = "#userId")
     public Optional<GarageResponseDTO> findByUserId(Long userId) {
-        logger.info("Fetching garage for user ID: {}", userId);
+        Garage cached = garageCacheByUser.get(userId);
+        if (cached != null) return Optional.of(mapper.toResponseDTO(cached));
+
         Optional<Garage> garage = garageRepository.findByUserId(userId);
-        if (garage.isEmpty()) {
-            logger.warn("No garage found for user ID: {}", userId);
-        }
+        garage.ifPresent(g -> garageCacheByUser.put(userId, g));
         return garage.map(mapper::toResponseDTO);
     }
 
     @Override
     public boolean isDetailsCompleted(Long userId) {
-        logger.debug("Checking garage detail completion for user ID: {}", userId);
+        Garage cached = garageCacheByUser.get(userId);
+        if (cached != null) return cached.isComplete();
+
         return garageRepository.findByUserId(userId)
                 .map(Garage::isComplete)
                 .orElse(false);
@@ -146,39 +151,42 @@ public class GarageServiceImpl implements GarageService {
     @Override
     @Cacheable(value = "garageById", key = "#garageId")
     public Optional<GarageResponseDTO> getGarageById(Long garageId) {
-        logger.info("Fetching garage by ID: {}", garageId);
+        Garage cached = garageCacheById.get(garageId);
+        if (cached != null) return Optional.of(mapper.toResponseDTO(cached));
+
         Optional<Garage> garage = garageRepository.findByGarageId(garageId);
-        if (garage.isEmpty()) {
-            logger.warn("Garage not found with ID: {}", garageId);
-        }
+        garage.ifPresent(g -> garageCacheById.put(g.getGarageId(), g));
         return garage.map(mapper::toResponseDTO);
     }
 
     @Override
     @Cacheable(value = "garageByName", key = "#name")
     public Optional<GarageResponseDTO> getGarageByName(String name) {
-        logger.info("Fetching garage by name: {}", name);
+        Garage cached = garageCacheByName.get(name);
+        if (cached != null) return Optional.of(mapper.toResponseDTO(cached));
+
         Optional<Garage> garage = garageRepository.findByBusinessName(name);
-        if (garage.isEmpty()) {
-            logger.warn("Garage not found with name: {}", name);
-        }
+        garage.ifPresent(g -> garageCacheByName.put(name, g));
         return garage.map(mapper::toResponseDTO);
     }
 
     @Override
     @Cacheable(value = "allGarages")
     public List<GarageResponseDTO> getAllGarages() {
-        logger.info("Fetching all garages");
+        if (!allGaragesCache.isEmpty()) {
+            return mapper.toResponseDTOList(new ArrayList<>(allGaragesCache));
+        }
         List<Garage> garages = garageRepository.findAll();
-        logger.debug("Found {} garages in total", garages.size());
+        synchronized (allGaragesCache) {
+            allGaragesCache.clear();
+            allGaragesCache.addAll(garages);
+        }
         return mapper.toResponseDTOList(garages);
     }
 
     @Override
     public long countAllGarages() {
-        long count = garageRepository.count();
-        logger.debug("Total number of garages: {}", count);
-        return count;
+        return allGaragesCache.isEmpty() ? garageRepository.count() : allGaragesCache.size();
     }
 
     private String getObjectNameFromUrl(String fileUrl, String bucketName, String endpoint) {
@@ -186,152 +194,89 @@ public class GarageServiceImpl implements GarageService {
         if (fileUrl.startsWith(baseUrl)) {
             return fileUrl.substring(baseUrl.length());
         }
-        return null; // The URL format is unexpected
+        return null;
     }
 
     @Override
     @CachePut(value = "garageById", key = "#garageId")
     @CacheEvict(value = {"allGarages", "garageByUser", "garageByName"}, allEntries = true)
-    public GarageResponseDTO updateGarage(Long garageId, GarageRequestsDTO garageRequestsDTO,
-                                          MultipartFile businessLicense, MultipartFile professionalCertificate,
-                                          MultipartFile facilityPhotos) {
-        return garageRepository.findByGarageId(garageId).map(existingGarage -> {
+    public synchronized GarageResponseDTO updateGarage(Long garageId, GarageRequestsDTO dto,
+                                                       MultipartFile businessLicense, MultipartFile professionalCertificate,
+                                                       MultipartFile facilityPhotos) {
 
-            if (garageRequestsDTO.getBusinessName() != null)
-                existingGarage.setBusinessName(garageRequestsDTO.getBusinessName());
-            if (garageRequestsDTO.getOperatingHours() != null)
-                existingGarage.setOperatingHours(garageRequestsDTO.getOperatingHours());
-            if (garageRequestsDTO.getBusinessEmailAddress() != null)
-                existingGarage.setBusinessEmailAddress(garageRequestsDTO.getBusinessEmailAddress());
-            if (garageRequestsDTO.getBusinessRegNumber() != null)
-                existingGarage.setBusinessRegNumber(garageRequestsDTO.getBusinessRegNumber());
-            if (garageRequestsDTO.getTwentyFourHours() != null)
-                existingGarage.setTwentyFourHours(garageRequestsDTO.getTwentyFourHours());
-            if (garageRequestsDTO.getServiceCategories() != null)
-                existingGarage.setServiceCategories(garageRequestsDTO.getServiceCategories());
-            if (garageRequestsDTO.getSpecialisedServices() != null)
-                existingGarage.setSpecialisedServices(garageRequestsDTO.getSpecialisedServices());
-            if (garageRequestsDTO.getPhysicalBusinessAddress() != null)
-                existingGarage.setPhysicalBusinessAddress(garageRequestsDTO.getPhysicalBusinessAddress());
-            if (garageRequestsDTO.getBusinessPhoneNumber() != null)
-                existingGarage.setBusinessPhoneNumber(garageRequestsDTO.getBusinessPhoneNumber());
-            if (garageRequestsDTO.getYearsInOperation() != null)
-                existingGarage.setYearsInOperation(garageRequestsDTO.getYearsInOperation());
-            if (garageRequestsDTO.getMpesaPayBill() != null)
-                existingGarage.setMpesaPayBill(garageRequestsDTO.getMpesaPayBill());
-            if (garageRequestsDTO.getMpesaTill() != null)
-                existingGarage.setMpesaTill(garageRequestsDTO.getMpesaTill());
+        Garage garage = garageCacheById.getOrDefault(garageId,
+                garageRepository.findByGarageId(garageId).orElseThrow(() ->
+                        new ResourceNotFoundException("Garage not found")));
 
-            try {
-                if (businessLicense != null && !businessLicense.isEmpty()) {
-                    String oldUrl = existingGarage.getBusinessLicense();
-                    if (oldUrl != null && !oldUrl.isBlank()) {
-                        try {
-                            String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
-                            if (objectName != null) {
-                                ossService.deleteFile(objectName);
-                                logger.debug("[UPDATE] Old business license deleted from OSS: {}", objectName);
-                            }
-                        } catch (Exception e) {
-                            logger.warn("[UPDATE] Failed to delete old business license from OSS: {}", e.getMessage());
-                        }
-                    }
-                    String fileExtension = getFileExtension(businessLicense.getOriginalFilename());
-                    String uniqueFileName = "Garages/licences/" + existingGarage.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
-                    String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
-                    existingGarage.setBusinessLicense(fileUrl);
+        if (dto.getBusinessName() != null) garage.setBusinessName(dto.getBusinessName());
+        if (dto.getOperatingHours() != null) garage.setOperatingHours(dto.getOperatingHours());
+        if (dto.getBusinessEmailAddress() != null) garage.setBusinessEmailAddress(dto.getBusinessEmailAddress());
+        if (dto.getBusinessRegNumber() != null) garage.setBusinessRegNumber(dto.getBusinessRegNumber());
+        if (dto.getTwentyFourHours() != null) garage.setTwentyFourHours(dto.getTwentyFourHours());
+        if (dto.getServiceCategories() != null) garage.setServiceCategories(dto.getServiceCategories());
+        if (dto.getSpecialisedServices() != null) garage.setSpecialisedServices(dto.getSpecialisedServices());
+        if (dto.getPhysicalBusinessAddress() != null) garage.setPhysicalBusinessAddress(dto.getPhysicalBusinessAddress());
+        if (dto.getBusinessPhoneNumber() != null) garage.setBusinessPhoneNumber(dto.getBusinessPhoneNumber());
+        if (dto.getYearsInOperation() != null) garage.setYearsInOperation(dto.getYearsInOperation());
+        if (dto.getMpesaPayBill() != null) garage.setMpesaPayBill(dto.getMpesaPayBill());
+        if (dto.getMpesaTill() != null) garage.setMpesaTill(dto.getMpesaTill());
 
-                    logger.debug("[UPDATE] New business license uploaded to OSS at: {}", fileUrl);
-
-                }
-                if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
-                    String oldUrl = existingGarage.getProfessionalCertificate();
-                    if (oldUrl != null && !oldUrl.isBlank()) {
-                        try {
-                            String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
-                            if (objectName != null) {
-                                ossService.deleteFile(objectName);
-                                logger.debug("[UPDATE] Old professional certificate  deleted from OSS: {}", objectName);
-                            }
-                        } catch (Exception e) {
-                            logger.warn("[UPDATE] Failed to delete old professional certificate  from OSS: {}", e.getMessage());
-                        }
-                    }
-                    String fileExtension = getFileExtension(professionalCertificate.getOriginalFilename());
-                    String uniqueFileName = "Garages/profCerts/" + existingGarage.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
-                    String fileUrl = ossService.uploadFile(uniqueFileName, professionalCertificate.getInputStream());
-                    existingGarage.setProfessionalCertificate(fileUrl);
-
-                    logger.debug("[UPDATE] New professional certificate  uploaded to OSS at: {}", fileUrl);
-
-                }
-                if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
-                    String oldUrl = existingGarage.getFacilityPhotos();
-                    if (oldUrl != null && !oldUrl.isBlank()) {
-                        try {
-                            String objectName = getObjectNameFromUrl(oldUrl, ossService.getBucketName(), ossService.getEndpoint());
-                            if (objectName != null) {
-                                ossService.deleteFile(objectName);
-                                logger.debug("[UPDATE] Old profile garage deleted from OSS: {}", objectName);
-                            }
-                        } catch (Exception e) {
-                            logger.warn("[UPDATE] Failed to delete old garage picture from OSS: {}", e.getMessage());
-                        }
-                    }
-                    String fileExtension = getFileExtension(facilityPhotos.getOriginalFilename());
-                    String uniqueFileName = "Garages/photos/" + existingGarage.getId() + "-" + UUID.randomUUID().toString() + fileExtension;
-                    String fileUrl = ossService.uploadFile(uniqueFileName, facilityPhotos.getInputStream());
-                    existingGarage.setFacilityPhotos(fileUrl);
-
-                    logger.debug("[UPDATE] New Garage facility picture uploaded to OSS at: {}", fileUrl);
-
-                }
-            } catch (IOException e) {
-                logger.error("Failed to process uploaded files for garage update (ID {}): {}", garageId, e.getMessage());
-                throw new BadRequestException("Failed to read file data");
+        try {
+            if (businessLicense != null && !businessLicense.isEmpty()) {
+                String ext = getFileExtension(businessLicense.getOriginalFilename());
+                String uniqueFileName = "Garages/licences/" + garageId + "-" + UUID.randomUUID() + ext;
+                String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
+                garage.setBusinessLicense(fileUrl);
             }
+            if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
+                String ext = getFileExtension(professionalCertificate.getOriginalFilename());
+                String uniqueFileName = "Garages/profCerts/" + garageId + "-" + UUID.randomUUID() + ext;
+                String fileUrl = ossService.uploadFile(uniqueFileName, professionalCertificate.getInputStream());
+                garage.setProfessionalCertificate(fileUrl);
+            }
+            if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
+                String ext = getFileExtension(facilityPhotos.getOriginalFilename());
+                String uniqueFileName = "Garages/photos/" + garageId + "-" + UUID.randomUUID() + ext;
+                String fileUrl = ossService.uploadFile(uniqueFileName, facilityPhotos.getInputStream());
+                garage.setFacilityPhotos(fileUrl);
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to update garage files");
+        }
 
-            Garage updatedGarage = garageRepository.save(existingGarage);
-            logger.info("Garage with ID {} updated successfully", garageId);
-            return mapper.toResponseDTO(updatedGarage);
+        Garage updated = garageRepository.save(garage);
 
-        }).orElseThrow(() -> {
-            logger.error("Garage not found during update, ID: {}", garageId);
-            return new ResourceNotFoundException("Garage not found");
-        });
+        garageCacheById.put(updated.getGarageId(), updated);
+        garageCacheByName.put(updated.getBusinessName(), updated);
+        garageCacheByUser.put(updated.getUser().getId(), updated);
+        allGaragesCache.removeIf(g -> Objects.equals(g.getGarageId(), garageId));
+        allGaragesCache.add(updated);
+
+        return mapper.toResponseDTO(updated);
     }
 
     @Override
     @CacheEvict(value = {"allGarages", "garageById", "garageByName", "garageByUser"}, allEntries = true)
-    public void deleteGarage(Long id) {
-        logger.info("Deleting garage with ID: {}", id);
-
+    public synchronized void deleteGarage(Long id) {
         if (!garageRepository.existsById(id)) {
-            logger.warn("Attempted to delete non-existent garage with ID: {}", id);
             throw new ResourceNotFoundException("Garage with id " + id + " does not exist");
         }
-
         garageRepository.deleteById(id);
-        logger.info("Garage with ID {} deleted successfully", id);
+
+        garageCacheById.remove(id);
+        garageCacheByName.entrySet().removeIf(e -> e.getValue().getId().equals(id));
+        garageCacheByUser.entrySet().removeIf(e -> e.getValue().getId().equals(id));
+        allGaragesCache.removeIf(g -> g.getId().equals(id));
     }
 
     @Override
     public Optional<String> getGarageUrlByUniqueId(Long uniqueId, int expiryMinutes) {
-        logger.info("[OSS URL] Generating presigned URL for Garage uniqueId={}", uniqueId);
+        Garage cached = garageCacheById.get(uniqueId);
+        if (cached != null && cached.getBusinessLicense() != null) {
+            return Optional.of(ossService.generatePresignedUrl(cached.getBusinessLicense(), expiryMinutes));
+        }
 
         return garageRepository.findByGarageId(uniqueId)
-                .map(garage -> {
-                    String objectKey = garage.getBusinessLicense();
-
-                    if (objectKey == null || objectKey.isBlank()) {
-                        logger.warn("[OSS URL] No Business License key found for CarOwner uniqueId={}", uniqueId);
-                        return null;
-                    }
-
-                    String presignedUrl = ossService.generatePresignedUrl(objectKey, expiryMinutes);
-
-                    logger.debug("[OSS URL] Generated URL for {} will expire in {} minutes", objectKey, expiryMinutes);
-                    return presignedUrl;
-                });
+                .map(g -> ossService.generatePresignedUrl(g.getBusinessLicense(), expiryMinutes));
     }
 }

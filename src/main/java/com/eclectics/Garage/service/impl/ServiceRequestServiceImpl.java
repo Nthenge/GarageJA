@@ -13,8 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +28,11 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final GarageRepository garageRepository;
     private final SeverityCategoryRepository severityCategoryRepository;
     private final ServiceRequestsMapper mapper;
+
+    private final Map<Long, ServiceRequest> requestCache = new HashMap<>(); // quick lookup by requestId
+    private final Map<Integer, List<ServiceRequest>> requestsByCarOwnerCache = new HashMap<>(); // group requests per car owner
+    private final Queue<ServiceRequest> recentRequestsQueue = new LinkedList<>(); // track last few created requests (FIFO)
+    private final Set<Long> deletedRequestIds = new HashSet<>(); // track deleted IDs to avoid reprocessing
 
     public ServiceRequestServiceImpl(
             RequestServiceRepository requestServiceRepository,
@@ -81,20 +85,35 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 
         ServiceRequest savedRequest = requestServiceRepository.save(request);
         logger.info("Service request successfully created.");
+
+        requestCache.put(savedRequest.getId(), savedRequest);
+        requestsByCarOwnerCache.computeIfAbsent(carOwnerUniqueId, k -> new ArrayList<>()).add(savedRequest);
+        if (recentRequestsQueue.size() > 20) recentRequestsQueue.poll(); // limit queue size
+        recentRequestsQueue.offer(savedRequest);
+
         return savedRequest;
     }
-
 
     @Override
     @Cacheable(value = "allServiceRequests")
     public List<ServiceRequestsResponseDTO> getAllRequests() {
         logger.info("Fetching all service requests...");
+
+        if (!requestCache.isEmpty()) {
+            logger.info("Returning cached requests: " + requestCache.size());
+            return mapper.toResponseList(new ArrayList<>(requestCache.values()));
+        }
+
         List<ServiceRequest> requests = requestServiceRepository.findAll();
         logger.info("Total service requests fetched: " + requests.size());
+
+        for (ServiceRequest req : requests) {
+            requestCache.put(req.getId(), req);
+        }
+
         return mapper.toResponseList(requests);
     }
 
-    //Look into how, data structures are implemented in java spring boot and implement them
     @Override
     @Caching(evict = {
             @CacheEvict(value = "allServiceRequests", allEntries = true),
@@ -124,16 +143,25 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 
         ServiceRequest updatedRequest = requestServiceRepository.save(serviceRequest);
         logger.info("Service request updated successfully with ID: " + requestId);
+
+        requestCache.put(requestId, updatedRequest);
         return mapper.toResponse(updatedRequest);
     }
-
 
     @Override
     @Cacheable(value = "requestsByCarOwner", key = "#carOwnerUniqueId")
     public List<ServiceRequestsResponseDTO> getRequestsByCarOwner(Integer carOwnerUniqueId) {
         logger.info("Fetching service requests for CarOwner with ID: " + carOwnerUniqueId);
+
+        if (requestsByCarOwnerCache.containsKey(carOwnerUniqueId)) {
+            logger.info("Returning cached requests for CarOwner: " + carOwnerUniqueId);
+            return mapper.toResponseList(requestsByCarOwnerCache.get(carOwnerUniqueId));
+        }
+
         List<ServiceRequest> requests = requestServiceRepository.getServiceByCarOwner_UniqueId(carOwnerUniqueId);
         logger.info("Total requests found for CarOwner " + carOwnerUniqueId + ": " + requests.size());
+        requestsByCarOwnerCache.put(carOwnerUniqueId, requests);
+
         return mapper.toResponseList(requests);
     }
 
@@ -150,12 +178,21 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     @Cacheable(value = "requestById", key = "#requestId")
     public Optional<ServiceRequestsResponseDTO> getRequestById(Long requestId) {
         logger.info("Fetching service request by ID: " + requestId);
+
+        if (requestCache.containsKey(requestId)) {
+            logger.info("Returning cached request for ID: " + requestId);
+            return Optional.of(mapper.toResponse(requestCache.get(requestId)));
+        }
+
         Optional<ServiceRequest> request = requestServiceRepository.findById(requestId);
+        request.ifPresent(r -> requestCache.put(r.getId(), r));
+
         if (request.isPresent()) {
             logger.info("Service request found with ID: " + requestId);
         } else {
             logger.warning("No service request found with ID: " + requestId);
         }
+
         return mapper.toOptionalResponse(request);
     }
 
@@ -171,6 +208,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         try {
             requestServiceRepository.deleteById(id);
             logger.info("Service request deleted successfully with ID: " + id);
+
+            requestCache.remove(id);
+            deletedRequestIds.add(id);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error deleting service request with ID: " + id, e);
             throw e;

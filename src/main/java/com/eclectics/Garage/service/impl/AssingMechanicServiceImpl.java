@@ -17,7 +17,9 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class AssingMechanicServiceImpl implements AssignMechanicService {
@@ -29,9 +31,16 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
     private final RequestServiceRepository requestServiceRepository;
     private final AssignMechanicsMapper mapper;
 
-    public AssingMechanicServiceImpl(AssignMechanicsRepository assignMechanicsRepository,
-                                     MechanicRepository mechanicRepository,
-                                     RequestServiceRepository requestServiceRepository, AssignMechanicsMapper mapper) {
+    private final Map<Long, List<AssignMechanics>> mechanicAssignmentsMap = new ConcurrentHashMap<>();
+    private final Map<Long, List<AssignMechanics>> requestAssignmentsMap = new ConcurrentHashMap<>();
+    private final Set<String> assignedPairs = Collections.synchronizedSet(new HashSet<>()); // to prevent duplicates
+
+    public AssingMechanicServiceImpl(
+            AssignMechanicsRepository assignMechanicsRepository,
+            MechanicRepository mechanicRepository,
+            RequestServiceRepository requestServiceRepository,
+            AssignMechanicsMapper mapper
+    ) {
         this.assignMechanicsRepository = assignMechanicsRepository;
         this.mechanicRepository = mechanicRepository;
         this.requestServiceRepository = requestServiceRepository;
@@ -47,17 +56,17 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
     public AssignMechanicsResponseDTO assignRequestToMechanic(Long requestId, Long mechanicId) {
         logger.info("Assigning service request ID {} to mechanic ID {}", requestId, mechanicId);
 
+        String key = mechanicId + "-" + requestId;
+
+        if (assignedPairs.contains(key)) {
+            throw new IllegalStateException("This mechanic is already assigned to this request");
+        }
+
         ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
-                .orElseThrow(() -> {
-                    logger.error("ServiceRequest with ID {} not found", requestId);
-                    return new ResourceNotFoundException("Service with this id does not exist");
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Service with this id does not exist"));
 
         Mechanic mechanic = mechanicRepository.findById(mechanicId)
-                .orElseThrow(() -> {
-                    logger.error("Mechanic with ID {} not found", mechanicId);
-                    return new ResourceNotFoundException("Mechanic with this id does not exist");
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Mechanic with this id does not exist"));
 
         AssignMechanics assignRequests = new AssignMechanics();
         assignRequests.setService(serviceRequest);
@@ -67,6 +76,17 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         assignRequests.setUpdatedAt(LocalDateTime.now());
 
         AssignMechanics savedAssignment = assignMechanicsRepository.save(assignRequests);
+
+        mechanicAssignmentsMap
+                .computeIfAbsent(mechanicId, k -> new LinkedList<>())
+                .add(savedAssignment);
+
+        requestAssignmentsMap
+                .computeIfAbsent(requestId, k -> new LinkedList<>())
+                .add(savedAssignment);
+
+        assignedPairs.add(key);
+
         logger.info("Successfully assigned mechanic ID {} to service request ID {}", mechanicId, requestId);
         return mapper.toResponseDTO(savedAssignment);
     }
@@ -81,15 +101,19 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         logger.info("Updating assignment ID {} to status {}", assignmentId, status);
 
         AssignMechanics assignRequests = assignMechanicsRepository.findById(assignmentId)
-                .orElseThrow(() -> {
-                    logger.error("Assignment with ID {} not found", assignmentId);
-                    return new ResourceNotFoundException("Request with this id does not exist");
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Request with this id does not exist"));
 
         assignRequests.setStatus(status);
         assignRequests.setUpdatedAt(LocalDateTime.now());
 
         AssignMechanics updatedAssignment = assignMechanicsRepository.save(assignRequests);
+
+        mechanicAssignmentsMap.getOrDefault(assignRequests.getMechanic().getId(), new LinkedList<>())
+                .replaceAll(a -> a.getId().equals(assignmentId) ? updatedAssignment : a);
+
+        requestAssignmentsMap.getOrDefault(assignRequests.getService().getId(), new LinkedList<>())
+                .replaceAll(a -> a.getId().equals(assignmentId) ? updatedAssignment : a);
+
         logger.info("Assignment ID {} updated to status {}", assignmentId, status);
         return mapper.toResponseDTO(updatedAssignment);
     }
@@ -98,7 +122,10 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
     @Cacheable(value = "assignmentsByMechanic", key = "#mechanicId")
     public List<AssignMechanicsResponseDTO> getAssignmentsByMechanic(Long mechanicId) {
         logger.info("Fetching assignments for mechanic ID {}", mechanicId);
-        List<AssignMechanics> assignments = assignMechanicsRepository.findByMechanicId(mechanicId);
+
+        List<AssignMechanics> assignments = mechanicAssignmentsMap.getOrDefault(mechanicId,
+                assignMechanicsRepository.findByMechanicId(mechanicId));
+
         logger.debug("Found {} assignments for mechanic ID {}", assignments.size(), mechanicId);
         return mapper.toResponseList(assignments);
     }
@@ -107,7 +134,10 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
     @Cacheable(value = "assignmentsByRequest", key = "#requestId")
     public List<AssignMechanicsResponseDTO> getAssignmentByRequest(Long requestId) {
         logger.info("Fetching assignments for service request ID {}", requestId);
-        List<AssignMechanics> assignments = assignMechanicsRepository.findByService_Id(requestId);
+
+        List<AssignMechanics> assignments = requestAssignmentsMap.getOrDefault(requestId,
+                assignMechanicsRepository.findByService_Id(requestId));
+
         logger.debug("Found {} assignments for request ID {}", assignments.size(), requestId);
         return mapper.toResponseList(assignments);
     }
@@ -116,7 +146,16 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
     @Cacheable(value = "allAssignments")
     public List<AssignMechanicsResponseDTO> getAllAssignments() {
         logger.info("Fetching all mechanic assignments");
-        List<AssignMechanics> assignments = assignMechanicsRepository.findAll();
+
+        List<AssignMechanics> assignments = mechanicAssignmentsMap.values().stream()
+                .flatMap(List::stream)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (assignments.isEmpty()) {
+            assignments = assignMechanicsRepository.findAll();
+        }
+
         logger.debug("Total assignments found: {}", assignments.size());
         return mapper.toResponseList(assignments);
     }
