@@ -185,35 +185,6 @@ public class UserServiceImpl implements UserService {
         boolean detailsCompleted = user.isDetailsCompleted();
         responseDTO.setDetailsCompleted(detailsCompleted);
 
-        if (!detailsCompleted) {
-            switch (user.getRole()) {
-                case SYSTEM_ADMIN:
-                    responseDTO.setDetailsCompleted(true);
-                    break;
-
-                case CAR_OWNER:
-                    carOwnerRepository.findByUser(user).ifPresent(carOwner ->
-                            responseDTO.setMissingFields(carOwner.getMissingFields())
-                    );
-                    break;
-
-                case GARAGE_ADMIN:
-                    garageRepository.findByUser(user).ifPresent(garage ->
-                            responseDTO.setMissingFields(garage.getMissingFields())
-                    );
-                    break;
-
-                case MECHANIC:
-                    mechanicRepository.findByUser(user).ifPresent(mechanic ->
-                            responseDTO.setMissingFields(mechanic.getMissingFields())
-                    );
-                    break;
-
-                default:
-                    responseDTO.setMissingFields(List.of("Unknown role – cannot determine missing fields"));
-            }
-        }
-
         return responseDTO;
     }
 

@@ -7,16 +7,14 @@ import java.util.List;
 public class UserDetailsAuthDTO extends UserLoginResponseDTO{
     private String firstname;
     private boolean detailsCompleted;
-    private List<String> missingFields;
 
     public UserDetailsAuthDTO() {
     }
 
-    public UserDetailsAuthDTO(String token, Role role, String firstname, boolean detailsCompleted, List<String> missingFields) {
+    public UserDetailsAuthDTO(String token, Role role, String firstname, boolean detailsCompleted) {
         super(token, role);
         this.firstname = firstname;
         this.detailsCompleted = detailsCompleted;
-        this.missingFields = missingFields;
     }
 
     public String getFirstname() {
@@ -33,13 +31,5 @@ public class UserDetailsAuthDTO extends UserLoginResponseDTO{
 
     public void setDetailsCompleted(boolean detailsCompleted) {
         this.detailsCompleted = detailsCompleted;
-    }
-
-    public List<String> getMissingFields() {
-        return missingFields;
-    }
-
-    public void setMissingFields(List<String> missingFields) {
-        this.missingFields = missingFields;
     }
 }
