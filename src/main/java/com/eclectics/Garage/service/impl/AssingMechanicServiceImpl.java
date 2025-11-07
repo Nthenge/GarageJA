@@ -1,68 +1,162 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.AssignMechanicsResponseDTO;
+import com.eclectics.Garage.mapper.AssignMechanicsMapper;
 import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.AssignMechanicsRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.RequestServiceRepository;
 import com.eclectics.Garage.service.AssignMechanicService;
+import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class AssingMechanicServiceImpl implements AssignMechanicService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AssingMechanicServiceImpl.class);
+
     private final AssignMechanicsRepository assignMechanicsRepository;
     private final MechanicRepository mechanicRepository;
     private final RequestServiceRepository requestServiceRepository;
+    private final AssignMechanicsMapper mapper;
 
-    public AssingMechanicServiceImpl(AssignMechanicsRepository assignMechanicsRepository, MechanicRepository mechanicRepository, RequestServiceRepository requestServiceRepository) {
+    private final Map<Long, List<AssignMechanics>> mechanicAssignmentsMap = new ConcurrentHashMap<>();
+    private final Map<Long, List<AssignMechanics>> requestAssignmentsMap = new ConcurrentHashMap<>();
+    private final Set<String> assignedPairs = Collections.synchronizedSet(new HashSet<>()); // to prevent duplicates
+
+    public AssingMechanicServiceImpl(
+            AssignMechanicsRepository assignMechanicsRepository,
+            MechanicRepository mechanicRepository,
+            RequestServiceRepository requestServiceRepository,
+            AssignMechanicsMapper mapper
+    ) {
         this.assignMechanicsRepository = assignMechanicsRepository;
         this.mechanicRepository = mechanicRepository;
         this.requestServiceRepository = requestServiceRepository;
+        this.mapper = mapper;
     }
 
     @Override
-    public AssignMechanics assignRequestToMechanic(Long requestId, Long mechanicId) {
+    @Caching(evict = {
+            @CacheEvict(value = "allAssignments", allEntries = true),
+            @CacheEvict(value = "assignmentsByMechanic", allEntries = true),
+            @CacheEvict(value = "assignmentsByRequest", allEntries = true)
+    })
+    public AssignMechanicsResponseDTO assignRequestToMechanic(Long requestId, Long mechanicId) {
+        logger.info("Assigning service request ID {} to mechanic ID {}", requestId, mechanicId);
+
+        String key = mechanicId + "-" + requestId;
+
+        if (assignedPairs.contains(key)) {
+            throw new IllegalStateException("This mechanic is already assigned to this request");
+        }
+
         ServiceRequest serviceRequest = requestServiceRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Service with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Service with this id does not exist"));
 
         Mechanic mechanic = mechanicRepository.findById(mechanicId)
-                .orElseThrow(()-> new RuntimeException("Mechanic with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mechanic with this id does not exist"));
 
         AssignMechanics assignRequests = new AssignMechanics();
-
         assignRequests.setService(serviceRequest);
         assignRequests.setMechanic(mechanic);
-        assignRequests.setStatus(AssignmentStatus.ASSINGED);
+        assignRequests.setStatus(AssignMechanicStatus.ASSINGED);
         assignRequests.setAssignedAt(LocalDateTime.now());
         assignRequests.setUpdatedAt(LocalDateTime.now());
-        return assignMechanicsRepository.save(assignRequests);
+
+        AssignMechanics savedAssignment = assignMechanicsRepository.save(assignRequests);
+
+        mechanicAssignmentsMap
+                .computeIfAbsent(mechanicId, k -> new LinkedList<>())
+                .add(savedAssignment);
+
+        requestAssignmentsMap
+                .computeIfAbsent(requestId, k -> new LinkedList<>())
+                .add(savedAssignment);
+
+        assignedPairs.add(key);
+
+        logger.info("Successfully assigned mechanic ID {} to service request ID {}", mechanicId, requestId);
+        return mapper.toResponseDTO(savedAssignment);
     }
 
     @Override
-    public AssignMechanics updateAssignmentStatus(Long assignmentId, AssignmentStatus status) {
+    @Caching(evict = {
+            @CacheEvict(value = "allAssignments", allEntries = true),
+            @CacheEvict(value = "assignmentsByMechanic", allEntries = true),
+            @CacheEvict(value = "assignmentsByRequest", allEntries = true)
+    })
+    public AssignMechanicsResponseDTO updateAssignmentStatus(Long assignmentId, AssignMechanicStatus status) {
+        logger.info("Updating assignment ID {} to status {}", assignmentId, status);
+
         AssignMechanics assignRequests = assignMechanicsRepository.findById(assignmentId)
-                .orElseThrow(()-> new RuntimeException("Request with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Request with this id does not exist"));
 
-        assignRequests.setStatus(AssignmentStatus.ACCEPTED);
+        assignRequests.setStatus(status);
         assignRequests.setUpdatedAt(LocalDateTime.now());
-        return assignMechanicsRepository.save(assignRequests);
+
+        AssignMechanics updatedAssignment = assignMechanicsRepository.save(assignRequests);
+
+        mechanicAssignmentsMap.getOrDefault(assignRequests.getMechanic().getId(), new LinkedList<>())
+                .replaceAll(a -> a.getId().equals(assignmentId) ? updatedAssignment : a);
+
+        requestAssignmentsMap.getOrDefault(assignRequests.getService().getId(), new LinkedList<>())
+                .replaceAll(a -> a.getId().equals(assignmentId) ? updatedAssignment : a);
+
+        logger.info("Assignment ID {} updated to status {}", assignmentId, status);
+        return mapper.toResponseDTO(updatedAssignment);
     }
 
     @Override
-    public List<AssignMechanics> getAssignmentsByMechanic(Long mechanicId) {
-        return assignMechanicsRepository.findByMechanicId(mechanicId);
+    @Cacheable(value = "assignmentsByMechanic", key = "#mechanicId")
+    public List<AssignMechanicsResponseDTO> getAssignmentsByMechanic(Long mechanicId) {
+        logger.info("Fetching assignments for mechanic ID {}", mechanicId);
+
+        List<AssignMechanics> assignments = mechanicAssignmentsMap.getOrDefault(mechanicId,
+                assignMechanicsRepository.findByMechanicId(mechanicId));
+
+        logger.debug("Found {} assignments for mechanic ID {}", assignments.size(), mechanicId);
+        return mapper.toResponseList(assignments);
     }
 
     @Override
-    public List<AssignMechanics> getAssignmentByRequest(Long requestId) {
-        return assignMechanicsRepository.findByService_Id(requestId);
+    @Cacheable(value = "assignmentsByRequest", key = "#requestId")
+    public List<AssignMechanicsResponseDTO> getAssignmentByRequest(Long requestId) {
+        logger.info("Fetching assignments for service request ID {}", requestId);
+
+        List<AssignMechanics> assignments = requestAssignmentsMap.getOrDefault(requestId,
+                assignMechanicsRepository.findByService_Id(requestId));
+
+        logger.debug("Found {} assignments for request ID {}", assignments.size(), requestId);
+        return mapper.toResponseList(assignments);
     }
 
     @Override
-    public List<AssignMechanics> getAllAssignments() {
-        return assignMechanicsRepository.findAll();
+    @Cacheable(value = "allAssignments")
+    public List<AssignMechanicsResponseDTO> getAllAssignments() {
+        logger.info("Fetching all mechanic assignments");
+
+        List<AssignMechanics> assignments = mechanicAssignmentsMap.values().stream()
+                .flatMap(List::stream)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (assignments.isEmpty()) {
+            assignments = assignMechanicsRepository.findAll();
+        }
+
+        logger.debug("Total assignments found: {}", assignments.size());
+        return mapper.toResponseList(assignments);
     }
 }

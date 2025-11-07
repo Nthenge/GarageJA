@@ -1,21 +1,23 @@
 package com.eclectics.Garage.service;
 
-import com.eclectics.Garage.model.Role;
+import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.model.User;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
-    User createUser(User user);
-    Optional<User> getUserByEmail(String email);
-    List<User> getAllUsers();
-    User updateUser(Long id, User user);
+    UserRegistrationResponseDTO createUser(UserRegistrationRequestDTO user);
+    Optional<UserRegistrationResponseDTO> getUserByEmail(String email);
+    List<UserRegistrationResponseDTO> getAllUsers();
+    UserRegistrationResponseDTO updateUser(Long id, User user);
+    UserLoginResponseDTO loginUser(UserLoginRequestDTO userLoginRequestDTO);
+    UserPasswordResetResponseDTO resetPassword(UserPasswordResetRequestDTO resetRequestDTO);
+    void updatePassword(UserPasswordUpdateDTO updatePassword);
+    void confirmEmail(String token, String email);
     void  deleteUser(Long id);
-    User loginUser(String email, String password);
-    User resetPassword(String email);
     void sendResetEmail(String email, String token);
-    User updatePassword(String token, String newPassword);
+    boolean confirmUser(String token);
 }
 
 

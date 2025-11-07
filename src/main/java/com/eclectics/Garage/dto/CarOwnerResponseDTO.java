@@ -17,12 +17,12 @@ public class CarOwnerResponseDTO {
     private String transmission;
     private String severity;
     private boolean isComplete;
-    private byte[] profilePic;
+    private String profilePic;
 
     public CarOwnerResponseDTO() {
     }
 
-    public CarOwnerResponseDTO(Long id, String altPhone, String year, String engineCapacity, String severity, byte[] profilePic, boolean isComplete, String transmission, String engineType, String make, Integer uniqueId, String model, String licensePlate, String color) {
+    public CarOwnerResponseDTO(Long id, String altPhone, String year, String engineCapacity, String severity, String profilePic, boolean isComplete, String transmission, String engineType, String make, Integer uniqueId, String model, String licensePlate, String color) {
         this.id = id;
         this.altPhone = altPhone;
         this.year = year;
@@ -143,11 +143,11 @@ public class CarOwnerResponseDTO {
         isComplete = complete;
     }
 
-    public byte[] getProfilePic() {
+    public String getProfilePic() {
         return profilePic;
     }
 
-    public void setProfilePic(byte[] profilePic) {
+    public void setProfilePic(String profilePic) {
         this.profilePic = profilePic;
     }
 }

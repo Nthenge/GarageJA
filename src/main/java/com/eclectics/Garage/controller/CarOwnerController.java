@@ -6,6 +6,7 @@ import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.service.CarOwnerService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,11 +28,13 @@ public class CarOwnerController {
             this.mapper = mapper;
         }
 
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
         @GetMapping("/search/{carOwnerUniqueId}")
         public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
             return carOwnerService.getCarOwnerByUniqueId(carOwnerUniqueId);
         }
 
+        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
         @GetMapping()
         public List<CarOwnerResponseDTO> getAllCarOwners(){
             return carOwnerService.getAllCarOwners();
@@ -46,30 +49,23 @@ public class CarOwnerController {
                 @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
             carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
-
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Car owner created with profile picture");
-
             return ResponseEntity.ok(response);
         }
 
-
-    @PutMapping(value = "/{carOwnerUniqueId}/uploadprofile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasRole('CAR_OWNER)")
+        @PutMapping(value = "/update/{carOwnerUniqueId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<CarOwnerResponseDTO> updateCarOwnerProfilePic(
                 @PathVariable Integer carOwnerUniqueId,
+                @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
                 @RequestPart("profilePic") MultipartFile profilePic
         ) throws IOException {
 
-            CarOwnerResponseDTO updatedOwner = carOwnerService.updateProfilePic(carOwnerUniqueId, profilePic);
+            CarOwnerResponseDTO updatedOwner = carOwnerService.updateProfilePic(carOwnerUniqueId,carOwnerRequestsDTO, profilePic);
             return ResponseEntity.ok(updatedOwner);
         }
 
-        @PutMapping("/{carOwnerId}")
-        public ResponseEntity<CarOwnerResponseDTO> updateCarOwner(@PathVariable Long carOwnerId, @RequestBody CarOwnerRequestsDTO carOwnerRequestsDTO){
-            CarOwnerResponseDTO updatedOwner = carOwnerService.updateCarOwner(carOwnerId, carOwnerRequestsDTO);
-            return ResponseEntity.ok(updatedOwner);
-        }
-
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER)")
         @DeleteMapping("/{carOwnerId}")
         public String deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
             carOwnerService.deleteCarOwner(carOwnerId);

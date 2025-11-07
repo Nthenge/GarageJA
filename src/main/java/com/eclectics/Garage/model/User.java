@@ -5,6 +5,7 @@
 
     @Entity
     @Table(name = "users")
+    @Cacheable
     public class User {
 
         @Id
@@ -26,7 +27,7 @@
         @Column(nullable = false)
         private String phoneNumber;
 
-        private boolean enabled = true;
+        private boolean enabled = false;
 
         @Enumerated(EnumType.STRING)
         private Role role;
@@ -70,6 +71,20 @@
             this.email = email;
         }
 
+        public String getFirstname() {
+            return firstname;
+        }
+        public void setFirstname(String firstname) {
+            this.firstname = firstname;
+        }
+
+        public String getSecondname() {
+            return secondname;
+        }
+        public void setSecondname(String secondname) {
+            this.secondname = secondname;
+        }
+
         public String getPassword() {
             return password;
         }
@@ -101,41 +116,20 @@
         public Mechanic getMechanic() {return mechanic;}
         public void setMechanic(Mechanic mechanic) {this.mechanic = mechanic;}
 
-        public CarOwner getCarOwner() {return carOwner;}
-        public void setCarOwner(CarOwner carOwner) {this.carOwner = carOwner;}
-
         public Garage getGarage() {return garage;}
         public void setGarage(Garage garage) {this.garage = garage;}
-
-        @Transient
-        public boolean isDetailsCompleted() {
-            switch (this.role) {
-                case MECHANIC:
-                    return mechanic != null && mechanic.isComplete();
-                case CAR_OWNER:
-                    return carOwner != null && carOwner.isComplete();
-                case GARAGE_ADMIN:
-                    return garage != null && garage.isComplete();
-                default:
-                    return false;
-            }
-        }
-
 
         public User() {
         }
 
-        public String getFirstname() {
-            return firstname;
-        }
-        public void setFirstname(String firstname) {
-            this.firstname = firstname;
-        }
-        public String getSecondname() {
-            return secondname;
-        }
-        public void setSecondname(String secondname) {
-            this.secondname = secondname;
+        @Transient
+        public boolean isDetailsCompleted() {
+            return switch (this.role) {
+                case MECHANIC -> mechanic != null && mechanic.isComplete();
+                case CAR_OWNER -> carOwner != null && carOwner.isComplete();
+                case GARAGE_ADMIN -> garage != null && garage.isComplete();
+                default -> false;
+            };
         }
     }
 

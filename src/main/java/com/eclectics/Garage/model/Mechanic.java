@@ -23,15 +23,15 @@ public class Mechanic {
     private String availability;
 
     @Lob
-    private byte[] profilePic;
+    private String profilePic;
     @Lob
-    private byte[] nationalIDPic;
+    private String nationalIDPic;
     @Lob
-    private byte[] professionalCertfificate;
+    private String professionalCertfificate;
     @Lob
-    private byte[] anyRelevantCertificate;
+    private String anyRelevantCertificate;
     @Lob
-    private byte[] policeClearanceCertficate;
+    private String policeClearanceCertficate;
 
     @Column(unique = true)
     private Integer nationalIdNumber;
@@ -47,7 +47,7 @@ public class Mechanic {
 
     public Mechanic() {}
 
-    public Mechanic(Long id, String areasofSpecialization, User user, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, byte[] profilePic, byte[] nationalIDPic, byte[] professionalCertfificate, byte[] anyRelevantCertificate, byte[] policeClearanceCertficate, Integer nationalIdNumber, Garage garage) {
+    public Mechanic(Long id, String areasofSpecialization, User user, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate, Integer nationalIdNumber, Garage garage) {
         this.id = id;
         this.areasofSpecialization = areasofSpecialization;
         this.alternativePhone = alternativePhone;
@@ -76,21 +76,15 @@ public class Mechanic {
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (areasofSpecialization != null && !areasofSpecialization.isBlank()) {missingFields.add("areasofSpecialization");};
-        if (alternativePhone == null || alternativePhone.isBlank()) missingFields.add("alternativePhone");
+        if (areasofSpecialization == null || areasofSpecialization.isEmpty()) {missingFields.add("areasofSpecialization");};
         if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalAddress");
-        if (emergencyContactName == null || emergencyContactName.isBlank()) missingFields.add("emergencyContactName");
-        if (emergencyContactNumber == null || emergencyContactNumber.isBlank()) missingFields.add("emergencyContactNumber");
         if (yearsofExperience == null || yearsofExperience.isBlank()) missingFields.add("yearsofExperience");
         if (vehicleBrands == null || vehicleBrands.isBlank()) missingFields.add("vehicleBrands");
         if (availability == null || availability.isBlank()) missingFields.add("availability");
-        if (profilePic == null || profilePic.length == 0) missingFields.add("profilePic");
-        if (nationalIDPic == null || nationalIDPic.length == 0) missingFields.add("nationalIDPic");
-        if (professionalCertfificate == null || professionalCertfificate.length == 0) missingFields.add("professionalCertfificate");
-        if (anyRelevantCertificate == null || anyRelevantCertificate.length == 0) missingFields.add("anyRelevantCertificate");
-        if (policeClearanceCertficate == null || policeClearanceCertficate.length == 0) missingFields.add("policeClearanceCertficate");
+        if (professionalCertfificate == null || professionalCertfificate.isEmpty()) missingFields.add("professionalCertfificate");
+        if (policeClearanceCertficate == null || policeClearanceCertficate.isEmpty()) missingFields.add("policeClearanceCertficate");
         if (nationalIdNumber == null) missingFields.add("nationalIdNumber");
-        if (garage == null) missingFields.add("garage");
+//        if (garage == null) missingFields.add("garage"); return it to be a must
 
         return missingFields;
     }
@@ -122,20 +116,20 @@ public class Mechanic {
     public String getAvailability() { return availability; }
     public void setAvailability(String availability) { this.availability = availability;}
 
-    public byte[] getProfilePic() { return profilePic;}
-    public void setProfilePic(byte[] profilePic) { this.profilePic = profilePic;}
+    public String getProfilePic() { return profilePic;}
+    public void setProfilePic(String profilePic) { this.profilePic = profilePic;}
 
-    public byte[] getNationalIDPic() { return nationalIDPic;}
-    public void setNationalIDPic(byte[] nationalID) { this.nationalIDPic = nationalID;}
+    public String getNationalIDPic() { return nationalIDPic;}
+    public void setNationalIDPic(String nationalID) { this.nationalIDPic = nationalID;}
 
-    public byte[] getProfessionalCertfificate() { return professionalCertfificate;}
-    public void setProfessionalCertfificate(byte[] professionalCertfificate) {this.professionalCertfificate = professionalCertfificate;}
+    public String getProfessionalCertfificate() { return professionalCertfificate;}
+    public void setProfessionalCertfificate(String professionalCertfificate) {this.professionalCertfificate = professionalCertfificate;}
 
-    public byte[] getAnyRelevantCertificate() { return anyRelevantCertificate;}
-    public void setAnyRelevantCertificate(byte[] anyRelevantCertificate) {this.anyRelevantCertificate = anyRelevantCertificate;}
+    public String getAnyRelevantCertificate() { return anyRelevantCertificate;}
+    public void setAnyRelevantCertificate(String anyRelevantCertificate) {this.anyRelevantCertificate = anyRelevantCertificate;}
 
-    public byte[] getPoliceClearanceCertficate() { return policeClearanceCertficate;}
-    public void setPoliceClearanceCertficate(byte[] policeClearanceCertficate) { this.policeClearanceCertficate = policeClearanceCertficate;}
+    public String getPoliceClearanceCertficate() { return policeClearanceCertficate;}
+    public void setPoliceClearanceCertficate(String policeClearanceCertficate) { this.policeClearanceCertficate = policeClearanceCertficate;}
 
     public Integer getNationalIdNumber() { return nationalIdNumber;}
     public void setNationalIdNumber(Integer nationalIdNumber) { this.nationalIdNumber = nationalIdNumber;}

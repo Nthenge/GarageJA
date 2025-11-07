@@ -1,6 +1,7 @@
 package com.eclectics.Garage.dto;
 
 import com.eclectics.Garage.model.Garage;
+import org.springframework.web.multipart.MultipartFile;
 
 public class MechanicRequestDTO {
     private String areasofSpecialization;
@@ -13,16 +14,16 @@ public class MechanicRequestDTO {
     private String availability;
     private Integer nationalIdNumber;
 
-    private byte[] profilePic;
-    private byte[] nationalIDPic;
-    private byte[] professionalCertfificate;
-    private byte[] anyRelevantCertificate;
-    private byte[] policeClearanceCertficate;
-    private Garage garage;
+    private String profilePic;
+    private String nationalIDPic;
+    private String professionalCertfificate;
+    private String anyRelevantCertificate;
+    private String policeClearanceCertficate;
+    private Long garageId;
 
     public MechanicRequestDTO() {}
 
-    public MechanicRequestDTO(String areasofSpecialization,Garage garage, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, Integer nationalIdNumber, byte[] profilePic, byte[] nationalIDPic, byte[] professionalCertfificate, byte[] anyRelevantCertificate, byte[] policeClearanceCertficate) {
+    public MechanicRequestDTO(String areasofSpecialization,Long garageId, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, Integer nationalIdNumber, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate) {
         this.areasofSpecialization = areasofSpecialization;
         this.alternativePhone = alternativePhone;
         this.physicalAddress = physicalAddress;
@@ -33,7 +34,7 @@ public class MechanicRequestDTO {
         this.availability = availability;
         this.nationalIdNumber = nationalIdNumber;
         this.profilePic = profilePic;
-        this.garage = garage;
+        this.garageId = garageId;
         this.nationalIDPic = nationalIDPic;
         this.professionalCertfificate = professionalCertfificate;
         this.anyRelevantCertificate = anyRelevantCertificate;
@@ -112,51 +113,51 @@ public class MechanicRequestDTO {
         this.availability = availability;
     }
 
-    public byte[] getProfilePic() {
+    public String getProfilePic() {
         return profilePic;
     }
 
-    public void setProfilePic(byte[] profilePic) {
+    public void setProfilePic(String profilePic) {
         this.profilePic = profilePic;
     }
 
-    public byte[] getNationalIDPic() {
+    public String getNationalIDPic() {
         return nationalIDPic;
     }
 
-    public void setNationalIDPic(byte[] nationalIDPic) {
+    public void setNationalIDPic(String nationalIDPic) {
         this.nationalIDPic = nationalIDPic;
     }
 
-    public byte[] getProfessionalCertfificate() {
+    public String getProfessionalCertfificate() {
         return professionalCertfificate;
     }
 
-    public void setProfessionalCertfificate(byte[] professionalCertfificate) {
+    public void setProfessionalCertfificate(String professionalCertfificate) {
         this.professionalCertfificate = professionalCertfificate;
     }
 
-    public byte[] getAnyRelevantCertificate() {
+    public String getAnyRelevantCertificate() {
         return anyRelevantCertificate;
     }
 
-    public void setAnyRelevantCertificate(byte[] anyRelevantCertificate) {
+    public void setAnyRelevantCertificate(String anyRelevantCertificate) {
         this.anyRelevantCertificate = anyRelevantCertificate;
     }
 
-    public byte[] getPoliceClearanceCertficate() {
+    public String getPoliceClearanceCertficate() {
         return policeClearanceCertficate;
     }
 
-    public void setPoliceClearanceCertficate(byte[] policeClearanceCertficate) {
+    public void setPoliceClearanceCertficate(String policeClearanceCertficate) {
         this.policeClearanceCertficate = policeClearanceCertficate;
     }
 
-    public Garage getGarage() {
-        return garage;
+    public Long getGarageId() {
+        return garageId;
     }
 
-    public void setGarage(Garage garage) {
-        this.garage = garage;
+    public void setGarageId(Long garageId) {
+        this.garageId = garageId;
     }
 }

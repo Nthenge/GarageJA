@@ -1,16 +1,18 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.dto.ServiceRequestsRequestDTO;
+import com.eclectics.Garage.dto.ServiceRequestsResponseDTO;
 import com.eclectics.Garage.model.ServiceRequest;
-import com.eclectics.Garage.model.SeverityCategories;
-import com.eclectics.Garage.model.Status;
+import com.eclectics.Garage.model.RequestStatus;
 import com.eclectics.Garage.service.ServiceRequestService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/requests")
+@RequestMapping("/request")
 public class ServiceRequestsController {
 
     private final ServiceRequestService serviceRequestService;
@@ -20,10 +22,10 @@ public class ServiceRequestsController {
     }
 
     @GetMapping
-    public List<ServiceRequest> getAllReguests(){
+    public List<ServiceRequestsResponseDTO> getAllReguests(){
         return serviceRequestService.getAllRequests();
     }
-
+    @PreAuthorize("hasRole('CAR_OWNER')")
     @PostMapping
     public ServiceRequest createRequest(
             @RequestParam Integer carOwnerId,
@@ -34,27 +36,39 @@ public class ServiceRequestsController {
         return serviceRequestService.createRequest(carOwnerId, garageId, serviceId, severityId);
     }
 
-    @PutMapping("/{requestId}/status")
-    public ServiceRequest updateRequest(
+    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
+    @PutMapping("/status/{requestId}")
+    public ServiceRequestsResponseDTO updateRequest(
             @PathVariable Long requestId,
-            @RequestParam Status status,
-            @RequestParam Long severityId
+            @RequestParam RequestStatus status,
+            @RequestParam Long severityId,
+            @RequestBody ServiceRequestsRequestDTO serviceRequestsRequestDTO
             ){
-        return serviceRequestService.updateStatus(requestId, status,severityId);
+        return serviceRequestService.updateStatus(requestId, status,severityId, serviceRequestsRequestDTO);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/carOwner/{carOwnerUniqueId}")
-    public List<ServiceRequest> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
+    public List<ServiceRequestsResponseDTO> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
         return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/garage/{garageId}")
-    public List<ServiceRequest> getRequestsByGarage(@PathVariable Long garageId){
+    public List<ServiceRequestsResponseDTO> getRequestsByGarage(@PathVariable Long garageId){
         return serviceRequestService.getRequestsByGarage(garageId);
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/{requestId}")
-    public Optional<ServiceRequest> getRequestById(@PathVariable Long requestId){
+    public Optional<ServiceRequestsResponseDTO> getRequestById(@PathVariable Long requestId){
         return serviceRequestService.getRequestById(requestId);
+    }
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public String deleteById(@PathVariable Long id){
+        serviceRequestService.deleteServiceRequest(id);
+        return "Service request deleted";
     }
 }

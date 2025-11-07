@@ -12,10 +12,11 @@ public interface MechanicService {
 
     boolean isDetailsCompleted(Long userId);
 
-    MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO, MultipartFile profilepic, MultipartFile nationalIdFile, MultipartFile profCert, MultipartFile anyRelCert, MultipartFile polCleCert) throws java.io.IOException;
+    MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO, MultipartFile profilePic, MultipartFile nationalIDPic, MultipartFile professionalCertfificate, MultipartFile anyRelevantCertificate, MultipartFile policeClearanceCertficate) throws java.io.IOException;
     Optional<MechanicResponseDTO> getMechanicByNationalId(Integer nationalIdNumber);
     List<MechanicResponseDTO> getAllMechanics();
     List<MechanicResponseDTO> getMechanicsByGarageId(Long garageId);
-    MechanicResponseDTO updateMechanic(Long id, MechanicRequestDTO mechanic);
+    MechanicResponseDTO updateMechanic(Long id, MechanicRequestDTO mechanic,MultipartFile profilePic, MultipartFile nationalIDPic, MultipartFile professionalCertfificate, MultipartFile anyRelevantCertificate, MultipartFile policeClearanceCertficate);
     String deleteMechanic(Long id);
+    Optional<String> getMechanicFilesUrlByNationalId(Integer nationalId, int expiryMinutes);
 }

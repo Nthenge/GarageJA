@@ -2,9 +2,11 @@ package com.eclectics.Garage.security;
 
 import com.eclectics.Garage.model.User;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -14,21 +16,18 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
-    // Allow access to the underlying User entity
     public User getUser() {
         return user;
     }
 
-    // Convenient method to get logged-in user's ID
     public Long getId() {
         return user.getId();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // For simplicity, we can map roles to authorities if needed
-        // Example: return List.of(new SimpleGrantedAuthority(user.getRole().name()));
-        return null;
+        String roleName = user.getRole().name();
+        return List.of(new SimpleGrantedAuthority(roleName)); //roles for authorization
     }
 
     @Override

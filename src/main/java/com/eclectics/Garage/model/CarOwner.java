@@ -17,10 +17,9 @@ public class CarOwner {
     @Column(unique = true, nullable = false)
         private Integer uniqueId;
 
-    //this takes lots of space, use url to minimise storages use
     @Lob
     @Column(unique = false, nullable = true)
-    private byte[] profilePic;
+    private String profilePic;
 
     @Column(unique = false, nullable = true)
     private String altPhone;
@@ -45,7 +44,7 @@ public class CarOwner {
 
     public CarOwner() {}
 
-    public CarOwner(Long id, Integer uniqueId,User user, byte[] profilePic,String model,String severity, String altPhone,String year,String transmission, String make,String engineType, String licensePlate, String engineCapacity, String color) {
+    public CarOwner(Long id, Integer uniqueId,User user, String profilePic,String model,String severity, String altPhone,String year,String transmission, String make,String engineType, String licensePlate, String engineCapacity, String color) {
         this.id = id;
         this.uniqueId = uniqueId;
         this.make = make;
@@ -64,16 +63,13 @@ public class CarOwner {
 
     @Transient
     public boolean isComplete() {
-        return true;
-    } // make this return getMissingFields().isEmpty()
+        return getMissingFields().isEmpty();
+    }
 
     @Transient
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (uniqueId == null) {missingFields.add("uniqueId");}
-        if (profilePic == null || profilePic.length == 0) {missingFields.add("profilePic");}
-        if (altPhone == null || altPhone.isBlank()) {missingFields.add("altPhone");}
         if (model == null || model.isBlank()) {missingFields.add("model");}
         if (licensePlate == null || licensePlate.isBlank()) {missingFields.add("licensePlate");}
         if (engineCapacity == null || engineCapacity.isBlank()) {missingFields.add("engineCapacity");}
@@ -83,7 +79,6 @@ public class CarOwner {
         if (engineType == null || engineType.isBlank()) {missingFields.add("engineType");}
         if (transmission == null || transmission.isBlank()) {missingFields.add("transmission");}
         if (severity == null || severity.isBlank()) {missingFields.add("severity");}
-        if (user == null) {missingFields.add("user");}
 
         return missingFields;
     }
@@ -99,8 +94,8 @@ public class CarOwner {
     public String getMake() {return make;}
     public void setMake(String make) {this.make = make;}
 
-    public byte[] getProfilePic() {return profilePic;}
-    public void setProfilePic(byte[] profilePic) {this.profilePic = profilePic;}
+    public String getProfilePic() {return profilePic;}
+    public void setProfilePic(String profilePic) {this.profilePic = profilePic;}
 
     public String getAltPhone() {return altPhone;}
     public void setAltPhone(String altPhone) {this.altPhone = altPhone;}

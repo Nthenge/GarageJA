@@ -15,6 +15,7 @@ public class Service {
     private String serviceName;
     private String description;
     private Double price;
+    private Double avgDuration;
 
     @ManyToOne
     @JoinColumn(name = "garageId", referencedColumnName = "garageId")
@@ -27,11 +28,12 @@ public class Service {
 
     public Service() {}
 
-    public Service(Long id, String serviceName,ServiceCategories serviceCategories, String description, Double price, Garage garage) {
+    public Service(Long id, String serviceName, String description, Double price, Double avgDuration, Garage garage, ServiceCategories serviceCategories) {
         this.id = id;
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
+        this.avgDuration = avgDuration;
         this.garage = garage;
         this.serviceCategories = serviceCategories;
     }
@@ -50,6 +52,9 @@ public class Service {
 
     public Garage getGarage() { return garage; }
     public void setGarage(Garage garage) { this.garage = garage; }
+
+    public Double getAvgDuration() { return avgDuration;}
+    public void setAvgDuration(Double avgDuration) {this.avgDuration = avgDuration; }
 
     public ServiceCategories getServiceCategories() {return serviceCategories;}
     public void setServiceCategories(ServiceCategories serviceCategories) {this.serviceCategories = serviceCategories;}

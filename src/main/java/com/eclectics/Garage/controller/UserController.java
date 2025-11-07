@@ -1,40 +1,35 @@
 package com.eclectics.Garage.controller;
 
-import com.eclectics.Garage.model.CarOwner;
+import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.model.User;
-import com.eclectics.Garage.repository.CarOwnerRepository;
-import com.eclectics.Garage.repository.GarageRepository;
-import com.eclectics.Garage.repository.MechanicRepository;
-import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.service.UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+
+import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
+import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
+
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
-    private final CarOwnerRepository carOwnerRepository;
-    private final GarageRepository garageRepository;
-    private final MechanicRepository mechanicRepository;
 
-    public UserController(UserService userService, JwtUtil jwtUtil, CarOwnerRepository carOwnerRepository, GarageRepository garageRepository, MechanicRepository mechanicRepository) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.jwtUtil = jwtUtil;
-        this.carOwnerRepository = carOwnerRepository;
-        this.garageRepository = garageRepository;
-        this.mechanicRepository = mechanicRepository;
     }
 
+    private ResponseEntity<Map<String, String>> success(String message) {
+        return ResponseEntity.ok(Map.of("message", message));
+    }
+
+    //    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -42,178 +37,99 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
-    public ResponseEntity<List<User>> getAllUsers(){
+    public ResponseEntity<List<UserRegistrationResponseDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
-        try {
-            User savedUser = userService.createUser(user);
-            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
-
-            return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(
-                            "message", "User registered successfully",
-                            "token", token,
-                            "role", savedUser.getRole().name()
-                    ));
-
-        } catch (RuntimeException e) {
-            if ("Email is already in use".equals(e.getMessage())) {
-                return ResponseEntity
-                        .status(HttpStatus.CONFLICT)
-                        .body(Map.of(
-                                "status", 409,
-                                "error", "Conflict",
-                                "message", e.getMessage()
-                        ));
-            }
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of(
-                            "status", 400,
-                            "error", "Bad Request",
-                            "message", e.getMessage()
-                    ));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(
-                            "status", 500,
-                            "error", "Internal Server Error",
-                            "message", "An unexpected error occurred"
-                    ));
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserRegistrationRequestDTO user) {
+        if (user.getEmail() == null || user.getPassword() == null) {
+            throw new BadRequestException("Email and password are required");
         }
-    }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> requestResetPassword(@RequestBody Map<String, String> payload) {
         try {
-            String email = payload.get("email");
-
-            if (email == null || email.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
-            }
-
-            User user = userService.resetPassword(email);
-            String resetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
-            userService.sendResetEmail(user.getEmail(), resetToken);
-
+            userService.createUser(user);
             return ResponseEntity.ok(Map.of(
-                    "message", "Password reset link sent to " + email
+                    "message", "To finish registration, Please confirm your email"
             ));
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @PostMapping("/update-password")
-    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> payload) {
-        try {
-            String token = payload.get("token");
-            String newPassword = payload.get("newPassword");
-
-            if (token == null || newPassword == null) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Token and new password are required"));
-            }
-
-            User updatedUser = userService.updatePassword(token, newPassword);
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Password updated successfully",
-                    "user", updatedUser.getEmail()
-            ));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+        } catch (BadRequestException e) {
+            throw new BadRequestException(e.getMessage());
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
-        try {
-            String email = payload.get("email");
-            String password = payload.get("password");
+    public ResponseEntity<UserDetailsAuthDTO> login(@RequestBody UserLoginRequestDTO requestDTO) {
+        if (requestDTO.getEmail() == null || requestDTO.getPassword() == null) {
+            throw new BadRequestException("Email and password are required");
+        }
+        UserDetailsAuthDTO responseDTO = (UserDetailsAuthDTO) userService.loginUser(requestDTO);
+        return ResponseEntity.ok(responseDTO);
+    }
 
-            if (email == null || password == null) {
-                return ResponseEntity
-                        .badRequest()
-                        .body(Map.of(
-                                "status", 400,
-                                "error", "Bad Request",
-                                "message", "Email and password are required"
-                        ));
-            }
+    @PostMapping("/confirm")
+    public ResponseEntity<?> confirmAccount(@RequestBody Map<String, Object> payload) {
+        String token = (String) payload.get("token");
 
-            User user = userService.loginUser(email, password);
-            String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        if (token == null) {
+            throw new BadRequestException("Token is required");
+        }
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("role", user.getRole().name());
-            response.put("firstname", user.getFirstname());
-            response.put("detailsCompleted", user.isDetailsCompleted());
+        boolean confirmed = userService.confirmUser(token);
 
-            if (!user.isDetailsCompleted()) {
-                switch (user.getRole().name()) {
-                    case "CAR_OWNER":
-                        carOwnerRepository.findByUser(user).ifPresent(carOwner ->
-                                response.put("missingFields", carOwner.getMissingFields())
-                        );
-                        break;
-
-                    case "GARAGE_ADMIN":
-                        garageRepository.findByUser(user).ifPresent(garage ->
-                                response.put("missingFields", garage.getMissingFields())
-                        );
-                        break;
-
-                    case "MECHANIC":
-                        mechanicRepository.findByUser(user).ifPresent(mechanic ->
-                                response.put("missingFields", mechanic.getMissingFields())
-                        );
-                        break;
-
-                    default:
-                        response.put("missingFields", List.of("Unknown role – cannot determine missing fields"));
-                }
-            }
-
-
-            return ResponseEntity.ok(response);
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of(
-                            "status", 401,
-                            "error", "Unauthorized access",
-                            "message", e.getMessage())
-                    );
+        if (confirmed) {
+            return success("Account confirmed successfully!");
+        } else {
+            throw new ForbiddenException("Invalid or expired token");
         }
     }
 
+    @GetMapping("/confirm")
+    public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
 
-    //updateUser
-    @PutMapping("/{userId}")
-    public  ResponseEntity<?>updateUser(@PathVariable Long userId, @RequestBody User user){
-        userService.updateUser(userId, user);
-        return ResponseEntity.ok(Map.of("message", "User updated successfully"));
+        boolean confirmed = userService.confirmUser(token);
+
+        if (confirmed) {
+            return success("Your account has been confirmed!");
+        } else {
+            throw new ForbiddenException("Invalid or expired token");
+        }
     }
 
-    //deleteUser
-    @DeleteMapping("/{userId}")
+    @PostMapping("/reset-password")
+    public ResponseEntity<UserPasswordResetResponseDTO> requestResetPassword(
+            @RequestBody UserPasswordResetRequestDTO requestDTO) {
+
+        if (requestDTO.getEmail() == null || requestDTO.getEmail().isEmpty()) {
+            throw new BadRequestException("Email is required");
+        }
+
+        UserPasswordResetResponseDTO responseDTO = userService.resetPassword(requestDTO);
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody UserPasswordUpdateDTO updateDTO) {
+
+        if (updateDTO.getToken() == null || updateDTO.getNewPassword() == null) {
+            throw new BadRequestException("Token, and new password are required");
+        }
+        userService.updatePassword(updateDTO);
+
+        return success("Password updated successfully");
+    }
+
+    @PutMapping("/update/{userId}")
+    public  ResponseEntity<?>updateUser(@PathVariable Long userId, @RequestBody User user){
+        userService.updateUser(userId, user);
+        return success("User updated successfully");
+    }
+
+    @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);
-        return ResponseEntity.ok(Map.of("message", "User deleted"));
+        return success("User deleted");
     }
 }

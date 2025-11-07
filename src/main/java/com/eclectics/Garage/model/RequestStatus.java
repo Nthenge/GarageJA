@@ -1,6 +1,6 @@
 package com.eclectics.Garage.model;
 
-public enum Status {
+public enum RequestStatus {
     PENDING,
     APPROVED,
     ASSIGNED,
