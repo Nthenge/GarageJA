@@ -69,7 +69,7 @@ alibaba:
   cloud:
     oss:
       endpoint: https://oss-eu-west-1.aliyuncs.com
-      access-key-id: ${ALIBABA_ACCESS_KEY_ID}
-      access-key-secret: ${ALIBABA_ACCESS_KEY_SECRET}
+      access-key-id: LTAI5tGhV8z2P3ryvU9J6jFq
+      access-key-secret: 1dz2p5isdE68CO8duRQRWHtzDsIman
       bucket-name: jagarage
 
