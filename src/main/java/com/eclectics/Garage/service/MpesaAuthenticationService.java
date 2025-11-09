@@ -20,7 +20,7 @@ public class MpesaAuthenticationService {
     @Value("${mpesa.consumer.url}")
     private String baseUrl;
 
-    public String generateAccessToken() throws IOException, java.io.IOException, JSONException {
+    public String generateAccessToken() throws IOException, java.io.IOException{
         String appKeySecret = customerKey + ":" + customerSecret;
         String encoded = Base64.getEncoder().encodeToString(appKeySecret.getBytes());
 

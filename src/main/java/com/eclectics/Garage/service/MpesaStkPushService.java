@@ -3,6 +3,7 @@ package com.eclectics.Garage.service;
 import okhttp3.*;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -12,9 +13,17 @@ import java.util.Date;
 
 @Service
 public class MpesaStkPushService {
+
+    @Value("${mpesa.shortcode}")
     private String shortCode;
+
+    @Value("${mpesa.passkey}")
     private String passKey;
+
+    @Value("${mpesa.base.url}")
     private String baseUrl;
+
+    @Value("${mpesa.callback.url}")
     private String callbackUrl;
 
     private final MpesaAuthenticationService mpesaAuthenticationService;
@@ -23,9 +32,9 @@ public class MpesaStkPushService {
         this.mpesaAuthenticationService = mpesaAuthenticationService;
     }
 
-    public String initiateStkPush(String phoneNumber, String amount) throws JSONException, IOException {
+    public String initiateStkPush(String phoneNumber, String amount)
+            throws JSONException, IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-
         String password = Base64.getEncoder()
                 .encodeToString((shortCode + passKey + timeStamp).getBytes());
 
@@ -34,25 +43,29 @@ public class MpesaStkPushService {
         JSONObject json = new JSONObject();
         json.put("BusinessShortCode", shortCode);
         json.put("Password", password);
-        json.put("TimeStamp", timeStamp);
-        json.put("TransactionType", "CustomerTillOnline");
+        json.put("Timestamp", timeStamp);
+        json.put("TransactionType", "CustomerPayBillOnline"); // or CustomerBuyGoodsOnline
         json.put("Amount", amount);
-        json.put("Party1", phoneNumber);
-        json.put("Party2", shortCode);
+        json.put("PartyA", phoneNumber);
+        json.put("PartyB", shortCode);
         json.put("PhoneNumber", phoneNumber);
-        json.put("CallBackUrl", callbackUrl);
-        json.put("Account reference", "Garage");
+        json.put("CallBackURL", callbackUrl);
+        json.put("AccountReference", "Garage");
         json.put("TransactionDesc", "Payment service");
 
-        RequestBody body = RequestBody.create(MediaType.parse("application/json"), json.toString());
+        RequestBody body = RequestBody.create(
+                MediaType.parse("application/json"),
+                json.toString()
+        );
 
         Request request = new Request.Builder()
                 .url(baseUrl + "/mpesa/stkpush/v1/processrequest")
                 .post(body)
-                .addHeader("Authorization", mpesaAuthenticationService.generateAccessToken())
+                .addHeader("Authorization", "Bearer " + mpesaAuthenticationService.generateAccessToken())
                 .build();
 
         Response response = client.newCall(request).execute();
-        return response.body().toString();
+
+        return response.body().string();
     }
 }
