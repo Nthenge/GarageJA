@@ -43,7 +43,7 @@ public class CarOwnerController {
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER)")
         @PostMapping(
                 value = "/create",
-                consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE}
+                consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}
         )
         public ResponseEntity<Map<String, String>> createCarOwner(
                 @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
