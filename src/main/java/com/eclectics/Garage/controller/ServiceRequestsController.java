@@ -28,12 +28,11 @@ public class ServiceRequestsController {
     @PreAuthorize("hasRole('CAR_OWNER')")
     @PostMapping
     public ServiceRequest createRequest(
-            @RequestParam Integer carOwnerId,
             @RequestParam Long garageId,
             @RequestParam Long serviceId,
             @RequestParam Long severityId
             ){
-        return serviceRequestService.createRequest(carOwnerId, garageId, serviceId, severityId);
+        return serviceRequestService.createRequest(garageId, serviceId, severityId);
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")

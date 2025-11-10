@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface ServiceRequestService {
 
-    ServiceRequest createRequest(Integer carOwnerUniqueId, Long garageId, Long serviceId, Long severityId);
+    ServiceRequest createRequest(Long garageId, Long serviceId, Long severityId);
     List<ServiceRequestsResponseDTO> getAllRequests();
     ServiceRequestsResponseDTO updateStatus(Long requestId, RequestStatus status, Long severityId, ServiceRequestsRequestDTO serviceRequestsRequestDTO);
     List<ServiceRequestsResponseDTO> getRequestsByCarOwner(Integer carOwnerUniqueId);
