@@ -42,7 +42,7 @@ public class MechanicController {
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_OCTET_STREAM_VALUE})
         public ResponseEntity<String> createMechanic(
-                @ModelAttribute("mechanic") MechanicRequestDTO mechanicRequestDTO,
+                @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
                 @RequestPart(value = "profilePic", required = false)MultipartFile profilePic,
                 @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
                 @RequestPart(value = "professionalCertfificate", required = false)MultipartFile professionalCertfificate,
