@@ -25,7 +25,7 @@ public class ServiceRequestsController {
     public List<ServiceRequestsResponseDTO> getAllReguests(){
         return serviceRequestService.getAllRequests();
     }
-    @PreAuthorize("hasRole('CAR_OWNER')")
+    @PreAuthorize("hasAnyAuthority('CAR_OWNER')")
     @PostMapping
     public ServiceRequest createRequest(
             @RequestParam Long garageId,
