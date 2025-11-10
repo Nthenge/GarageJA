@@ -48,7 +48,7 @@ public class MechanicController {
                 @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
                 @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
                 @RequestPart(value = "anyRelevantCertificate", required = false) MultipartFile anyRelevantCertificate,
-                @RequestPart(value = "policeClearanceCertificate", required = true) MultipartFile policeClearanceCertificate
+                @RequestPart(value = "policeClearanceCertificate", required = false) MultipartFile policeClearanceCertificate
         ) throws IOException {
             mechanicService.createMechanic(mechanicRequestDTO, profilePic, nationalIDPic, professionalCertificate, anyRelevantCertificate, policeClearanceCertificate);
             return ResponseEntity.ok("Mechanic created successfully");
