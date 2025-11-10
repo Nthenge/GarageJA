@@ -63,7 +63,7 @@ public class GarageController {
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @PutMapping("/update")
     public String updateGarage(
-            @RequestPart("garage") GarageRequestsDTO garageRequestsDTO,
+            @ModelAttribute("garage") GarageRequestsDTO garageRequestsDTO,
             @RequestPart(value = "businessLicense", required = false) MultipartFile businessLicense,
             @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
             @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos){

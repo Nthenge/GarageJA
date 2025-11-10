@@ -46,7 +46,7 @@ public class CarOwnerController {
                 consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE}
         )
         public ResponseEntity<Map<String, String>> createCarOwner(
-                @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
+                @ModelAttribute("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
                 @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
             carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
