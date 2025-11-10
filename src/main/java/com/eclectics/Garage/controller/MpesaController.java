@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/mpesa")
+@RequestMapping("/mpesa")
 public class MpesaController {
 
     private final MpesaStkPushService mpesaStkPushService;
@@ -29,7 +29,6 @@ public class MpesaController {
         this.mpesaB2CService = mpesaB2CService;
     }
 
-    // === STK Push Request ===
     @PostMapping("/stkpush")
     public ResponseEntity<String> stkPush(@RequestParam String phone, @RequestParam String amount)
             throws Exception {
@@ -37,21 +36,16 @@ public class MpesaController {
         return ResponseEntity.ok(response);
     }
 
-    // === Callback ===
     @PostMapping("/callback")
     public ResponseEntity<String> handleCallback(@RequestBody MpesaCallbackDTO callback) {
-        // Step 1: Confirm payment success
         if (callback.getBody().getStkCallback().getResultCode() == 0) {
 
-            // Step 2: Identify service and garage (from database)
             ServiceResponseDTO service = mpesaCallbackService.getServiceFromCallback(callback);
             GarageResponseDTO garage = mpesaCallbackService.getGarageFromService(service);
 
-            // Step 3: Calculate payment split
             PaymentSplitService.PaymentSplitResult split =
                     paymentSplitService.calculateSplit(service, garage);
 
-            // Step 4: Send garage’s 95% share
             try {
                 mpesaB2CService.sendMoneyToGarage(
                         split.getGarageAmount(),
