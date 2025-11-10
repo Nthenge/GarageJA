@@ -46,7 +46,7 @@ public class ServiceRequestsController {
         return serviceRequestService.updateStatus(requestId, status,severityId, serviceRequestsRequestDTO);
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
     @GetMapping("/carOwner/{carOwnerUniqueId}")
     public List<ServiceRequestsResponseDTO> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
         return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);

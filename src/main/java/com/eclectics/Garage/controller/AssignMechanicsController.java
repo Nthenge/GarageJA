@@ -27,25 +27,25 @@ public class AssignMechanicsController {
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN','MECHANIC')")
-    @PutMapping("/{assignmentId}/status")
+    @PutMapping("/status/{assignmentId}")
     public AssignMechanicsResponseDTO updateStatus(@PathVariable Long assignmentId,
                                        @RequestParam AssignMechanicStatus status) {
         return assignMechanicService.updateAssignmentStatus(assignmentId, status);
     }
 
-    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN,'MECHANIC')")
     @GetMapping("/mechanic/{mechanicId}")
     public List<AssignMechanicsResponseDTO> getAssignmentsByMechanic(@PathVariable Long mechanicId) {
         return assignMechanicService.getAssignmentsByMechanic(mechanicId);
     }
 
-    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN,'MECHANIC')")
     @GetMapping("/request/{requestId}")
     public List<AssignMechanicsResponseDTO> getAssignmentByRequest(@PathVariable Long requestId) {
         return assignMechanicService.getAssignmentByRequest(requestId);
     }
 
-    @PreAuthorize("hasRole('GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN', 'SYSTEM_ADMIN)")
     @GetMapping
     public List<AssignMechanicsResponseDTO> getAllAssignments() {
         return assignMechanicService.getAllAssignments();

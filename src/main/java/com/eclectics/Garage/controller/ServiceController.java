@@ -41,7 +41,7 @@ public class ServiceController {
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
-        @GetMapping()
+        @GetMapping("/all")
         public List<ServiceResponseDTO> getAllServices(){
             return servicesService.getAllServices();
         }

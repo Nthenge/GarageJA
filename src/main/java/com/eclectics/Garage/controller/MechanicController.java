@@ -27,7 +27,7 @@ public class MechanicController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN','MECHANIC')")
         @GetMapping("/search/{nationalIdNumber}")
         public Optional<MechanicResponseDTO> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
             return mechanicService.getMechanicByNationalId(nationalIdNumber);
@@ -52,7 +52,7 @@ public class MechanicController {
             return ResponseEntity.ok("Mechanic created successfully");
         }
 
-        @PreAuthorize("hasAuthority('MECHANIC')")
+        @PreAuthorize("hasAuthority('SYSTEM_ADMIN','MECHANIC')")
         @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<MechanicResponseDTO> updateOwnMechanic(
                 @RequestPart MechanicRequestDTO mechanicRequestDTO,
