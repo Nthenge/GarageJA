@@ -147,21 +147,15 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     }
 
     @Override
-    @CachePut(value = "carOwnerByUniqueId", key = "#carOwnerUniqueId")
-    @CacheEvict(value = {"allCarOwners", "carOwnerByUser"}, allEntries = true)
-    public CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId,
-                                                CarOwnerRequestsDTO carOwnerRequestsDTO,
+    @CachePut(value = "carOwnerByUser", key = "#result.user.id")
+    @CacheEvict(value = {"allCarOwners", "carOwnerByUniqueId"}, allEntries = true)
+    public CarOwnerResponseDTO updateOwnProfile(CarOwnerRequestsDTO carOwnerRequestsDTO,
                                                 MultipartFile profilePic) throws IOException {
-        logger.info("[UPDATE] Updating CarOwner profile for uniqueId={}", carOwnerUniqueId);
+        logger.info("[UPDATE] Updating profile for currently authenticated CarOwner");
 
-        Optional<CarOwner> existingCarOwnerOptional = carOwnerRepository.findByUniqueId(carOwnerUniqueId);
-
-        if (existingCarOwnerOptional.isEmpty()) {
-            logger.error("[UPDATE FAILED] CarOwner with uniqueId={} not found", carOwnerUniqueId);
-            throw new ResourceAccessException("Car Owner does not exist");
-        }
-
-        CarOwner eco = existingCarOwnerOptional.get();
+        User user = authenticationService.getCurrentUser();
+        CarOwner eco = carOwnerRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceAccessException("Car Owner profile not found for user: " + user.getEmail()));
 
         if (profilePic != null && !profilePic.isEmpty()) {
             String oldUrl = eco.getProfilePic();
@@ -187,10 +181,8 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         CarOwner updated = carOwnerRepository.save(eco);
         CarOwnerResponseDTO dto = mapper.toDto(updated);
 
-        carOwnerCacheByUniqueId.put(carOwnerUniqueId, dto);
-        carOwnerCacheByUserId.put(updated.getUser().getId(), dto);
-
-        logger.info("[UPDATE SUCCESS] CarOwner updated with uniqueId={}", carOwnerUniqueId);
+        carOwnerCacheByUserId.put(user.getId(), dto);
+        logger.info("[UPDATE SUCCESS] CarOwner profile updated for user={}", user.getEmail());
         return dto;
     }
 

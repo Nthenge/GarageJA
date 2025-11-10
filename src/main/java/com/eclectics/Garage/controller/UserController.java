@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-    //    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
     public ResponseEntity<?> getOneUser(@PathVariable String email ){
         return userService.getUserByEmail(email)
@@ -37,7 +38,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
     public ResponseEntity<List<UserRegistrationResponseDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
@@ -121,12 +122,25 @@ public class UserController {
         return success("Password updated successfully");
     }
 
-    @PutMapping("/update/{userId}")
-    public  ResponseEntity<?>updateUser(@PathVariable Long userId, @RequestBody User user){
-        userService.updateUser(userId, user);
-        return success("User updated successfully");
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/update")
+    public ResponseEntity<?> updateOwnProfile(@RequestBody User user) {
+        userService.updateUser(user);
+        return ResponseEntity.ok(Map.of("message", "Profile updated successfully"));
     }
 
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<Map<String, String>> deleteOwnAccount() {
+        userService.deletePersonalAccount();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Your account has been deleted successfully.");
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);

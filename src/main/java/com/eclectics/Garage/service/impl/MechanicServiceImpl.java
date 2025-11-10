@@ -222,18 +222,20 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Transactional
     @Override
-    @CachePut(value = "mechanics", key = "#id")
+    @CachePut(value = "mechanicsByUser", key = "#result.user.id")
     @CacheEvict(value = {"allMechanics", "mechanicsByGarage"}, allEntries = true)
-    public MechanicResponseDTO updateMechanic(Long id,
-                                              MechanicRequestDTO mechanicRequestDTO,
-                                              MultipartFile profilePic,
-                                              MultipartFile nationalIDPic,
-                                              MultipartFile professionalCertfificate,
-                                              MultipartFile anyRelevantCertificate,
-                                              MultipartFile policeClearanceCertficate) {
+    public MechanicResponseDTO updateOwnMechanic(MechanicRequestDTO mechanicRequestDTO,
+                                                 MultipartFile profilePic,
+                                                 MultipartFile nationalIDPic,
+                                                 MultipartFile professionalCertificate,
+                                                 MultipartFile anyRelevantCertificate,
+                                                 MultipartFile policeClearanceCertificate) {
 
-        Mechanic mechanic = mechanicRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found"));
+        logger.info("[UPDATE] Updating profile for currently authenticated Mechanic");
+
+        User user = authenticationService.getCurrentUser();
+        Mechanic mechanic = mechanicRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Mechanic profile not found for user: " + user.getEmail()));
 
         mapper.updateEntityFromDTO(mechanicRequestDTO, mechanic);
 
@@ -244,25 +246,31 @@ public class MechanicServiceImpl implements MechanicService {
         }
 
         try {
-            uploadFilesForMechanic(mechanic, mechanic.getUser().getId(), profilePic, nationalIDPic,
-                    professionalCertfificate, anyRelevantCertificate, policeClearanceCertficate);
+            uploadFilesForMechanic(mechanic, user.getId(),
+                    profilePic,
+                    nationalIDPic,
+                    professionalCertificate,
+                    anyRelevantCertificate,
+                    policeClearanceCertificate);
         } catch (IOException e) {
-            throw new BadRequestException("Error processing uploaded file(s)");
+            throw new BadRequestException("Error processing uploaded file(s): " + e.getMessage());
         }
 
         Mechanic updated = mechanicRepository.save(mechanic);
         MechanicResponseDTO dto = mapper.toResponseDTO(updated);
 
-        mechanicCacheById.put(id, dto);
-        mechanicCacheByUserId.put(updated.getUser().getId(), dto);
+        mechanicCacheById.put(updated.getId(), dto);
+        mechanicCacheByUserId.put(user.getId(), dto);
         mechanicCacheByNationalId.put(updated.getNationalIdNumber(), dto);
-        cachedAllMechanics.replaceAll(m -> Objects.equals(m.getId(), id) ? dto : m);
+        cachedAllMechanics.replaceAll(m -> Objects.equals(m.getId(), updated.getId()) ? dto : m);
 
         if (mechanic.getGarage() != null)
             mechanicCacheByGarageId.computeIfAbsent(mechanic.getGarage().getGarageId(), k -> new ArrayList<>()).add(dto);
 
+        logger.info("[UPDATE SUCCESS] Mechanic profile updated for user={}", user.getEmail());
         return dto;
     }
+
 
     @Transactional
     @Override

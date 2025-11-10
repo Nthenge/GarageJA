@@ -52,21 +52,29 @@ public class MechanicController {
             return ResponseEntity.ok("Mechanic created successfully");
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
-        @PutMapping("/{mechanicId}")
-        public ResponseEntity<MechanicResponseDTO> updateMechanic(
-                @PathVariable Long mechanicId,
+        @PreAuthorize("hasAuthority('MECHANIC')")
+        @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<MechanicResponseDTO> updateOwnMechanic(
                 @RequestPart MechanicRequestDTO mechanicRequestDTO,
-                @RequestPart(value = "profilePic", required = false)MultipartFile profilePic,
+                @RequestPart(value = "profilePic", required = false) MultipartFile profilePic,
                 @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
-                @RequestPart(value = "professionalCertfificate", required = false)MultipartFile professionalCertfificate,
-                @RequestPart(value = "anyRelevantCertificate", required = false)MultipartFile anyRelevantCertificate,
-                @RequestPart(value = "policeClearanceCertficate", required = true)MultipartFile policeClearanceCertficate){
-            MechanicResponseDTO updatedMechanic = mechanicService.updateMechanic(mechanicId, mechanicRequestDTO, profilePic,nationalIDPic,professionalCertfificate,anyRelevantCertificate, policeClearanceCertficate);
+                @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
+                @RequestPart(value = "anyRelevantCertificate", required = false) MultipartFile anyRelevantCertificate,
+                @RequestPart(value = "policeClearanceCertificate", required = true) MultipartFile policeClearanceCertificate) {
+
+            MechanicResponseDTO updatedMechanic = mechanicService.updateOwnMechanic(
+                    mechanicRequestDTO,
+                    profilePic,
+                    nationalIDPic,
+                    professionalCertificate,
+                    anyRelevantCertificate,
+                    policeClearanceCertificate);
+
             return ResponseEntity.ok(updatedMechanic);
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
         @DeleteMapping("/{MechanicId}")
         public String deleteMechanic(@PathVariable("MechanicId") Long MechanicId){
             mechanicService.deleteMechanic(MechanicId);

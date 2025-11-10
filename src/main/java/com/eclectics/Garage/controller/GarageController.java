@@ -1,7 +1,6 @@
 package com.eclectics.Garage.controller;
 import com.eclectics.Garage.dto.GarageRequestsDTO;
 import com.eclectics.Garage.dto.GarageResponseDTO;
-import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.service.GarageService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -62,14 +61,13 @@ public class GarageController {
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
-    @PutMapping("/{garageId}")
+    @PutMapping("/update")
     public String updateGarage(
-            @PathVariable Long garageId,
             @RequestPart("garage") GarageRequestsDTO garageRequestsDTO,
             @RequestPart(value = "businessLicense", required = false) MultipartFile businessLicense,
             @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
             @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos){
-        garageService.updateGarage(garageId, garageRequestsDTO,businessLicense,professionalCertificate,facilityPhotos);
+        garageService.updateOwnGarage(garageRequestsDTO, businessLicense, professionalCertificate, facilityPhotos);
         return "Garage updated successfully";
     }
 

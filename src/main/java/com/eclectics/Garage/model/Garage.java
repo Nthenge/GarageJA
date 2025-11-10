@@ -43,7 +43,7 @@ public class Garage {
     @OneToMany(mappedBy = "garage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Service> services = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     @JsonBackReference
     private User user;

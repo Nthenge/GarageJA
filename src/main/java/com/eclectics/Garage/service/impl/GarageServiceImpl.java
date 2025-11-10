@@ -198,16 +198,23 @@ public class GarageServiceImpl implements GarageService {
     }
 
     @Override
-    @CachePut(value = "garageById", key = "#garageId")
-    @CacheEvict(value = {"allGarages", "garageByUser", "garageByName"}, allEntries = true)
-    public synchronized GarageResponseDTO updateGarage(Long garageId, GarageRequestsDTO dto,
-                                                       MultipartFile businessLicense, MultipartFile professionalCertificate,
-                                                       MultipartFile facilityPhotos) {
+    @CachePut(value = "garageByUser", key = "#result.user.id")
+    @CacheEvict(value = {"allGarages", "garageById", "garageByName"}, allEntries = true)
+    public synchronized GarageResponseDTO updateOwnGarage(GarageRequestsDTO dto,
+                                                          MultipartFile businessLicense,
+                                                          MultipartFile professionalCertificate,
+                                                          MultipartFile facilityPhotos) {
 
-        Garage garage = garageCacheById.getOrDefault(garageId,
-                garageRepository.findByGarageId(garageId).orElseThrow(() ->
-                        new ResourceNotFoundException("Garage not found")));
+        logger.info("[UPDATE] Updating Garage profile for currently authenticated user");
 
+        // 1️⃣ Get the authenticated user
+        User user = authenticationService.getCurrentUser();
+
+        // 2️⃣ Get the linked Garage entity
+        Garage garage = garageRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Garage profile not found for user: " + user.getEmail()));
+
+        // 3️⃣ Update basic garage fields
         if (dto.getBusinessName() != null) garage.setBusinessName(dto.getBusinessName());
         if (dto.getOperatingHours() != null) garage.setOperatingHours(dto.getOperatingHours());
         if (dto.getBusinessEmailAddress() != null) garage.setBusinessEmailAddress(dto.getBusinessEmailAddress());
@@ -221,39 +228,49 @@ public class GarageServiceImpl implements GarageService {
         if (dto.getMpesaPayBill() != null) garage.setMpesaPayBill(dto.getMpesaPayBill());
         if (dto.getMpesaTill() != null) garage.setMpesaTill(dto.getMpesaTill());
 
+        // 4️⃣ Handle file uploads
         try {
             if (businessLicense != null && !businessLicense.isEmpty()) {
                 String ext = getFileExtension(businessLicense.getOriginalFilename());
-                String uniqueFileName = "Garages/licences/" + garageId + "-" + UUID.randomUUID() + ext;
+                String uniqueFileName = "Garages/licences/" + garage.getGarageId() + "-" + UUID.randomUUID() + ext;
                 String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
                 garage.setBusinessLicense(fileUrl);
+                logger.debug("[UPDATE] Business license updated: {}", fileUrl);
             }
+
             if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
                 String ext = getFileExtension(professionalCertificate.getOriginalFilename());
-                String uniqueFileName = "Garages/profCerts/" + garageId + "-" + UUID.randomUUID() + ext;
+                String uniqueFileName = "Garages/profCerts/" + garage.getGarageId() + "-" + UUID.randomUUID() + ext;
                 String fileUrl = ossService.uploadFile(uniqueFileName, professionalCertificate.getInputStream());
                 garage.setProfessionalCertificate(fileUrl);
+                logger.debug("[UPDATE] Professional certificate updated: {}", fileUrl);
             }
+
             if (facilityPhotos != null && !facilityPhotos.isEmpty()) {
                 String ext = getFileExtension(facilityPhotos.getOriginalFilename());
-                String uniqueFileName = "Garages/photos/" + garageId + "-" + UUID.randomUUID() + ext;
+                String uniqueFileName = "Garages/photos/" + garage.getGarageId() + "-" + UUID.randomUUID() + ext;
                 String fileUrl = ossService.uploadFile(uniqueFileName, facilityPhotos.getInputStream());
                 garage.setFacilityPhotos(fileUrl);
+                logger.debug("[UPDATE] Facility photos updated: {}", fileUrl);
             }
         } catch (IOException e) {
-            throw new BadRequestException("Failed to update garage files");
+            throw new BadRequestException("Failed to update garage files: " + e.getMessage());
         }
 
+        // 5️⃣ Save and cache the updated garage
         Garage updated = garageRepository.save(garage);
 
         garageCacheById.put(updated.getGarageId(), updated);
         garageCacheByName.put(updated.getBusinessName(), updated);
         garageCacheByUser.put(updated.getUser().getId(), updated);
-        allGaragesCache.removeIf(g -> Objects.equals(g.getGarageId(), garageId));
+
+        allGaragesCache.removeIf(g -> Objects.equals(g.getGarageId(), garage.getGarageId()));
         allGaragesCache.add(updated);
 
+        logger.info("[UPDATE SUCCESS] Garage profile updated for user={}", user.getEmail());
         return mapper.toResponseDTO(updated);
     }
+
 
     @Override
     @CacheEvict(value = {"allGarages", "garageById", "garageByName", "garageByUser"}, allEntries = true)

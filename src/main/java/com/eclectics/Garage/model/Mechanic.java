@@ -40,7 +40,7 @@ public class Mechanic {
     @JoinColumn(name = "garageId", referencedColumnName = "garageId")
     private Garage garage;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     @JsonBackReference
     private User user;

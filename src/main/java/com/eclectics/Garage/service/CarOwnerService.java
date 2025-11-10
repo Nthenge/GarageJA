@@ -15,7 +15,8 @@ public interface CarOwnerService {
     Optional<CarOwnerResponseDTO> findByUserId(Long userId);
     boolean isDetailsCompleted(Long userId);
     List<CarOwnerResponseDTO> getAllCarOwners();
-    CarOwnerResponseDTO updateProfilePic(Integer carOwnerUniqueId,CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic) throws java.io.IOException;
+    CarOwnerResponseDTO updateOwnProfile(CarOwnerRequestsDTO carOwnerRequestsDTO,
+                                         MultipartFile profilePic) throws java.io.IOException;
     String deleteCarOwner(Long id);
     Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId);
     Optional<String> getProfilePictureUrlByUniqueId(Integer uniqueId, int expiryMinutes);

@@ -5,6 +5,7 @@ import com.eclectics.Garage.mapper.UserMapper;
 import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.UsersRepository;
+import com.eclectics.Garage.security.CustomUserDetails;
 import com.eclectics.Garage.security.JwtUtil;
 import com.eclectics.Garage.security.TokenEncryptor;
 import com.eclectics.Garage.service.UserService;
@@ -188,6 +189,10 @@ public class UserServiceImpl implements UserService {
             throw new UnauthorizedException("Please verify your email before logging in.");
         }
 
+        if (user.isSuspended()) {
+            throw new UnauthorizedException("Your account has been suspended. Contact system administrator.");
+        }
+
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         UserDetailsAuthDTO responseDTO = mapper.toAuthDetailsResponseDTO(user);
         responseDTO.setToken(token);
@@ -231,6 +236,30 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             logger.error("Failed to send reset email to {}: {}", email, e.getMessage());
         }
+    }
+
+    @Override
+    public void suspendUser(Long userId) {
+        User user = usersRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getRole() == Role.SYSTEM_ADMIN) {
+            throw new UnauthorizedException("Cannot suspend another System Admin");
+        }
+
+        user.setSuspended(true);
+        usersRepository.save(user);
+        logger.info("User {} suspended successfully", user.getEmail());
+    }
+
+    @Override
+    public void unsuspendUser(Long userId) {
+        User user = usersRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setSuspended(false);
+        usersRepository.save(user);
+        logger.info("User {} unsuspended successfully", user.getEmail());
     }
 
     @Override
@@ -281,40 +310,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CachePut(value = "users", key = "#user.email")
-    public UserRegistrationResponseDTO updateUser(Long id, User user) {
-        logger.info("Updating user with ID: {}", id);
+    @CachePut(value = "users", key = "#result.email")
+    public UserRegistrationResponseDTO updateUser(User user) {
+        logger.info("Updating profile for the logged-in user");
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserEmail = authentication.getName();
         logger.debug("Authenticated user performing update: {}", currentUserEmail);
 
-        User currentUser = usersRepository.findByEmail(currentUserEmail)
+        User existingUser = usersRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
 
-        return usersRepository.findById(id).map(existingUser -> {
-            logger.debug("Found existing user with ID: {}", id);
+        if (user.getFirstname() != null) existingUser.setFirstname(user.getFirstname());
+        if (user.getSecondname() != null) existingUser.setSecondname(user.getSecondname());
+        if (user.getPhoneNumber() != null) existingUser.setPhoneNumber(user.getPhoneNumber());
+        if (user.getEmail() != null && !user.getEmail().equals(existingUser.getEmail())) {
+            existingUser.setEmail(user.getEmail());
+        }
 
-            if (user.getRole() != null && !user.getRole().equals(existingUser.getRole())) {
-                if (!Role.SYSTEM_ADMIN.equals(currentUser.getRole())) {
-                    logger.warn("Unauthorized role change attempt by user: {}", currentUserEmail);
-                    throw new UnauthorizedException("You are not authorized to change roles");
-                }
-                existingUser.setRole(user.getRole());
-            }
+        User updatedUser = usersRepository.save(existingUser);
+        userCache.put(updatedUser.getEmail(), updatedUser);
 
-            if (user.getSecondname() != null) existingUser.setSecondname(user.getSecondname());
-            if (user.getFirstname() != null) existingUser.setFirstname(user.getFirstname());
-            if (user.getEmail() != null) existingUser.setEmail(user.getEmail());
-            if (user.getPhoneNumber() != null) existingUser.setPhoneNumber(user.getPhoneNumber());
-
-            User updatedUser = usersRepository.save(existingUser);
-            userCache.put(updatedUser.getEmail(), updatedUser);
-
-            logger.info("User {} updated successfully", updatedUser.getEmail());
-            return mapper.toResponseDTO(updatedUser);
-        }).orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+        logger.info("User {} updated successfully", updatedUser.getEmail());
+        return mapper.toResponseDTO(updatedUser);
     }
+
+
 
     @Override
     @CacheEvict(value = "users", allEntries = true)
@@ -331,6 +352,32 @@ public class UserServiceImpl implements UserService {
 
         logger.info("User with ID {} deleted successfully", id);
     }
+
+    @Override
+    @CacheEvict(value = "users", allEntries = true)
+    public void deletePersonalAccount() {
+        logger.info("[DELETE] Attempting to delete currently authenticated user account...");
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+            logger.error("[DELETE FAILED] No authenticated user found in context.");
+            throw new UnauthorizedException("You are not authenticated.");
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Long userId = userDetails.getId();
+
+        User existingUser = usersRepository.findById(userId)
+                .orElseThrow(() -> {
+                    logger.error("[DELETE FAILED] User with ID {} not found", userId);
+                    return new ResourceNotFoundException("User not found");
+                });
+        usersRepository.delete(existingUser);
+
+        logger.info("[DELETE SUCCESS] User account deleted successfully for email={}", existingUser.getEmail());
+    }
+
 
     //monitoring
     public List<String> getRecentLogins() {

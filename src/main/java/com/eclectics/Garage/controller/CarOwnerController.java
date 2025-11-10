@@ -40,6 +40,7 @@ public class CarOwnerController {
             return carOwnerService.getAllCarOwners();
         }
 
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER)")
         @PostMapping(
                 value = "/create",
                 consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE}
@@ -53,23 +54,22 @@ public class CarOwnerController {
             return ResponseEntity.ok(response);
         }
 
-        @PreAuthorize("hasRole('CAR_OWNER)")
-        @PutMapping(value = "/update/{carOwnerUniqueId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        public ResponseEntity<CarOwnerResponseDTO> updateCarOwnerProfilePic(
-                @PathVariable Integer carOwnerUniqueId,
+        @PreAuthorize("hasRole('CAR_OWNER')")
+        @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<CarOwnerResponseDTO> updateOwnProfile(
                 @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
-                @RequestPart("profilePic") MultipartFile profilePic
+                @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
 
-            CarOwnerResponseDTO updatedOwner = carOwnerService.updateProfilePic(carOwnerUniqueId,carOwnerRequestsDTO, profilePic);
+            CarOwnerResponseDTO updatedOwner = carOwnerService.updateOwnProfile(carOwnerRequestsDTO, profilePic);
             return ResponseEntity.ok(updatedOwner);
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER)")
-        @DeleteMapping("/{carOwnerId}")
-        public String deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
-            carOwnerService.deleteCarOwner(carOwnerId);
-            return "CarOwner Deleted Successfully";
-        }
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+            @DeleteMapping("/{carOwnerId}")
+            public String deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
+                carOwnerService.deleteCarOwner(carOwnerId);
+                return "CarOwner Deleted Successfully";
+            }
 
-    }
+        }

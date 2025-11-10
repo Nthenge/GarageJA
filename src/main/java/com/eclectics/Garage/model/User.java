@@ -29,6 +29,8 @@
 
         private boolean enabled = false;
 
+        private boolean suspended = false;
+
         @Enumerated(EnumType.STRING)
         private Role role;
 
@@ -44,13 +46,14 @@
         @JsonManagedReference
         private Garage garage;
 
-        public User(String email, String secondname,Mechanic mechanic,CarOwner carOwner,Garage garage, String firstname, String password, String phoneNumber, boolean enabled, Role role) {
+        public User(String email, String secondname,Mechanic mechanic,CarOwner carOwner,Garage garage, String firstname, String password, String phoneNumber, boolean enabled, boolean suspended, Role role) {
             this.email = email;
             this.secondname = secondname;
             this.firstname = firstname;
             this.password = password;
             this.phoneNumber = phoneNumber;
             this.enabled = enabled;
+            this.suspended = suspended;
             this.role = role;
             this.mechanic = mechanic;
             this.carOwner = carOwner;
@@ -105,6 +108,9 @@
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
         }
+
+        public boolean isSuspended() { return suspended;}
+        public void setSuspended(boolean suspended) { this.suspended = suspended;}
 
         public Role getRole() {
             return role;
