@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,15 +41,16 @@ public class MechanicController {
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
-        @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,MediaType.APPLICATION_OCTET_STREAM_VALUE})
+        @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
         public ResponseEntity<String> createMechanic(
                 @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
-                @RequestPart(value = "profilePic", required = false)MultipartFile profilePic,
+                @RequestPart(value = "profilePic", required = false) MultipartFile profilePic,
                 @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
-                @RequestPart(value = "professionalCertfificate", required = false)MultipartFile professionalCertfificate,
-                @RequestPart(value = "anyRelevantCertificate", required = false)MultipartFile anyRelevantCertificate,
-                @RequestPart(value = "policeClearanceCertficate", required = true)MultipartFile policeClearanceCertficate) throws java.io.IOException{
-            mechanicService.createMechanic(mechanicRequestDTO,profilePic,nationalIDPic,professionalCertfificate,anyRelevantCertificate,policeClearanceCertficate);
+                @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
+                @RequestPart(value = "anyRelevantCertificate", required = false) MultipartFile anyRelevantCertificate,
+                @RequestPart(value = "policeClearanceCertificate", required = true) MultipartFile policeClearanceCertificate
+        ) throws IOException {
+            mechanicService.createMechanic(mechanicRequestDTO, profilePic, nationalIDPic, professionalCertificate, anyRelevantCertificate, policeClearanceCertificate);
             return ResponseEntity.ok("Mechanic created successfully");
         }
 
