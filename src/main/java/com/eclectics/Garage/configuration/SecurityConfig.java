@@ -37,7 +37,7 @@ public class SecurityConfig {
                 "http://10.20.33.60:4200",
                 "http://192.168.1.66:4200",
                 "http://192.168.1.69:4200",
-                "http://192.168.1.73:4200"
+                "http://192.168.100.96:4200"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

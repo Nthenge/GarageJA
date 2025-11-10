@@ -106,9 +106,9 @@ public class MechanicServiceImpl implements MechanicService {
     public MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO,
                                               MultipartFile profilePic,
                                               MultipartFile nationalIDPic,
-                                              MultipartFile professionalCertfificate,
+                                              MultipartFile professionalCertificate,
                                               MultipartFile anyRelevantCertificate,
-                                              MultipartFile policeClearanceCertficate) throws IOException {
+                                              MultipartFile policeClearanceCertificate) throws IOException {
 
         logger.info("[CREATE] Creating mechanic for national ID: {}", mechanicRequestDTO.getNationalIdNumber());
 
@@ -127,7 +127,7 @@ public class MechanicServiceImpl implements MechanicService {
             mechanic.setGarage(garage);
         }
 
-        uploadFilesForMechanic(mechanic, user.getId(), profilePic, nationalIDPic, professionalCertfificate, anyRelevantCertificate, policeClearanceCertficate);
+        uploadFilesForMechanic(mechanic, user.getId(), profilePic, nationalIDPic, professionalCertificate, anyRelevantCertificate, policeClearanceCertificate);
 
         Mechanic saved = mechanicRepository.save(mechanic);
         MechanicResponseDTO dto = mapper.toResponseDTO(saved);
@@ -143,6 +143,7 @@ public class MechanicServiceImpl implements MechanicService {
 
         return dto;
     }
+
 
     private void uploadFilesForMechanic(Mechanic mechanic, Long userId,
                                         MultipartFile profilePic,
