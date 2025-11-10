@@ -5,6 +5,7 @@ import com.eclectics.Garage.dto.ServiceRequestsResponseDTO;
 import com.eclectics.Garage.mapper.ServiceRequestsMapper;
 import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.*;
+import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.ServiceRequestService;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
@@ -28,11 +29,12 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final GarageRepository garageRepository;
     private final SeverityCategoryRepository severityCategoryRepository;
     private final ServiceRequestsMapper mapper;
+    private final AuthenticationService authenticationService;
 
-    private final Map<Long, ServiceRequest> requestCache = new HashMap<>(); // quick lookup by requestId
-    private final Map<Integer, List<ServiceRequest>> requestsByCarOwnerCache = new HashMap<>(); // group requests per car owner
-    private final Queue<ServiceRequest> recentRequestsQueue = new LinkedList<>(); // track last few created requests (FIFO)
-    private final Set<Long> deletedRequestIds = new HashSet<>(); // track deleted IDs to avoid reprocessing
+    private final Map<Long, ServiceRequest> requestCache = new HashMap<>();
+    private final Map<Integer, List<ServiceRequest>> requestsByCarOwnerCache = new HashMap<>();
+    private final Queue<ServiceRequest> recentRequestsQueue = new LinkedList<>();
+    private final Set<Long> deletedRequestIds = new HashSet<>();
 
     public ServiceRequestServiceImpl(
             RequestServiceRepository requestServiceRepository,
@@ -40,7 +42,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             CarOwnerRepository carOwnerRepository,
             ServiceRepository serviceRepository,
             GarageRepository garageRepository,
-            ServiceRequestsMapper mapper
+            ServiceRequestsMapper mapper, AuthenticationService authenticationService
     ) {
         this.requestServiceRepository = requestServiceRepository;
         this.carOwnerRepository = carOwnerRepository;
@@ -48,6 +50,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         this.garageRepository = garageRepository;
         this.severityCategoryRepository = severityCategoryRepository;
         this.mapper = mapper;
+        this.authenticationService = authenticationService;
     }
 
     @Override
@@ -57,22 +60,20 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             @CacheEvict(value = "requestsByCarOwner", allEntries = true),
             @CacheEvict(value = "requestById", allEntries = true)
     })
-    public ServiceRequest createRequest(Integer carOwnerUniqueId, Long garageId, Long serviceId, Long severityId) {
+    public ServiceRequest createRequest(Long garageId, Long serviceId, Long severityId) {
 
-        logger.info(String.format("Creating new service request for CarOwner ID: %d, Garage ID: %d, Service ID: %d, Severity ID: %d",
-                carOwnerUniqueId, garageId, serviceId, severityId));
-
-        CarOwner carOwner = carOwnerRepository.findByUniqueId(carOwnerUniqueId)
-                .orElseThrow(() -> new ResourceNotFoundException("Car Owner with this id does not exist"));
+        User currentUser = authenticationService.getCurrentUser();
+        CarOwner carOwner = carOwnerRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Car Owner not found for current user"));
 
         Garage garage = garageRepository.findByGarageId(garageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Garage with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
 
         Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
         SeverityCategories severityCategory = severityCategoryRepository.findById(severityId)
-                .orElseThrow(() -> new ResourceNotFoundException("Severity with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Severity not found"));
 
         ServiceRequest request = new ServiceRequest();
         request.setCarOwner(carOwner);
@@ -84,15 +85,15 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         request.setUpdatedAt(LocalDateTime.now());
 
         ServiceRequest savedRequest = requestServiceRepository.save(request);
-        logger.info("Service request successfully created.");
 
         requestCache.put(savedRequest.getId(), savedRequest);
-        requestsByCarOwnerCache.computeIfAbsent(carOwnerUniqueId, k -> new ArrayList<>()).add(savedRequest);
-        if (recentRequestsQueue.size() > 20) recentRequestsQueue.poll(); // limit queue size
+        requestsByCarOwnerCache.computeIfAbsent(carOwner.getUniqueId(), k -> new ArrayList<>()).add(savedRequest);
+        if (recentRequestsQueue.size() > 20) recentRequestsQueue.poll();
         recentRequestsQueue.offer(savedRequest);
 
         return savedRequest;
     }
+
 
     @Override
     @Cacheable(value = "allServiceRequests")

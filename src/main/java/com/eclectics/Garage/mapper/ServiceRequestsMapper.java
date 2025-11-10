@@ -20,7 +20,6 @@ public interface ServiceRequestsMapper {
     @Mapping(target = "id", ignore = true)
     ServiceRequest toEntity(ServiceRequestsRequestDTO dto);
 
-    // Map entity → DTO (extracting IDs from nested entities)
     @Mapping(target = "carId", source = "carOwner.uniqueId")
     @Mapping(target = "garageId", source = "garage.garageId")
     @Mapping(target = "serviceId", source = "service.id")
