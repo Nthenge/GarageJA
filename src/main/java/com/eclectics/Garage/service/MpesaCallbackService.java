@@ -20,18 +20,17 @@ public class MpesaCallbackService {
     private final ServiceRepository serviceRepository;
     private final GarageRepository garageRepository;
     private final PaymentSplitService paymentSplitService;
-    private final MpesaB2CService mpesaB2CService;
+    private final MpesaB2BService mpesaBBCService;
     private final PaymentRepository paymentRepository;
     private final UsersRepository usersRepository;
 
     public MpesaCallbackService(ServiceRepository serviceRepository,
                                 GarageRepository garageRepository,
-                                PaymentSplitService paymentSplitService,
-                                MpesaB2CService mpesaB2CService, PaymentRepository paymentRepository, UsersRepository usersRepository) {
+                                PaymentSplitService paymentSplitService, MpesaB2BService mpesaBBCService, PaymentRepository paymentRepository, UsersRepository usersRepository) {
         this.serviceRepository = serviceRepository;
         this.garageRepository = garageRepository;
         this.paymentSplitService = paymentSplitService;
-        this.mpesaB2CService = mpesaB2CService;
+        this.mpesaBBCService = mpesaBBCService;
         this.paymentRepository = paymentRepository;
         this.usersRepository = usersRepository;
     }
@@ -67,15 +66,20 @@ public class MpesaCallbackService {
 
             // Send money to garage and system
             try {
-                mpesaB2CService.sendMoneyToGarage(
+                // 1. Send Garage's Share (Till to Till)
+                mpesaBBCService.transferMoney(
                         split.getGarageAmount(),
-                        split.getGarageTill().toString(),
-                        "Garage payment"
+                        String.valueOf(split.getGarageTill()), // Ensure it's a String
+                        "Garage service payment",
+                        "BusinessBuyGoods" // Use the appropriate B2B command ID for Tills
                 );
-                mpesaB2CService.sendMoneyToGarage(
+
+                // 2. Send System's Commission (Till to Till)
+                mpesaBBCService.transferMoney(
                         split.getSystemAmount(),
-                        split.getSystemTill(),
-                        "System commission"
+                        split.getSystemTill(), // This is already a String (600000)
+                        "System commission split",
+                        "BusinessBuyGoods" // Use the appropriate B2B command ID
                 );
             } catch (Exception e) {
                 e.printStackTrace();
@@ -98,7 +102,7 @@ public class MpesaCallbackService {
             paymentRepository.save(payment);
 
         } else {
-            System.out.println("❌ Payment failed or cancelled: " + stk.getResultDesc());
+            System.out.println("Payment failed or cancelled: " + stk.getResultDesc());
         }
     }
 

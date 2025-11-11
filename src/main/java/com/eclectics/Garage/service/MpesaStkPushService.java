@@ -20,7 +20,7 @@ public class MpesaStkPushService {
     @Value("${mpesa.passkey}")
     private String passKey;
 
-    @Value("${mpesa.base.url}")
+    @Value("${mpesa.base.host}")
     private String baseUrl;
 
     @Value("${mpesa.callback.url}")

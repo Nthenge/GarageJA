@@ -1,12 +1,8 @@
 package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.MpesaCallbackDTO;
-import com.eclectics.Garage.dto.ServiceResponseDTO;
-import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.service.MpesaCallbackService;
 import com.eclectics.Garage.service.MpesaStkPushService;
-import com.eclectics.Garage.service.PaymentSplitService;
-import com.eclectics.Garage.service.MpesaB2CService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,48 +12,40 @@ public class MpesaController {
 
     private final MpesaStkPushService mpesaStkPushService;
     private final MpesaCallbackService mpesaCallbackService;
-    private final PaymentSplitService paymentSplitService;
-    private final MpesaB2CService mpesaB2CService;
+    // Removed unused dependencies: PaymentSplitService and MpesaB2BService
 
     public MpesaController(MpesaStkPushService mpesaStkPushService,
-                           MpesaCallbackService mpesaCallbackService,
-                           PaymentSplitService paymentSplitService,
-                           MpesaB2CService mpesaB2CService) {
+                           MpesaCallbackService mpesaCallbackService) {
         this.mpesaStkPushService = mpesaStkPushService;
         this.mpesaCallbackService = mpesaCallbackService;
-        this.paymentSplitService = paymentSplitService;
-        this.mpesaB2CService = mpesaB2CService;
     }
 
+    // 1. Initial STK Push Request
     @PostMapping("/stkpush")
     public ResponseEntity<String> stkPush(@RequestParam String phone, @RequestParam String amount)
             throws Exception {
+        // Simple delegation: Controller initiates the payment process
         String response = mpesaStkPushService.initiateStkPush(phone, amount);
         return ResponseEntity.ok(response);
     }
 
+    // 2. Safaricom's Response (Callback)
     @PostMapping("/callback")
     public ResponseEntity<String> handleCallback(@RequestBody MpesaCallbackDTO callback) {
-        if (callback.getBody().getStkCallback().getResultCode() == 0) {
 
-            ServiceResponseDTO service = mpesaCallbackService.getServiceFromCallback(callback);
-            GarageResponseDTO garage = mpesaCallbackService.getGarageFromService(service);
+        // Simple delegation: Controller hands off the entire response body
+        // to the service layer for processing, splitting, and saving.
+        try {
+            mpesaCallbackService.handleCallback(callback);
 
-            PaymentSplitService.PaymentSplitResult split =
-                    paymentSplitService.calculateSplit(service, garage);
+            // Safaricom requires a 200 OK response with a specific body
+            // for successful callback receipt.
+            return ResponseEntity.ok("{ \"ResponseCode\":\"0\", \"ResponseDesc\":\"Callback received successfully\" }");
 
-            try {
-                mpesaB2CService.sendMoneyToGarage(
-                        split.getGarageAmount(),
-                        split.getGarageTill().toString(),
-                        "Garage payment for service ID: " + service.getId()
-                );
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.internalServerError().body("Error sending money to garage");
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Important: Log the failure, but return success to avoid continuous retries from Daraja
+            return ResponseEntity.ok("{ \"ResponseCode\":\"0\", \"ResponseDesc\":\"Callback received, but processing failed internally\" }");
         }
-
-        return ResponseEntity.ok("Callback processed successfully");
     }
 }

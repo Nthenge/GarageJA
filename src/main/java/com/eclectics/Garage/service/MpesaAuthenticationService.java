@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.Base64;
 
 @Service
-public class MpesaAuthenticationService {
+public class    MpesaAuthenticationService {
     @Value("${mpesa.consumer.key}")
     private String customerKey;
     @Value("${mpesa.consumer.secret}")
     private String customerSecret;
-    @Value("${mpesa.consumer.url}")
+    @Value("${mpesa.consumer.host}")
     private String baseUrl;
 
     public String generateAccessToken() throws IOException, java.io.IOException{
