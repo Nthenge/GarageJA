@@ -17,7 +17,7 @@ public class    MpesaAuthenticationService {
     private String customerKey;
     @Value("${mpesa.consumer.secret}")
     private String customerSecret;
-    @Value("${mpesa.consumer.host}")
+    @Value("${mpesa.base.host}")
     private String baseUrl;
 
     public String generateAccessToken() throws IOException, java.io.IOException{
