@@ -19,20 +19,24 @@ public class Payment {
     private PaymentMethod paymentMethod;
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
+    private Double garageAmount; // optional
+    private Double systemAmount;
 
     public Payment() {}
 
-    public Payment(Double amount, Integer paymentId, String createdAt, String updatedAt, PaymentCurrency currency, Long ownerId, String transactionRef, PaymentMethod paymentMethod, PaymentStatus paymentStatus, Long serviceId) {
-        this.amount = amount;
+    public Payment(Integer paymentId, Double amount, Long ownerId, Long serviceId, String createdAt, String updatedAt, String transactionRef, PaymentCurrency currency, PaymentMethod paymentMethod, PaymentStatus paymentStatus, Double garageAmount, Double systemAmount) {
         this.paymentId = paymentId;
+        this.amount = amount;
+        this.ownerId = ownerId;
+        this.serviceId = serviceId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.currency = currency;
-        this.ownerId = ownerId;
         this.transactionRef = transactionRef;
+        this.currency = currency;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = paymentStatus;
-        this.serviceId = serviceId;
+        this.garageAmount = garageAmount;
+        this.systemAmount = systemAmount;
     }
 
     public Integer getPaymentId() {return paymentId;}
@@ -64,6 +68,12 @@ public class Payment {
 
     public PaymentCurrency getCurrency() {return currency;}
     public void setCurrency(PaymentCurrency currency) {this.currency = currency;}
+
+    public Double getGarageAmount() { return garageAmount;}
+    public void setGarageAmount(Double garageAmount) {this.garageAmount = garageAmount;}
+
+    public Double getSystemAmount() {return systemAmount;}
+    public void setSystemAmount(Double systemAmount) {this.systemAmount = systemAmount;}
 }
 
 
