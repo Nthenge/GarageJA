@@ -1,6 +1,5 @@
 package com.eclectics.Garage.repository;
 
-import com.eclectics.Garage.dto.ServiceResponseDTO;
 import com.eclectics.Garage.model.Service;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,6 +15,6 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     @Query("SELECT COUNT(DISTINCT s.garage.garageId) FROM Service s WHERE s.serviceName = :serviceName")
     long countByServiceName(String serviceName);
 
-    Optional<Service> findByCheckoutRequestId(String checkoutId);
+    Optional<Service> findById(Long id);
 }
 

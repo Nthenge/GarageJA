@@ -12,7 +12,6 @@ import com.eclectics.Garage.repository.UsersRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @org.springframework.stereotype.Service
 public class MpesaCallbackService {
@@ -124,12 +123,21 @@ public class MpesaCallbackService {
 
 
     public ServiceResponseDTO getServiceFromCallback(MpesaCallbackDTO callback) {
-        String checkoutId = callback.getBody().getStkCallback().getCheckoutRequestID();
+        // Get service ID from callback (as String)
+        String serviceIdString = callback.getBody().getStkCallback().getCheckoutRequestID();
+
+        // Convert to Long
+        Long serviceId;
+        try {
+            serviceId = Long.parseLong(serviceIdString);
+        } catch (NumberFormatException e) {
+            throw new GarageExceptions.ResourceNotFoundException("Invalid service ID format: " + serviceIdString);
+        }
 
         // Fetch service entity from repository
-        com.eclectics.Garage.model.Service serviceEntity = serviceRepository.findByCheckoutRequestId(checkoutId)
+        Service serviceEntity = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new GarageExceptions.ResourceNotFoundException(
-                        "Service not found for checkout ID: " + checkoutId
+                        "Service not found for ID: " + serviceId
                 ));
 
         // Convert entity to DTO
@@ -141,6 +149,7 @@ public class MpesaCallbackService {
 
         return dto;
     }
+
 
 
     public GarageResponseDTO getGarageFromService(ServiceResponseDTO service) {
