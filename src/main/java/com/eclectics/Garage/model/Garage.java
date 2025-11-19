@@ -3,7 +3,9 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "garages")
@@ -40,32 +42,45 @@ public class Garage {
     @OneToMany(mappedBy = "garage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServiceRequest> requests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "garage", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Service> services = new ArrayList<>();
+    @ManyToMany
+    @JoinTable(
+            name = "garage_services",
+            joinColumns = @JoinColumn(
+                    name = "garage_id"
+//                    referencedColumnName = "garageId"
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "service_id",
+                    referencedColumnName = "id"
+            )
+    )
+    private Set<Service> offeredServices = new HashSet<>();
+
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     @JsonBackReference
     private User user;
 
-    public Garage(Integer mpesaTill, Integer mpesaPayBill, User user, String businessPhoneNumber, String physicalBusinessAddress, String businessName, String specialisedServices, String serviceCategories, String twentyFourHours, Long operatingHours, Integer yearsInOperation, String businessEmailAddress, String businessRegNumber, Long garageId, String facilityPhotos, String professionalCertificate, String businessLicense, Long id) {
-        this.mpesaTill = mpesaTill;
-        this.mpesaPayBill = mpesaPayBill;
-        this.businessPhoneNumber = businessPhoneNumber;
-        this.physicalBusinessAddress = physicalBusinessAddress;
-        this.businessName = businessName;
-        this.specialisedServices = specialisedServices;
-        this.serviceCategories = serviceCategories;
-        this.twentyFourHours = twentyFourHours;
-        this.operatingHours = operatingHours;
-        this.yearsInOperation = yearsInOperation;
-        this.businessEmailAddress = businessEmailAddress;
-        this.businessRegNumber = businessRegNumber;
-        this.garageId = garageId;
-        this.facilityPhotos = facilityPhotos;
-        this.professionalCertificate = professionalCertificate;
+    public Garage(String businessLicense, String professionalCertificate, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String twentyFourHours, String serviceCategories, String specialisedServices, String businessName, String physicalBusinessAddress, String businessPhoneNumber, Integer yearsInOperation, Integer mpesaPayBill, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
         this.businessLicense = businessLicense;
-        this.id = id;
+        this.professionalCertificate = professionalCertificate;
+        this.facilityPhotos = facilityPhotos;
+        this.garageId = garageId;
+        this.operatingHours = operatingHours;
+        this.businessRegNumber = businessRegNumber;
+        this.businessEmailAddress = businessEmailAddress;
+        this.twentyFourHours = twentyFourHours;
+        this.serviceCategories = serviceCategories;
+        this.specialisedServices = specialisedServices;
+        this.businessName = businessName;
+        this.physicalBusinessAddress = physicalBusinessAddress;
+        this.businessPhoneNumber = businessPhoneNumber;
+        this.yearsInOperation = yearsInOperation;
+        this.mpesaPayBill = mpesaPayBill;
+        this.mpesaTill = mpesaTill;
+        this.requests = requests;
+        this.offeredServices = offeredServices;
         this.user = user;
     }
 
@@ -141,6 +156,19 @@ public class Garage {
     public String getBusinessPhoneNumber() { return businessPhoneNumber;}
     public void setBusinessPhoneNumber(String businessPhoneNumber) {this.businessPhoneNumber = businessPhoneNumber;}
 
+    public List<ServiceRequest> getRequests() {return requests;
+    }
+    public void setRequests(List<ServiceRequest> requests) {
+        this.requests = requests;
+    }
+
+    public Set<Service> getOfferedServices() {
+        return offeredServices;
+    }
+    public void setOfferedServices(Set<Service> offeredServices) {
+        this.offeredServices = offeredServices;
+    }
+
     public Integer getMpesaPayBill() { return mpesaPayBill;}
     public void setMpesaPayBill(Integer mpesaPayBill) { this.mpesaPayBill = mpesaPayBill;}
 
@@ -149,4 +177,5 @@ public class Garage {
 
     public User getUser() {return user;}
     public void setUser(User user) {this.user = user;}
+
 }

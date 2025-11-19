@@ -123,32 +123,42 @@ public class MpesaCallbackService {
 
 
     public ServiceResponseDTO getServiceFromCallback(MpesaCallbackDTO callback) {
-        // Get service ID from callback (as String)
-        String serviceIdString = callback.getBody().getStkCallback().getCheckoutRequestID();
+        String checkoutRequestId = callback.getBody().getStkCallback().getCheckoutRequestID();
 
-        // Convert to Long
-        Long serviceId;
-        try {
-            serviceId = Long.parseLong(serviceIdString);
-        } catch (NumberFormatException e) {
-            throw new GarageExceptions.ResourceNotFoundException("Invalid service ID format: " + serviceIdString);
+        // Expecting format: "serviceId:garageId"
+        String[] parts = checkoutRequestId.split(":");
+        if (parts.length != 2) {
+            throw new GarageExceptions.ResourceNotFoundException(
+                    "Invalid CheckoutRequestID format, expected serviceId:garageId"
+            );
         }
 
-        // Fetch service entity from repository
+        Long serviceId = Long.parseLong(parts[0]);
+        Long garageId = Long.parseLong(parts[1]);
+
+        // Fetch service
         Service serviceEntity = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new GarageExceptions.ResourceNotFoundException(
                         "Service not found for ID: " + serviceId
                 ));
 
-        // Convert entity to DTO
+        // Find the specific garage linked to this service
+        Garage linkedGarage = serviceEntity.getGarages().stream()
+                .filter(g -> g.getId().equals(garageId))
+                .findFirst()
+                .orElseThrow(() -> new GarageExceptions.ResourceNotFoundException(
+                        "Garage not found for this service"
+                ));
+
         ServiceResponseDTO dto = new ServiceResponseDTO();
         dto.setId(serviceEntity.getId());
         dto.setServiceName(serviceEntity.getServiceName());
         dto.setPrice(serviceEntity.getPrice());
-        dto.setGarageId(serviceEntity.getGarage().getId());
+        dto.setGarageId(linkedGarage.getId());
 
         return dto;
     }
+
 
 
 

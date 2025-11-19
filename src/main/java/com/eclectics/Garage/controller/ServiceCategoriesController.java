@@ -3,7 +3,9 @@ package com.eclectics.Garage.controller;
 import com.eclectics.Garage.dto.ServiceCategoriesResponseDTO;
 import com.eclectics.Garage.dto.ServiceCategoriestRequestDTO;
 import com.eclectics.Garage.model.ServiceCategories;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.ServiceCategoriesService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,28 +21,33 @@ public class ServiceCategoriesController {
         this.serviceCategoriesService = serviceCategoriesService;
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    @PostMapping
-    public ResponseEntity<ServiceCategories> createServiceCategories(@RequestBody ServiceCategoriestRequestDTO serviceCategoriestRequestDTO){
-        return ResponseEntity.ok(serviceCategoriesService.createCategory(serviceCategoriestRequestDTO));
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+    @PostMapping("/create")
+    public ResponseEntity<Object> createServiceCategories(@RequestBody ServiceCategoriestRequestDTO serviceCategoriestRequestDTO){
+        ServiceCategories serviceCategories =serviceCategoriesService.createCategory(serviceCategoriestRequestDTO);
+        return ResponseHandler.generateResponse("Service created", HttpStatus.CREATED, serviceCategories);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
-    @GetMapping
-    public ResponseEntity<List<ServiceCategoriesResponseDTO>> getAllServiceCategories(){
-        return ResponseEntity.ok(serviceCategoriesService.getAllServiceCategories());
+    @GetMapping("/all")
+    public ResponseEntity<Object> getAllServiceCategories(){
+        List<ServiceCategoriesResponseDTO> allservices = serviceCategoriesService.getAllServiceCategories();
+        return ResponseHandler.generateResponse("All services", HttpStatus.OK, allservices);
     }
+
+//update/{categoryId}
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','MECHANIC','CAR_OWNER')")
     @GetMapping("/{serviceCategoryName}")
-    public ResponseEntity<ServiceCategoriesResponseDTO> getServiceCategoryByName(@PathVariable("serviceCategoryName") String serviceCategoryName){
-        return ResponseEntity.ok(serviceCategoriesService.getServiceCategoryByName(serviceCategoryName));
+    public ResponseEntity<Object> getServiceCategoryByName(@PathVariable("serviceCategoryName") String serviceCategoryName){
+        ServiceCategoriesResponseDTO serviceCategoriesResponseDTO = serviceCategoriesService.getServiceCategoryByName(serviceCategoryName);
+        return ResponseHandler.generateResponse("Service Category by name", HttpStatus.OK, serviceCategoriesResponseDTO);
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteServiceCategory(@PathVariable Long id){
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Object> deleteServiceCategory(@PathVariable Long id){
         serviceCategoriesService.delete(id);
-        return ResponseEntity.ok("Service category deleted");
+        return ResponseHandler.generateResponse("Service category deleted", HttpStatus.OK, null);
     }
 }

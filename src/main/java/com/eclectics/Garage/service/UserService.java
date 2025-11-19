@@ -13,7 +13,7 @@ public interface UserService {
     UserRegistrationResponseDTO updateUser(User user);
     UserLoginResponseDTO loginUser(UserLoginRequestDTO userLoginRequestDTO);
     UserPasswordResetResponseDTO resetPassword(UserPasswordResetRequestDTO resetRequestDTO);
-    void updatePassword(UserPasswordUpdateDTO updatePassword);
+    UserPasswordUpdateDTO updatePassword(UserPasswordUpdateDTO updatePassword);
     void confirmEmail(String token, String email);
     void  deleteUser(Long id);
     void deletePersonalAccount();

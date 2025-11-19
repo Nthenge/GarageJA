@@ -9,17 +9,17 @@ public class ServiceRequestDTO {
     private String description;
     private Double price;
     private Double avgDuration;
-    private Long garageId;
+//    private Long garageId;
     private Long categoryId;
 
     public ServiceRequestDTO() {}
 
-    public ServiceRequestDTO(String serviceName, String description, Double price, Double avgDuration, Long garageId, Long categoryId) {
+    public ServiceRequestDTO(String serviceName, String description, Double price, Double avgDuration, Long categoryId) {
         this.serviceName = serviceName;
         this.description = description;
         this.price = price;
         this.avgDuration = avgDuration;
-        this.garageId = garageId;
+//        this.garageId = garageId;
         this.categoryId = categoryId;
     }
 
@@ -47,13 +47,13 @@ public class ServiceRequestDTO {
         this.avgDuration = avgDuration;
     }
 
-    public Long getGarageId() {
-        return garageId;
-    }
-
-    public void setGarageId(Long garageId) {
-        this.garageId = garageId;
-    }
+//    public Long getGarageId() {
+//        return garageId;
+//    }
+//
+//    public void setGarageId(Long garageId) {
+//        this.garageId = garageId;
+//    }
 
     public Long getCategoryId() {
         return categoryId;

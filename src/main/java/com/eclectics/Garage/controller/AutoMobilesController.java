@@ -2,8 +2,10 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.AutoMobileResponseDTO;
 import com.eclectics.Garage.dto.AutomobileRequestsDTO;
-import com.eclectics.Garage.model.AutoMobiles;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.AutomobilesService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,52 +24,61 @@ public class AutoMobilesController {
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping
-    public List<AutoMobileResponseDTO> getAllAutomobiles(){
-        return automobilesService.getAllAutomobiles();
+    public ResponseEntity<Object> getAllAutomobiles(){
+        List<AutoMobileResponseDTO> automobiles= automobilesService.getAllAutomobiles();
+        return ResponseHandler.generateResponse("All engine Types", HttpStatus.OK, automobiles);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/make")
-    public List<String> getAllMakes() {
-        return automobilesService.getAllMakes();
+    public ResponseEntity<Object> getAllMakes() {
+        List<String> makes= automobilesService.getAllMakes();
+        return ResponseHandler.generateResponse("All engine Types", HttpStatus.OK, makes);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/year")
-    public List<String> getAllYea() {
-        return automobilesService.findAllYears();
+    public ResponseEntity<Object> getAllYear() {
+        List<String> year= automobilesService.findAllYears();
+        return ResponseHandler.generateResponse("All engine Types", HttpStatus.OK, year);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/engineType")
-    public List<String> getAllEngineType() {
-        return automobilesService.findAllEngineType();
+    public ResponseEntity<Object> getAllEngineType() {
+        List<String> engineType= automobilesService.findAllEngineType();
+        return ResponseHandler.generateResponse("All engine Types", HttpStatus.OK, engineType);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/transmission")
-    public List<String> getTransmissions() {
-        return automobilesService.findAllTransmission()
+    public ResponseEntity<Object>getTransmissions() {
+        List<String> transmission = automobilesService.findAllTransmission()
                 .stream()
                 .filter(Objects::nonNull)
                 .toList();
+
+        return ResponseHandler.generateResponse("All Transmissions", HttpStatus.OK, transmission);
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @PostMapping
-    public AutoMobileResponseDTO createAutoMobile(@RequestBody AutomobileRequestsDTO automobileRequestsDTO){
-        return automobilesService.createAutoMobile(automobileRequestsDTO);
+    public ResponseEntity<Object> createAutoMobile(@RequestBody AutomobileRequestsDTO automobileRequestsDTO){
+        AutoMobileResponseDTO createdAutomobile = automobilesService.createAutoMobile(automobileRequestsDTO);
+        return ResponseHandler.generateResponse("Automobile created", HttpStatus.CREATED, createdAutomobile);
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @PutMapping("/{id}")
-    public AutoMobileResponseDTO updateAutoMobile(@PathVariable Long id, @RequestBody AutomobileRequestsDTO autoMobiles){
-        return automobilesService.updateAutoMobile(id, autoMobiles);
+    public  ResponseEntity<Object>updateAutoMobile(@PathVariable Long id, @RequestBody AutomobileRequestsDTO autoMobiles){
+        AutoMobileResponseDTO updatedAutomobile = automobilesService.updateAutoMobile(id, autoMobiles);
+        return ResponseHandler.generateResponse("Updated Automobile", HttpStatus.CREATED, updatedAutomobile);
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @DeleteMapping("/{id}")
-    public void deleteAutoMobile(@PathVariable Long id){
+    public ResponseEntity<Object> deleteAutoMobile(@PathVariable Long id){
         automobilesService.deleteAutoMobile(id);
+        return ResponseHandler.generateResponse("Automobile deleted", HttpStatus.OK, null);
     }
 }

@@ -131,6 +131,7 @@
         @Transient
         public boolean isDetailsCompleted() {
             return switch (this.role) {
+                case SYSTEM_ADMIN -> true;
                 case MECHANIC -> mechanic != null && mechanic.isComplete();
                 case CAR_OWNER -> carOwner != null && carOwner.isComplete();
                 case GARAGE_ADMIN -> garage != null && garage.isComplete();

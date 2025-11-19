@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.Caching;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 public class ServiceServiceImpl implements ServicesService {
@@ -33,6 +34,8 @@ public class ServiceServiceImpl implements ServicesService {
     private final Map<Long, List<ServiceResponseDTO>> garageServiceCache = new ConcurrentHashMap<>();
     private final Set<Long> validCategoryIds = ConcurrentHashMap.newKeySet();
     private final Set<String> existingServiceNames = ConcurrentHashMap.newKeySet();
+    private final Map<String, List<ServiceResponseDTO>> searchServiceCache = new ConcurrentHashMap<>();
+
 
     public ServiceServiceImpl(ServiceRepository serviceRepository,
                               GarageRepository garageRepository,
@@ -51,37 +54,104 @@ public class ServiceServiceImpl implements ServicesService {
     @Override
     @Caching(evict = {
             @CacheEvict(value = "allServices", allEntries = true),
-            @CacheEvict(value = "servicesByGarage", allEntries = true),
-            @CacheEvict(value = "serviceById", allEntries = true)
+            @CacheEvict(value = "servicesByGarage", allEntries = true)
     })
-    public void createService(ServiceRequestDTO serviceRequestDTO) {
-        logger.info("Creating new service: {}", serviceRequestDTO.getServiceName());
+    public ServiceResponseDTO createService(Long categoryId, ServiceRequestDTO dto) {
+        logger.info("Creating new service: {}", dto.getServiceName());
 
-        if (existingServiceNames.contains(serviceRequestDTO.getServiceName().toLowerCase())) {
+        if (existingServiceNames.contains(dto.getServiceName().toLowerCase())) {
             throw new IllegalArgumentException("Service name already exists");
         }
-
-        if (!validCategoryIds.contains(serviceRequestDTO.getCategoryId())) {
+        if (!validCategoryIds.contains(categoryId)) {
             throw new ResourceNotFoundException("Invalid category ID");
         }
-
-        Service service = mapper.toEntity(serviceRequestDTO);
-        Garage garage = garageRepository.findByGarageId(serviceRequestDTO.getGarageId())
-                .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
-
-        ServiceCategories category = serviceCategoryRepository.findById(serviceRequestDTO.getCategoryId())
+//        Garage garage = garageRepository.findByGarageId(dto.getGarageId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
+        ServiceCategories category = serviceCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-
-        service.setGarage(garage);
+        Service service = mapper.toEntity(dto);
         service.setServiceCategories(category);
-
-        Service savedService = serviceRepository.save(service);
+//        service.getGarages().add(garage);
+//        garage.getOfferedServices().add(service);
+        serviceRepository.save(service);
+//        garageRepository.save(garage);
         existingServiceNames.add(service.getServiceName().toLowerCase());
 
-        garageServiceCache.computeIfAbsent(garage.getGarageId(), k -> new ArrayList<>())
-                .add(mapper.toResponseDTO(savedService));
+        logger.info("Service created successfully with ID: {}", service.getId());
+        return mapper.toResponseDTO(service);
+    }
 
-        logger.info("Service created successfully with ID: {}", savedService.getId());
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "servicesByGarage", allEntries = true)
+    })
+    public ServiceResponseDTO assignServiceToGarage(Long serviceId, Long garageId) {
+        Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+
+        Garage garage = garageRepository.findByGarageId(garageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
+
+        // add service to garage
+        garage.getOfferedServices().add(service);
+        service.getGarages().add(garage);
+
+        // persist relationship
+        garageRepository.save(garage);
+
+        // clear cache for this garage
+        garageServiceCache.remove(garageId);
+
+        logger.info("Service '{}' assigned to Garage '{}'", service.getServiceName(), garage.getBusinessName());
+        return mapper.toResponseDTO(service);
+    }
+
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "servicesByGarage", key = "#garageId", allEntries = false),
+            @CacheEvict(value = "searchServices", allEntries = true)
+    })
+    public void assignMultipleServicesToGarage(Long garageId, List<Long> serviceIds) {
+        logger.info("Assigning services {} to garage ID: {}", serviceIds, garageId);
+
+        Garage garage = garageRepository.findByGarageId(garageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
+
+        List<Service> services = serviceRepository.findAllById(serviceIds);
+
+        // 1. CRITICAL: Check if all requested services were found
+        if (services.size() != serviceIds.size()) {
+            Set<Long> foundIds = services.stream().map(Service::getId).collect(Collectors.toSet());
+            List<Long> notFoundIds = serviceIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .collect(Collectors.toList());
+
+            if (!notFoundIds.isEmpty()) {
+                logger.warn("Service IDs not found: {}", notFoundIds);
+                throw new ResourceNotFoundException("The following service IDs were not found: " + notFoundIds);
+            }
+        }
+
+        int servicesAdded = 0;
+        // 2. Establish the M-M relationship on both sides for bi-directional consistency
+        for (Service service : services) {
+            // .add returns true if the element was added (i.e., not a duplicate)
+            if (garage.getOfferedServices().add(service)) {
+                service.getGarages().add(garage);
+                servicesAdded++;
+            }
+        }
+
+        // 3. Persist the change
+        if (servicesAdded > 0) {
+            garageRepository.save(garage);
+            logger.info("{} new services assigned to Garage '{}'", servicesAdded, garage.getBusinessName());
+        } else {
+            logger.info("No new services assigned; all services were already offered by Garage '{}'", garage.getBusinessName());
+        }
+
+        // 4. Clear the garage-specific cache manually as well, just in case
+        garageServiceCache.remove(garageId);
     }
 
     @Override
@@ -95,8 +165,7 @@ public class ServiceServiceImpl implements ServicesService {
     @Cacheable(value = "allServices")
     public List<ServiceResponseDTO> getAllServices() {
         logger.info("Fetching all services");
-        List<Service> services = serviceRepository.findAll();
-        return mapper.toResponseDTOList(services);
+        return mapper.toResponseDTOList(serviceRepository.findAll());
     }
 
     @Override
@@ -109,60 +178,128 @@ public class ServiceServiceImpl implements ServicesService {
             return garageServiceCache.get(garageId);
         }
 
-        List<Service> services = serviceRepository.findByGarage_GarageId(garageId);
-        List<ServiceResponseDTO> dtos = mapper.toResponseDTOList(services);
+        Garage garage = garageRepository.findByGarageId(garageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
+
+        List<ServiceResponseDTO> dtos = garage.getOfferedServices()
+                .stream()
+                .map(mapper::toResponseDTO)
+                .collect(Collectors.toList());
 
         garageServiceCache.put(garageId, dtos);
         return dtos;
     }
 
     @Override
+    @Cacheable(
+            value = "searchServices",
+            key = "T(java.util.Objects).toString(#serviceName) + '-' + " +
+                    "T(java.util.Objects).toString(#garageName) + '-' + " +
+                    "T(java.util.Objects).toString(#price)"
+    )
+    public List<ServiceResponseDTO> searchServices(String serviceName, Double price, String garageName){
+        String cacheKey = (serviceName == null ? "null" : serviceName.toLowerCase()) + "-" +
+                (garageName == null ? "null" : garageName.toLowerCase()) + "-" +
+                (price == null ? "null" : price);
+
+        if (searchServiceCache.containsKey(cacheKey)) {
+            logger.debug("Cache hit for search key: {}", cacheKey);
+            return searchServiceCache.get(cacheKey);
+        }
+
+        logger.info("Cache miss for search key: {}, querying database...", cacheKey);
+
+        List<Service> services;
+
+        if (serviceName != null && garageName != null && price != null) {
+            services = serviceRepository.findByServiceNameContainingIgnoreCaseAndGarages_BusinessNameContainingIgnoreCaseAndPrice(
+                    serviceName, garageName, price);
+        } else if (serviceName != null && garageName != null) {
+            services = serviceRepository.findByServiceNameContainingIgnoreCaseAndGarages_BusinessNameContainingIgnoreCase(
+                    serviceName, garageName);
+        } else if (garageName != null && price != null) {
+            services = serviceRepository.findByGarages_BusinessNameContainingIgnoreCaseAndPrice(garageName, price);
+        } else if (serviceName != null && price != null) {
+            services = serviceRepository.findByServiceNameContainingIgnoreCaseAndPrice(serviceName, price);
+        } else if (serviceName != null) {
+            services = serviceRepository.findByServiceNameContainingIgnoreCase(serviceName);
+        } else if (garageName != null) {
+            services = serviceRepository.findByGarages_BusinessNameContainingIgnoreCase(garageName);
+        } else if (price != null) {
+            services = serviceRepository.findByPrice(price);
+        } else {
+            services = serviceRepository.findAll();
+        }
+
+        if (services.isEmpty()) {
+            logger.warn("No services found for search key: {}", cacheKey);
+            throw new ResourceNotFoundException("No services found matching your search criteria.");
+        }
+
+        List<ServiceResponseDTO> result = mapper.toResponseDTOList(services);
+        searchServiceCache.put(cacheKey, result);
+
+        return result;
+    }
+
+    @Override
     @Caching(evict = {
             @CacheEvict(value = "allServices", allEntries = true),
             @CacheEvict(value = "servicesByGarage", allEntries = true),
-            @CacheEvict(value = "serviceById", key = "#id")
+            @CacheEvict(value = "serviceById", allEntries = true),
+            @CacheEvict(value = "searchServices", allEntries = true)
     })
-    public void updateService(Long id, ServiceRequestDTO serviceRequestDTO) {
+    public ServiceRequestDTO updateService(Long id, ServiceRequestDTO serviceRequestDTO) {
         logger.info("Updating service with ID: {}", id);
 
         Service existingService = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
         mapper.updateFromDTO(serviceRequestDTO, existingService);
+
         Service updated = serviceRepository.save(existingService);
 
         existingServiceNames.add(updated.getServiceName().toLowerCase());
-        garageServiceCache.computeIfPresent(updated.getGarage().getGarageId(), (key, oldList) -> {
-            oldList.removeIf(svc -> Objects.equals(svc.getId(), id));
-            oldList.add(mapper.toResponseDTO(updated));
-            return oldList;
-        });
+
+        for (Garage g : updated.getGarages()) {
+            garageServiceCache.computeIfPresent(g.getGarageId(), (key, oldList) -> {
+                oldList.removeIf(svc -> Objects.equals(svc.getId(), id));
+                oldList.add(mapper.toResponseDTO(updated));
+                return oldList;
+            });
+        }
 
         logger.info("Service with ID {} updated successfully", id);
+        return serviceRequestDTO;
     }
+
 
     @Override
     @Caching(evict = {
             @CacheEvict(value = "allServices", allEntries = true),
-            @CacheEvict(value = "servicesByGarage", allEntries = true),
-            @CacheEvict(value = "serviceById", key = "#id")
+            @CacheEvict(value = "servicesByGarage", allEntries = true)
     })
-    public void deleteService(Long id) {
-        logger.warn("Deleting service with ID: {}", id);
-
-        Service service = serviceRepository.findById(id)
+    public ServiceResponseDTO deleteService(Long serviceId) {
+        Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+        ServiceResponseDTO responseDTO = mapper.toResponseDTO(service);
 
-        serviceRepository.deleteById(id);
+        for (Garage g : service.getGarages()) {
+            g.getOfferedServices().remove(service);
+            garageRepository.save(g);
+        }
+        serviceRepository.delete(service);
+
         existingServiceNames.remove(service.getServiceName().toLowerCase());
-        garageServiceCache.remove(service.getGarage().getGarageId());
 
-        logger.info("Service with ID {} deleted successfully", id);
+        logger.info("Service with ID {} deleted successfully", serviceId);
+
+        return responseDTO;
     }
+
 
     @Override
     public long countGaragesByServiceName(String serviceName) {
-        logger.info("Counting garages with service name: {}", serviceName);
         return serviceRepository.countByServiceName(serviceName);
     }
 }

@@ -3,7 +3,9 @@ package com.eclectics.Garage.controller;
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.CarOwnerService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,14 +32,16 @@ public class CarOwnerController {
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
         @GetMapping("/search/{carOwnerUniqueId}")
-        public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
-            return carOwnerService.getCarOwnerByUniqueId(carOwnerUniqueId);
+        public ResponseEntity<Object> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
+            Optional<CarOwnerResponseDTO> searchCar = carOwnerService.getCarOwnerByUniqueId(carOwnerUniqueId);
+            return ResponseHandler.generateResponse("Car by Unique ID", HttpStatus.OK, searchCar);
         }
 
-        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
         @GetMapping()
-        public List<CarOwnerResponseDTO> getAllCarOwners(){
-            return carOwnerService.getAllCarOwners();
+        public ResponseEntity<Object> getAllCarOwners(){
+            List<CarOwnerResponseDTO> allCarOwners = carOwnerService.getAllCarOwners();
+            return ResponseHandler.generateResponse("All Car Owners", HttpStatus.OK, allCarOwners);
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER')")
@@ -45,31 +49,31 @@ public class CarOwnerController {
                 value = "/create",
                 consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}
         )
-        public ResponseEntity<Map<String, String>> createCarOwner(
+        public ResponseEntity<Object> createCarOwner(
                 @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
                 @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
             carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
             Map<String, String> response = new HashMap<>();
-            return ResponseEntity.ok(response);
+            return ResponseHandler.generateResponse("Car Owner created successfully", HttpStatus.CREATED, response);
         }
 
-        @PreAuthorize("hasRole('CAR_OWNER')")
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
         @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        public ResponseEntity<CarOwnerResponseDTO> updateOwnProfile(
+        public ResponseEntity<Object> updateOwnProfile(
                 @RequestPart("carOwner") CarOwnerRequestsDTO carOwnerRequestsDTO,
                 @RequestPart(value = "profilePic", required = false) MultipartFile profilePic
         ) throws IOException {
 
             CarOwnerResponseDTO updatedOwner = carOwnerService.updateOwnProfile(carOwnerRequestsDTO, profilePic);
-            return ResponseEntity.ok(updatedOwner);
+            return ResponseHandler.generateResponse("CarOwner profile updated successfully", HttpStatus.CREATED,updatedOwner);
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
             @DeleteMapping("/{carOwnerId}")
-            public String deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
+            public ResponseEntity<Object> deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
                 carOwnerService.deleteCarOwner(carOwnerId);
-                return "CarOwner Deleted Successfully";
+                return ResponseHandler.generateResponse("CarOwner Deleted Successfully", HttpStatus.OK, null);
             }
 
         }

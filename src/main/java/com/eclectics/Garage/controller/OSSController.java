@@ -32,7 +32,6 @@ public class OSSController {
         return ossService.uploadFile(objectName, file.getInputStream());
     }
 
-    // this is for downloading image or viewing
     @GetMapping("/url")
     public String getPresignedDownloadUrl(@RequestParam("fileName") String fileName) {
         return ossService.generatePresignedUrl("uploads/" + fileName, 10);

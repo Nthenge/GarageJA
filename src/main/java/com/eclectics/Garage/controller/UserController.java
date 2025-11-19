@@ -2,12 +2,15 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.model.User;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.UserService;
 
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 
 import jakarta.validation.Valid;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,35 +29,31 @@ public class UserController {
         this.userService = userService;
     }
 
-    private ResponseEntity<Map<String, String>> success(String message) {
-        return ResponseEntity.ok(Map.of("message", message));
-    }
-
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
     @GetMapping("/{email}")
-    public ResponseEntity<?> getOneUser(@PathVariable String email ){
-        return userService.getUserByEmail(email)
+    public ResponseEntity<Object> getOneUser(@PathVariable String email ){
+        UserRegistrationResponseDTO user = userService.getUserByEmail(email)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build()).getBody();
+        return ResponseHandler.generateResponse("User by email", HttpStatus.OK, user);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
-    public ResponseEntity<List<UserRegistrationResponseDTO>> getAllUsers(){
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<Object> getAllUsers(){
+        List<UserRegistrationResponseDTO> list = userService.getAllUsers();
+        return ResponseHandler.generateResponse("List of all Users", HttpStatus.OK, list);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserRegistrationRequestDTO user) {
+    public ResponseEntity<Object> createUser(@Valid @RequestBody UserRegistrationRequestDTO user) {
         if (user.getEmail() == null || user.getPassword() == null) {
             throw new BadRequestException("Email and password are required");
         }
 
         try {
             userService.createUser(user);
-            return ResponseEntity.ok(Map.of(
-                    "message", "To finish registration, Please confirm your email"
-            ));
+            return ResponseHandler.generateResponse("To finish registration, Please confirm your email", HttpStatus.CREATED, null);
 
         } catch (BadRequestException e) {
             throw new BadRequestException(e.getMessage());
@@ -62,16 +61,16 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDetailsAuthDTO> login(@RequestBody UserLoginRequestDTO requestDTO) {
+    public ResponseEntity<?> login(@RequestBody UserLoginRequestDTO requestDTO) {
         if (requestDTO.getEmail() == null || requestDTO.getPassword() == null) {
             throw new BadRequestException("Email and password are required");
         }
         UserDetailsAuthDTO responseDTO = (UserDetailsAuthDTO) userService.loginUser(requestDTO);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseHandler.generateResponse("Login success", HttpStatus.OK, responseDTO);
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<?> confirmAccount(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<Object> confirmAccount(@RequestBody Map<String, Object> payload) {
         String token = (String) payload.get("token");
 
         if (token == null) {
@@ -81,26 +80,26 @@ public class UserController {
         boolean confirmed = userService.confirmUser(token);
 
         if (confirmed) {
-            return success("Account confirmed successfully!");
+            return ResponseHandler.generateResponse("Account confirmed successfully!", HttpStatus.CREATED, null);
         } else {
             throw new ForbiddenException("Invalid or expired token");
         }
     }
 
     @GetMapping("/confirm")
-    public ResponseEntity<?> confirmAccountFromLink(@RequestParam("token") String token) {
+    public ResponseEntity<Object> confirmAccountFromLink(@RequestParam("token") String token) {
 
         boolean confirmed = userService.confirmUser(token);
 
         if (confirmed) {
-            return success("Your account has been confirmed!");
+            return ResponseHandler.generateResponse("Your account has been confirmed!", HttpStatus.CREATED, null);
         } else {
             throw new ForbiddenException("Invalid or expired token");
         }
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<UserPasswordResetResponseDTO> requestResetPassword(
+    public ResponseEntity<Object> requestResetPassword(
             @RequestBody UserPasswordResetRequestDTO requestDTO) {
 
         if (requestDTO.getEmail() == null || requestDTO.getEmail().isEmpty()) {
@@ -108,42 +107,41 @@ public class UserController {
         }
 
         UserPasswordResetResponseDTO responseDTO = userService.resetPassword(requestDTO);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseHandler.generateResponse("Reset PassWord success", HttpStatus.OK, responseDTO);
     }
 
     @PostMapping("/update-password")
-    public ResponseEntity<?> updatePassword(@RequestBody UserPasswordUpdateDTO updateDTO) {
+    public ResponseEntity<Object> updatePassword(@RequestBody UserPasswordUpdateDTO updateDTO) {
 
         if (updateDTO.getToken() == null || updateDTO.getNewPassword() == null) {
             throw new BadRequestException("Token, and new password are required");
         }
-        userService.updatePassword(updateDTO);
+        UserPasswordUpdateDTO updateUser = userService.updatePassword(updateDTO);
 
-        return success("Password updated successfully");
+        return ResponseHandler.generateResponse("Password updated successfully", HttpStatus.CREATED, updateUser);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/update")
-    public ResponseEntity<?> updateOwnProfile(@RequestBody User user) {
-        userService.updateUser(user);
-        return ResponseEntity.ok(Map.of("message", "Profile updated successfully"));
+    public ResponseEntity<Object> updateOwnProfile(@RequestBody User user) {
+        UserRegistrationResponseDTO userUpdate = userService.updateUser(user);
+        return ResponseHandler.generateResponse("Profile updated successfully", HttpStatus.CREATED, userUpdate);
     }
 
 
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete-account")
-    public ResponseEntity<Map<String, String>> deleteOwnAccount() {
+    public ResponseEntity<Object> deleteOwnAccount() {
         userService.deletePersonalAccount();
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Your account has been deleted successfully.");
-        return ResponseEntity.ok(response);
+        return ResponseHandler.generateResponse("Your account has been deleted successfully.",HttpStatus.OK, response);
     }
 
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId){
+    public ResponseEntity<Object> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);
-        return success("User deleted");
+        return ResponseHandler.generateResponse("User deleted", HttpStatus.OK, null);
     }
 }

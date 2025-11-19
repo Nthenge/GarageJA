@@ -15,15 +15,22 @@ public class ServiceCategories {
     @Column(nullable = false, unique = true)
     private String serviceCategoryName;
 
+    private String icon;
+    private String description;
+
+
     @OneToMany(mappedBy = "serviceCategories", cascade = CascadeType.ALL, orphanRemoval = true )
     @JsonManagedReference
     private List<Service> services;
 
     public ServiceCategories(){}
 
-    public ServiceCategories(String serviceCategoryName, Long id){
-        this.serviceCategoryName = serviceCategoryName;
+    public ServiceCategories(Long id, String serviceCategoryName, String icon, String description, List<Service> services) {
         this.id = id;
+        this.serviceCategoryName = serviceCategoryName;
+        this.icon = icon;
+        this.description = description;
+        this.services = services;
     }
 
     public Long getId() { return id;}
@@ -34,4 +41,10 @@ public class ServiceCategories {
 
     public List<Service> getServices() { return services;}
     public void setServices(List<Service> services) {this.services = services;}
+
+    public String getIcon() { return icon;}
+    public void setIcon(String icon) { this.icon = icon;}
+
+    public String getDescription() { return description;}
+    public void setDescription(String description) {this.description = description;}
 }

@@ -2,7 +2,9 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.MechanicService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,19 +32,21 @@ public class MechanicController {
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN','MECHANIC')")
     @GetMapping("/search/{nationalIdNumber}")
-    public Optional<MechanicResponseDTO> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
-        return mechanicService.getMechanicByNationalId(nationalIdNumber);
+    public ResponseEntity<Object> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
+        Optional<MechanicResponseDTO> mechanicsByNationalId = mechanicService.getMechanicByNationalId(nationalIdNumber);
+        return ResponseHandler.generateResponse("Mechanics by national Id", HttpStatus.OK, mechanicsByNationalId);
     }
 
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping()
-    public List<MechanicResponseDTO> getAllMechanics(){
-        return mechanicService.getAllMechanics();
+    public ResponseEntity<Object>getAllMechanics(){
+        List<MechanicResponseDTO> allmechanics = mechanicService.getAllMechanics();
+        return ResponseHandler.generateResponse("All mechanics", HttpStatus.OK, allmechanics);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
     @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<String> createMechanic(
+    public ResponseEntity<Object> createMechanic(
             @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
             @RequestPart(value = "profilePic", required = false) MultipartFile profilePic,
             @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
@@ -51,12 +55,12 @@ public class MechanicController {
             @RequestPart(value = "policeClearanceCertificate", required = false) MultipartFile policeClearanceCertificate
     ) throws IOException {
         mechanicService.createMechanic(mechanicRequestDTO, profilePic, nationalIDPic, professionalCertificate, anyRelevantCertificate, policeClearanceCertificate);
-        return ResponseEntity.ok("Mechanic created successfully");
+        return ResponseHandler.generateResponse("Mechanic created successfully", HttpStatus.CREATED, null);
     }
 
     @PreAuthorize("hasAuthority('SYSTEM_ADMIN','MECHANIC')")
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MechanicResponseDTO> updateOwnMechanic(
+    public ResponseEntity<Object> updateOwnMechanic(
             @RequestPart MechanicRequestDTO mechanicRequestDTO,
             @RequestPart(value = "profilePic", required = false) MultipartFile profilePic,
             @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
@@ -72,14 +76,14 @@ public class MechanicController {
                 anyRelevantCertificate,
                 policeClearanceCertificate);
 
-        return ResponseEntity.ok(updatedMechanic);
+        return ResponseHandler.generateResponse("Mechanic updated", HttpStatus.CREATED, updatedMechanic);
     }
 
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
     @DeleteMapping("/{MechanicId}")
-    public String deleteMechanic(@PathVariable("MechanicId") Long MechanicId){
+    public ResponseEntity<Object> deleteMechanic(@PathVariable("MechanicId") Long MechanicId){
         mechanicService.deleteMechanic(MechanicId);
-        return "Mechanic Deleted Successfully";
+        return ResponseHandler.generateResponse( "Mechanic Deleted Successfully", HttpStatus.OK, null);
     }
 }

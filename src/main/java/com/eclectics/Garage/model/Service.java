@@ -3,6 +3,9 @@ package com.eclectics.Garage.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "services")
 
@@ -17,9 +20,8 @@ public class Service {
     private Double price;
     private Double avgDuration;
 
-    @ManyToOne
-    @JoinColumn(name = "garageId", referencedColumnName = "garageId")
-    private Garage garage;
+    @ManyToMany(mappedBy = "offeredServices")
+    private Set<Garage> garages = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -28,13 +30,13 @@ public class Service {
 
     public Service() {}
 
-    public Service(Long id, String serviceName, String description, Double price, Double avgDuration, Garage garage, ServiceCategories serviceCategories) {
+    public Service(Long id, String serviceName, String description, Double avgDuration, Double price, Set<Garage> garages, ServiceCategories serviceCategories) {
         this.id = id;
         this.serviceName = serviceName;
         this.description = description;
-        this.price = price;
         this.avgDuration = avgDuration;
-        this.garage = garage;
+        this.price = price;
+        this.garages = garages;
         this.serviceCategories = serviceCategories;
     }
 
@@ -50,8 +52,8 @@ public class Service {
     public Double getPrice() { return price;}
     public void setPrice(Double price) { this.price = price; }
 
-    public Garage getGarage() { return garage; }
-    public void setGarage(Garage garage) { this.garage = garage; }
+    public Set<Garage> getGarages() { return garages;}
+    public void setGarages(Set<Garage> garages) { this.garages = garages;}
 
     public Double getAvgDuration() { return avgDuration;}
     public void setAvgDuration(Double avgDuration) {this.avgDuration = avgDuration; }

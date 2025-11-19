@@ -4,7 +4,10 @@ import com.eclectics.Garage.dto.ServiceRequestsRequestDTO;
 import com.eclectics.Garage.dto.ServiceRequestsResponseDTO;
 import com.eclectics.Garage.model.ServiceRequest;
 import com.eclectics.Garage.model.RequestStatus;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.ServiceRequestService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,47 +30,53 @@ public class ServiceRequestsController {
     }
 //    @PreAuthorize("hasAnyAuthority('CAR_OWNER')")
     @PostMapping
-    public ServiceRequest createRequest(
+    public ResponseEntity<Object> createRequest(
             @RequestParam Long garageId,
             @RequestParam Long serviceId,
             @RequestParam Long severityId
             ){
-        return serviceRequestService.createRequest(garageId, serviceId, severityId);
+        ServiceRequest serviceRequest = serviceRequestService.createRequest(garageId, serviceId, severityId);
+        return ResponseHandler.generateResponse("Request send", HttpStatus.CREATED, serviceRequest);
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
     @PutMapping("/status/{requestId}")
-    public ServiceRequestsResponseDTO updateRequest(
+    public ResponseEntity<Object> updateRequest(
             @PathVariable Long requestId,
             @RequestParam RequestStatus status,
             @RequestParam Long severityId,
             @RequestBody ServiceRequestsRequestDTO serviceRequestsRequestDTO
             ){
-        return serviceRequestService.updateStatus(requestId, status,severityId, serviceRequestsRequestDTO);
+
+        ServiceRequestsResponseDTO serviceRequestsResponseDTO = serviceRequestService.updateStatus(requestId, status,severityId, serviceRequestsRequestDTO);
+        return ResponseHandler.generateResponse("Update request", HttpStatus.OK, serviceRequestsResponseDTO);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
     @GetMapping("/carOwner/{carOwnerUniqueId}")
-    public List<ServiceRequestsResponseDTO> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
-        return serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
+    public ResponseEntity<Object> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
+        List<ServiceRequestsResponseDTO> requestsByCarOwner = serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
+        return ResponseHandler.generateResponse("Request By CarOwner", HttpStatus.OK, carOwnerUniqueId);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/garage/{garageId}")
-    public List<ServiceRequestsResponseDTO> getRequestsByGarage(@PathVariable Long garageId){
-        return serviceRequestService.getRequestsByGarage(garageId);
+    public ResponseEntity<Object> getRequestsByGarage(@PathVariable Long garageId){
+        List<ServiceRequestsResponseDTO> requestByGarage = serviceRequestService.getRequestsByGarage(garageId);
+        return ResponseHandler.generateResponse("Request By Garage", HttpStatus.OK, requestByGarage);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/{requestId}")
-    public Optional<ServiceRequestsResponseDTO> getRequestById(@PathVariable Long requestId){
-        return serviceRequestService.getRequestById(requestId);
+    public ResponseEntity<Object> getRequestById(@PathVariable Long requestId){
+        Optional<ServiceRequestsResponseDTO> requestById = serviceRequestService.getRequestById(requestId);
+        return ResponseHandler.generateResponse("Request By id", HttpStatus.OK, requestById);
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @DeleteMapping("/{id}")
-    public String deleteById(@PathVariable Long id){
+    public ResponseEntity<Object> deleteById(@PathVariable Long id){
         serviceRequestService.deleteServiceRequest(id);
-        return "Service request deleted";
+        return ResponseHandler.generateResponse( "Service request deleted", HttpStatus.OK, null);
     }
 }

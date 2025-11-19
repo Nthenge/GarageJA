@@ -2,8 +2,10 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.ServiceRequestDTO;
 import com.eclectics.Garage.dto.ServiceResponseDTO;
-import com.eclectics.Garage.model.Service;
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.ServicesService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,55 +17,71 @@ import java.util.Optional;
 @RequestMapping("/service")
 public class ServiceController {
 
-        ServicesService servicesService;
+        private final ServicesService servicesService;
+        private final ResponseHandler responseHandler;
 
-        public ServiceController(ServicesService servicesService) {
+        public ServiceController(ServicesService servicesService, ResponseHandler responseHandler) {
             this.servicesService = servicesService;
+            this.responseHandler = responseHandler;
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
-        @GetMapping("/{serviceId}")
-        public Optional<ServiceResponseDTO> getOneService(@PathVariable("serviceId") Long Id){
-            return servicesService.getServiceById(Id);
+        @GetMapping("/singleservice/{serviceId}")
+        public ResponseEntity<Object> getOneService(@PathVariable("serviceId") Long Id){
+            Optional<ServiceResponseDTO> service = servicesService.getServiceById(Id);
+            return ResponseHandler.generateResponse("Service by id", HttpStatus.OK, service);
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
-        @GetMapping("/count/byservicename/{serviceName}")
-        public ResponseEntity<Long> getUniqueGarageCountByServiceName(@PathVariable String serviceName) {
+        @GetMapping("/search")
+        public ResponseEntity<Object> searchServices(
+                @RequestParam(required = false) String serviceName,
+                @RequestParam(required = false) Double price,
+                @RequestParam(required = false) String garageName
+        ) {
+            List<ServiceResponseDTO> services = servicesService.searchServices(serviceName, price, garageName);
+            return ResponseHandler.generateResponse("Search results", HttpStatus.OK, services);
+        }
+
+
+        @GetMapping("/count/byservicename/{serviceName}")  //response, total count + names of garages
+        public ResponseEntity<Object> getUniqueGarageCountByServiceName(@PathVariable String serviceName) {
             long count = servicesService.countGaragesByServiceName(serviceName);
-            return ResponseEntity.ok(count);
+            return ResponseHandler.generateResponse("Service count by service name", HttpStatus.OK, count);
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
         @GetMapping("/search/{garageId}")
-        public List<ServiceResponseDTO> getAllServicesByGarageId(@PathVariable("garageId") Long garageId){
-            return servicesService.getServicesByGarageId(garageId);
+        public ResponseEntity<Object> getAllServicesByGarageId(@PathVariable("garageId") Long garageId){
+            List<ServiceResponseDTO> services = servicesService.getServicesByGarageId(garageId);
+            return ResponseHandler.generateResponse("Services offered by a garage", HttpStatus.OK, services);
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
         @GetMapping("/all")
-        public List<ServiceResponseDTO> getAllServices(){
-            return servicesService.getAllServices();
+        public ResponseEntity<Object> getAllServices() {
+            List<ServiceResponseDTO> services = servicesService.getAllServices();
+            return ResponseHandler.generateResponse("Garage Services", HttpStatus.OK, services);
         }
 
-        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-        @PostMapping()
-        public String createService(@RequestBody ServiceRequestDTO serviceRequestDTO){
-            servicesService.createService(serviceRequestDTO);
-            return "Service created successfully";
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+        @PostMapping("/create/{categoryId}")
+        public ResponseEntity<Object> createService(
+                @PathVariable Long categoryId,
+                @RequestBody ServiceRequestDTO serviceRequestDTO){
+            ServiceResponseDTO service = servicesService.createService(categoryId, serviceRequestDTO);
+            return ResponseHandler.generateResponse("Service created successfully", HttpStatus.OK, service);
         }
 
-        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-        @PutMapping("/{serviceId}")
-        public String updateService(@PathVariable Long serviceId, @RequestBody ServiceRequestDTO serviceRequestDTO){
-            servicesService.updateService(serviceId, serviceRequestDTO);
-            return "Service updated successfully";
+
+
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN')")
+        @PutMapping("/update/{serviceId}")
+        public ResponseEntity<Object> updateService(@PathVariable Long serviceId, @RequestBody ServiceRequestDTO serviceRequestDTO){
+            ServiceRequestDTO service = servicesService.updateService(serviceId, serviceRequestDTO);
+            return ResponseHandler.generateResponse("Service updated successfully", HttpStatus.OK, service);
         }
 
-        @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-        @DeleteMapping("/{serviceId}")
-        public String deleteAService(@PathVariable("serviceId") Long serviceId){
-            servicesService.deleteService(serviceId);
-            return "Service Deleted Successfully";
+        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
+        @DeleteMapping("/delete/{serviceId}")
+        public ResponseEntity<Object> deleteAService(@PathVariable("serviceId") Long serviceId){
+            ServiceResponseDTO service = servicesService.deleteService(serviceId);
+            return ResponseHandler.generateResponse("Service Deleted Successfully", HttpStatus.OK, service);
         }
 }

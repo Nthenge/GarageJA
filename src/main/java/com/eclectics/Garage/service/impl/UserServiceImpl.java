@@ -263,7 +263,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updatePassword(UserPasswordUpdateDTO updateDTO) {
+    public UserPasswordUpdateDTO updatePassword(UserPasswordUpdateDTO updateDTO) {
         String token = updateDTO.getToken();
         String newPassword = updateDTO.getNewPassword();
 
@@ -285,6 +285,7 @@ public class UserServiceImpl implements UserService {
         userCache.put(email, user);
 
         logger.info("Password successfully updated for user: {}", email);
+        return updateDTO;
     }
 
     @Override

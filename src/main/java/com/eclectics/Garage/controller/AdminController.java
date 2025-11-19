@@ -1,6 +1,8 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('SYSTEM_ADMIN')")
+@PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
 public class AdminController {
     private final UserService userService;
 
@@ -22,19 +24,17 @@ public class AdminController {
     }
 
     @PutMapping("/suspend/{userId}")
-    public ResponseEntity<Map<String, String>> suspendUser(@PathVariable Long userId) {
+    public ResponseEntity<Object> suspendUser(@PathVariable Long userId) {
         userService.suspendUser(userId);
         Map<String, String> response = new HashMap<>();
-        response.put("message", "User suspended successfully");
-        return ResponseEntity.ok(response);
+        return ResponseHandler.generateResponse("User suspended successfully", HttpStatus.OK, response);
     }
 
     @PutMapping("/unsuspend/{userId}")
-    public ResponseEntity<Map<String, String>> unsuspendUser(@PathVariable Long userId) {
+    public ResponseEntity<Object> unsuspendUser(@PathVariable Long userId) {
         userService.unsuspendUser(userId);
         Map<String, String> response = new HashMap<>();
-        response.put("message", "User unsuspended successfully");
-        return ResponseEntity.ok(response);
+        return ResponseHandler.generateResponse("User unsuspended successfully", HttpStatus.OK, response);
     }
 }
 
