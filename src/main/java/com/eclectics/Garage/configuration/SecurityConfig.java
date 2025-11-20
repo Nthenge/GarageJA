@@ -38,6 +38,7 @@ public class SecurityConfig {
                 "http://192.168.1.66:4200",
                 "http://192.168.1.67:4200",
                 "http://192.168.100.100:4200",
+                "http://192.168.1.73:4200",
                 "http://localhost:4200/"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
