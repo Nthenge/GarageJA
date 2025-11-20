@@ -61,12 +61,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginRequestDTO requestDTO) {
+    public ResponseEntity<UserDetailsAuthDTO> login(@RequestBody UserLoginRequestDTO requestDTO) {
         if (requestDTO.getEmail() == null || requestDTO.getPassword() == null) {
             throw new BadRequestException("Email and password are required");
         }
         UserDetailsAuthDTO responseDTO = (UserDetailsAuthDTO) userService.loginUser(requestDTO);
-        return ResponseHandler.generateResponse("Login success", HttpStatus.OK, responseDTO);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/confirm")
