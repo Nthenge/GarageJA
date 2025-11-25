@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         User savedUser = usersRepository.save(user);
-        userCache.put(savedUser.getEmail(), savedUser); // cache the user
+        userCache.put(savedUser.getEmail(), savedUser);
 
         logger.debug("User saved successfully with ID: {}", savedUser.getId());
 

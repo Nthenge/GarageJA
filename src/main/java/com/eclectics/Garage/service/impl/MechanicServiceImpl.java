@@ -1,5 +1,6 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.MechanicGarageRegisterRequestDTO;
 import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
@@ -8,21 +9,28 @@ import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException
 import com.eclectics.Garage.mapper.MechanicMapper;
 import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Mechanic;
+import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
+import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.MechanicService;
 import com.eclectics.Garage.service.OSSService;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -34,10 +42,12 @@ public class MechanicServiceImpl implements MechanicService {
     private static final Logger logger = LoggerFactory.getLogger(MechanicServiceImpl.class);
 
     private final MechanicRepository mechanicRepository;
-    private final GarageRepository garageRepository;
     private final AuthenticationService authenticationService;
     private final MechanicMapper mapper;
     private final OSSService ossService;
+    private final UsersRepository usersRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender javaMailSender;
 
     private final Map<Long, MechanicResponseDTO> mechanicCacheByUserId = new ConcurrentHashMap<>();
     private final Map<Long, MechanicResponseDTO> mechanicCacheById = new ConcurrentHashMap<>();
@@ -47,13 +57,15 @@ public class MechanicServiceImpl implements MechanicService {
 
     private List<MechanicResponseDTO> cachedAllMechanics = Collections.synchronizedList(new ArrayList<>());
 
-    public MechanicServiceImpl(MechanicRepository mechanicRepository, GarageRepository garageRepository,
-                               AuthenticationService authenticationService, MechanicMapper mapper, OSSService ossService) {
+    public MechanicServiceImpl(MechanicRepository mechanicRepository,
+                               AuthenticationService authenticationService, MechanicMapper mapper, OSSService ossService, UsersRepository usersRepository, PasswordEncoder passwordEncoder, JavaMailSender javaMailSender) {
         this.mechanicRepository = mechanicRepository;
-        this.garageRepository = garageRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
         this.ossService = ossService;
+        this.usersRepository = usersRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.javaMailSender = javaMailSender;
     }
 
     private String getFileExtension(String filename) {
@@ -101,49 +113,92 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Transactional
     @Override
-    @CachePut(value = "mechanics", key = "#result.id")
-    @CacheEvict(value = {"allMechanics", "mechanicsByGarage"}, allEntries = true)
-    public MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO,
-                                              MultipartFile profilePic,
-                                              MultipartFile nationalIDPic,
-                                              MultipartFile professionalCertificate,
-                                              MultipartFile anyRelevantCertificate,
-                                              MultipartFile policeClearanceCertificate) throws IOException {
+    public User registerMechanic(MechanicGarageRegisterRequestDTO dto) {
 
-        logger.info("[CREATE] Creating mechanic for national ID: {}", mechanicRequestDTO.getNationalIdNumber());
+        String MechRawPassword = generateRandomPassword();
 
-        if (nationalIdSet.contains(mechanicRequestDTO.getNationalIdNumber()) ||
-                mechanicRepository.findMechanicByNationalIdNumber(mechanicRequestDTO.getNationalIdNumber()).isPresent()) {
-            throw new ResourceNotFoundException("Mechanic with this National ID already exists");
-        }
+        User garageAdmin = authenticationService.getCurrentUser();
+        Garage garage = garageAdmin.getGarage();
 
-        Mechanic mechanic = mapper.toEntity(mechanicRequestDTO);
-        User user = authenticationService.getCurrentUser();
-        mechanic.setUser(user);
+        User mechanicUser = new User();
+        mechanicUser.setFirstname(dto.getFirstname());
+        mechanicUser.setSecondname(dto.getSecondname());
+        mechanicUser.setEmail(dto.getEmail());
+        mechanicUser.setPhoneNumber(dto.getPhoneNumber());
+        mechanicUser.setPassword(passwordEncoder.encode(MechRawPassword));
+        mechanicUser.setRole(Role.MECHANIC);
+        mechanicUser.setEnabled(true);
 
-        if (mechanicRequestDTO.getGarageId() != null) {
-            Garage garage = garageRepository.findByGarageId(mechanicRequestDTO.getGarageId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
-            mechanic.setGarage(garage);
-        }
+        Mechanic mechanic = new Mechanic();
+        mechanic.setUser(mechanicUser);
+        mechanic.setGarage(garage);
+        mechanicUser.setMechanic(mechanic);;
 
-        uploadFilesForMechanic(mechanic, user.getId(), profilePic, nationalIDPic, professionalCertificate, anyRelevantCertificate, policeClearanceCertificate);
+        usersRepository.save(mechanicUser);
 
-        Mechanic saved = mechanicRepository.save(mechanic);
-        MechanicResponseDTO dto = mapper.toResponseDTO(saved);
+        sendMechanicCredentials(mechanicUser.getEmail(),MechRawPassword,garage.getBusinessName());
 
-        nationalIdSet.add(mechanic.getNationalIdNumber());
-        mechanicCacheById.put(saved.getId(), dto);
-        mechanicCacheByUserId.put(user.getId(), dto);
-        mechanicCacheByNationalId.put(mechanic.getNationalIdNumber(), dto);
-        cachedAllMechanics.add(dto);
+        return mechanicUser;
+    }
+    private String generateRandomPassword() {
+        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lower = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String special = "!@#$%^&*()_+=-{}[]|:;<>?,./";
+        String allChars = upper + lower + digits + special;
 
-        if (mechanic.getGarage() != null)
-            mechanicCacheByGarageId.computeIfAbsent(mechanic.getGarage().getGarageId(), k -> new ArrayList<>()).add(dto);
+        StringBuilder password = getStringBuilder(digits, special, allChars);
+        String shuffledPassword = shuffleString(password.toString());
 
-        return dto;
+        return shuffledPassword;
     }
 
+    @NotNull
+    private static StringBuilder getStringBuilder(String digits, String special, String allChars) {
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder();
+
+        password.append(digits.charAt(random.nextInt(digits.length())));
+        password.append(digits.charAt(random.nextInt(digits.length())));
+        password.append(special.charAt(random.nextInt(special.length())));
+        int remainingLength = 7 - password.length();
+
+        for (int i = 0; i < remainingLength; i++) {
+            password.append(allChars.charAt(random.nextInt(allChars.length())));
+        }
+        return password;
+    }
+
+    private String shuffleString(String input) {
+        List<Character> characters = new ArrayList<>();
+        for (char c : input.toCharArray()) {
+            characters.add(c);
+        }
+        Collections.shuffle(characters);
+
+        StringBuilder output = new StringBuilder();
+        for (char c : characters) {
+            output.append(c);
+        }
+        return output.toString();
+    }
+
+    public void sendMechanicCredentials(String toEmail, String rawPassword, String garageName) {
+        String subject = "Your mechanic account at " + garageName;
+        String body = "Hello,\n\n" +
+                "An account has been created for you at " + garageName + ".\n" +
+                "Please use the credentials below to log in and complete your profile:\n\n" +
+                "Email: " + toEmail + "\n" +
+                "Password: " + rawPassword + "\n\n" +
+                "After login, you will be prompted to complete your profile.\n\n" +
+                "Regards,\n" + garageName;
+
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(toEmail);
+        msg.setSubject(subject);
+        msg.setText(body);
+        javaMailSender.send(msg);
+    }
 
     private void uploadFilesForMechanic(Mechanic mechanic, Long userId,
                                         MultipartFile profilePic,
@@ -151,24 +206,31 @@ public class MechanicServiceImpl implements MechanicService {
                                         MultipartFile professionalCertfificate,
                                         MultipartFile anyRelevantCertificate,
                                         MultipartFile policeClearanceCertficate) throws IOException {
+
         String baseFolder = "MechanicFiles/" + userId + "/";
+        Map<MultipartFile, Consumer<String>> filesToProcess = new HashMap<>();
 
-        Map<MultipartFile, Consumer<String>> files = Map.of(
-                profilePic, mechanic::setProfilePic,
-                nationalIDPic, mechanic::setNationalIDPic,
-                professionalCertfificate, mechanic::setProfessionalCertfificate,
-                anyRelevantCertificate, mechanic::setAnyRelevantCertificate,
-                policeClearanceCertficate, mechanic::setPoliceClearanceCertficate
-        );
+        if (profilePic != null && !profilePic.isEmpty())
+            filesToProcess.put(profilePic, mechanic::setProfilePic);
 
-        for (Map.Entry<MultipartFile, Consumer<String>> entry : files.entrySet()) {
+        if (nationalIDPic != null && !nationalIDPic.isEmpty())
+            filesToProcess.put(nationalIDPic, mechanic::setNationalIDPic);
+
+        if (professionalCertfificate != null && !professionalCertfificate.isEmpty())
+            filesToProcess.put(professionalCertfificate, mechanic::setProfessionalCertfificate);
+
+        if (anyRelevantCertificate != null && !anyRelevantCertificate.isEmpty())
+            filesToProcess.put(anyRelevantCertificate, mechanic::setAnyRelevantCertificate);
+
+        if (policeClearanceCertficate != null && !policeClearanceCertficate.isEmpty())
+            filesToProcess.put(policeClearanceCertficate, mechanic::setPoliceClearanceCertficate);
+
+        for (Map.Entry<MultipartFile, Consumer<String>> entry : filesToProcess.entrySet()) {
             MultipartFile file = entry.getKey();
-            if (file != null && !file.isEmpty()) {
-                String ext = getFileExtension(file.getOriginalFilename());
-                String uniqueName = baseFolder + UUID.randomUUID() + ext;
-                String fileUrl = ossService.uploadFile(uniqueName, file.getInputStream());
-                entry.getValue().accept(fileUrl);
-            }
+            String ext = getFileExtension(file.getOriginalFilename());
+            String uniqueName = baseFolder + UUID.randomUUID() + ext;
+            String fileUrl = ossService.uploadFile(uniqueName, file.getInputStream());
+            entry.getValue().accept(fileUrl);
         }
     }
 
@@ -213,7 +275,7 @@ public class MechanicServiceImpl implements MechanicService {
             return mechanicCacheByGarageId.get(garageId);
         }
 
-        List<MechanicResponseDTO> mechanics = mechanicRepository.findByGarageId(garageId)
+        List<MechanicResponseDTO> mechanics = mechanicRepository.findByGarage_Id(garageId)
                 .stream()
                 .map(mapper::toResponseDTO)
                 .toList();
@@ -223,7 +285,7 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Transactional
     @Override
-    @CachePut(value = "mechanicsByUser", key = "#result.user.id")
+    @CachePut(value = "mechanicsByUser", key = "#result.id")
     @CacheEvict(value = {"allMechanics", "mechanicsByGarage"}, allEntries = true)
     public MechanicResponseDTO updateOwnMechanic(MechanicRequestDTO mechanicRequestDTO,
                                                  MultipartFile profilePic,
@@ -239,12 +301,6 @@ public class MechanicServiceImpl implements MechanicService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mechanic profile not found for user: " + user.getEmail()));
 
         mapper.updateEntityFromDTO(mechanicRequestDTO, mechanic);
-
-        if (mechanicRequestDTO.getGarageId() != null) {
-            Garage garage = garageRepository.findByGarageId(mechanicRequestDTO.getGarageId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Garage not found"));
-            mechanic.setGarage(garage);
-        }
 
         try {
             uploadFilesForMechanic(mechanic, user.getId(),

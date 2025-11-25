@@ -19,11 +19,10 @@ public class MechanicRequestDTO {
     private String professionalCertfificate;
     private String anyRelevantCertificate;
     private String policeClearanceCertficate;
-    private Long garageId;
 
     public MechanicRequestDTO() {}
 
-    public MechanicRequestDTO(String areasofSpecialization,Long garageId, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, Integer nationalIdNumber, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate) {
+    public MechanicRequestDTO(String areasofSpecialization, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, Integer nationalIdNumber, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate) {
         this.areasofSpecialization = areasofSpecialization;
         this.alternativePhone = alternativePhone;
         this.physicalAddress = physicalAddress;
@@ -34,7 +33,6 @@ public class MechanicRequestDTO {
         this.availability = availability;
         this.nationalIdNumber = nationalIdNumber;
         this.profilePic = profilePic;
-        this.garageId = garageId;
         this.nationalIDPic = nationalIDPic;
         this.professionalCertfificate = professionalCertfificate;
         this.anyRelevantCertificate = anyRelevantCertificate;
@@ -151,13 +149,5 @@ public class MechanicRequestDTO {
 
     public void setPoliceClearanceCertficate(String policeClearanceCertficate) {
         this.policeClearanceCertficate = policeClearanceCertficate;
-    }
-
-    public Long getGarageId() {
-        return garageId;
-    }
-
-    public void setGarageId(Long garageId) {
-        this.garageId = garageId;
     }
 }

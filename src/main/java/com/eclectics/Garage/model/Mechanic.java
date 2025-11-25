@@ -22,15 +22,10 @@ public class Mechanic {
     private String vehicleBrands;
     private String availability;
 
-    @Lob
     private String profilePic;
-    @Lob
     private String nationalIDPic;
-    @Lob
     private String professionalCertfificate;
-    @Lob
     private String anyRelevantCertificate;
-    @Lob
     private String policeClearanceCertficate;
 
     @Column(unique = true)
@@ -136,6 +131,10 @@ public class Mechanic {
 
     public Garage getGarage() { return garage;}
     public void setGarage(Garage garage) { this.garage = garage;}
+
+    public Long getGarageId() {
+        return this.garage != null ? this.garage.getGarageId() : null;
+    }
 
     public User getUser() {return user;}
     public void setUser(User user) {this.user = user;}

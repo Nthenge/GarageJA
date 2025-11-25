@@ -1,7 +1,10 @@
 package com.eclectics.Garage.service;
 
+import com.eclectics.Garage.dto.MechanicGarageRegisterRequestDTO;
 import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
+import com.eclectics.Garage.model.User;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -12,7 +15,8 @@ public interface MechanicService {
 
     boolean isDetailsCompleted(Long userId);
 
-    MechanicResponseDTO createMechanic(MechanicRequestDTO mechanicRequestDTO, MultipartFile profilePic, MultipartFile nationalIDPic, MultipartFile professionalCertfificate, MultipartFile anyRelevantCertificate, MultipartFile policeClearanceCertficate) throws java.io.IOException;
+    @Transactional
+    User registerMechanic(MechanicGarageRegisterRequestDTO dto);
     Optional<MechanicResponseDTO> getMechanicByNationalId(Integer nationalIdNumber);
     List<MechanicResponseDTO> getAllMechanics();
     List<MechanicResponseDTO> getMechanicsByGarageId(Long garageId);

@@ -44,21 +44,7 @@ public class MechanicController {
         return ResponseHandler.generateResponse("All mechanics", HttpStatus.OK, allmechanics);
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
-    @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Object> createMechanic(
-            @RequestPart("mechanic") MechanicRequestDTO mechanicRequestDTO,
-            @RequestPart(value = "profilePic", required = false) MultipartFile profilePic,
-            @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
-            @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
-            @RequestPart(value = "anyRelevantCertificate", required = false) MultipartFile anyRelevantCertificate,
-            @RequestPart(value = "policeClearanceCertificate", required = false) MultipartFile policeClearanceCertificate
-    ) throws IOException {
-        mechanicService.createMechanic(mechanicRequestDTO, profilePic, nationalIDPic, professionalCertificate, anyRelevantCertificate, policeClearanceCertificate);
-        return ResponseHandler.generateResponse("Mechanic created successfully", HttpStatus.CREATED, null);
-    }
-
-    @PreAuthorize("hasAuthority('SYSTEM_ADMIN','MECHANIC')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','MECHANIC')")
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateOwnMechanic(
             @RequestPart MechanicRequestDTO mechanicRequestDTO,

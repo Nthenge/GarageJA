@@ -1,8 +1,10 @@
 package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.*;
+import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.response.ResponseHandler;
+import com.eclectics.Garage.service.MechanicService;
 import com.eclectics.Garage.service.UserService;
 
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
@@ -24,9 +26,11 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final MechanicService mechanicService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, MechanicService mechanicService) {
         this.userService = userService;
+        this.mechanicService = mechanicService;
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
@@ -58,6 +62,12 @@ public class UserController {
         } catch (BadRequestException e) {
             throw new BadRequestException(e.getMessage());
         }
+    }
+
+    @PostMapping("garage/register/mechanic")
+    public ResponseEntity<?> createMechanic(@Valid @RequestBody MechanicGarageRegisterRequestDTO mechUser){
+            User dto = mechanicService.registerMechanic(mechUser);
+            return ResponseHandler.generateResponse("Mechanic created", HttpStatus.CREATED, dto);
     }
 
     @PostMapping("/login")
