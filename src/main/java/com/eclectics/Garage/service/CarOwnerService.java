@@ -5,6 +5,8 @@ import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
 import com.eclectics.Garage.model.CarOwner;
 import io.jsonwebtoken.io.IOException;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -12,13 +14,15 @@ import java.util.Optional;
 
 public interface CarOwnerService {
     CarOwner createCarOwner(CarOwnerRequestsDTO carOwnerRequestsDTO, MultipartFile profilePic)throws java.io.IOException;
-    Optional<CarOwnerResponseDTO> findByUserId(Long userId);
+    List<CarOwnerResponseDTO> filterCarOwners(
+            String licensePlate,
+            Integer uniqueId
+    );
+
     boolean isDetailsCompleted(Long userId);
-    List<CarOwnerResponseDTO> getAllCarOwners();
     CarOwnerResponseDTO updateOwnProfile(CarOwnerRequestsDTO carOwnerRequestsDTO,
                                          MultipartFile profilePic) throws java.io.IOException;
     String deleteCarOwner(Long id);
-    Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId);
     Optional<String> getProfilePictureUrlByUniqueId(Integer uniqueId, int expiryMinutes);
 }
 

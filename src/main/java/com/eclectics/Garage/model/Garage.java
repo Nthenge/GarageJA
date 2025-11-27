@@ -1,5 +1,6 @@
 package com.eclectics.Garage.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ public class Garage {
     private Integer mpesaTill;
 
     @OneToMany(mappedBy = "garage", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ServiceRequest> requests = new ArrayList<>();
 
     @ManyToMany

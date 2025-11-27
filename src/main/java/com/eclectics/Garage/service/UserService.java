@@ -2,6 +2,7 @@ package com.eclectics.Garage.service;
 
 import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.model.User;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +10,14 @@ import java.util.Optional;
 public interface UserService {
     UserRegistrationResponseDTO createUser(UserRegistrationRequestDTO user);
     Optional<UserRegistrationResponseDTO> getUserByEmail(String email);
-    List<UserRegistrationResponseDTO> getAllUsers();
+
+    @Transactional(readOnly = true)
+    List<UserRegistrationResponseDTO> filterUsers(
+            String email,
+            String firstname,
+            String secondname
+    );
+
     UserRegistrationResponseDTO updateUser(User user);
     UserLoginResponseDTO loginUser(UserLoginRequestDTO userLoginRequestDTO);
     UserPasswordResetResponseDTO resetPassword(UserPasswordResetRequestDTO resetRequestDTO);

@@ -12,9 +12,11 @@ import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.GarageService;
 import com.eclectics.Garage.service.OSSService;
+import com.eclectics.Garage.specificationExecutor.GarageSpecificationExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -127,16 +129,6 @@ public class GarageServiceImpl implements GarageService {
         return saved;
     }
 
-    @Override
-    @Cacheable(value = "garageByUser", key = "#userId")
-    public Optional<GarageResponseDTO> findByUserId(Long userId) {
-        Garage cached = garageCacheByUser.get(userId);
-        if (cached != null) return Optional.of(mapper.toResponseDTO(cached));
-
-        Optional<Garage> garage = garageRepository.findByUserId(userId);
-        garage.ifPresent(g -> garageCacheByUser.put(userId, g));
-        return garage.map(mapper::toResponseDTO);
-    }
 
     @Override
     public boolean isDetailsCompleted(Long userId) {
@@ -148,41 +140,29 @@ public class GarageServiceImpl implements GarageService {
                 .orElse(false);
     }
 
+    @Cacheable(value = "garageFilter")
     @Override
-    @Cacheable(value = "garageById", key = "#garageId")
-    public Optional<GarageResponseDTO> getGarageById(Long garageId) {
-        Garage cached = garageCacheById.get(garageId);
-        if (cached != null) return Optional.of(mapper.toResponseDTO(cached));
+    public List<GarageResponseDTO> filterGarages(
+            String businessName,
+            String physicalBusinessAddress
+    ) {
 
-        Optional<Garage> garage = garageRepository.findByGarageId(garageId);
-        garage.ifPresent(g -> garageCacheById.put(g.getGarageId(), g));
-        return garage.map(mapper::toResponseDTO);
-    }
+        Specification<Garage> spec = Specification.allOf(
+                GarageSpecificationExecutor.businessNameContains(businessName),
+                GarageSpecificationExecutor.physicalAddressContains(physicalBusinessAddress));
 
-    @Override
-    @Cacheable(value = "garageByName", key = "#name")
-    public Optional<GarageResponseDTO> getGarageByName(String name) {
-        Garage cached = garageCacheByName.get(name);
-        if (cached != null) return Optional.of(mapper.toResponseDTO(cached));
+        List<Garage> garages = garageRepository.findAll(spec);
 
-        Optional<Garage> garage = garageRepository.findByBusinessName(name);
-        garage.ifPresent(g -> garageCacheByName.put(name, g));
-        return garage.map(mapper::toResponseDTO);
-    }
-
-    @Override
-    @Cacheable(value = "allGarages")
-    public List<GarageResponseDTO> getAllGarages() {
-        if (!allGaragesCache.isEmpty()) {
-            return mapper.toResponseDTOList(new ArrayList<>(allGaragesCache));
+        if (garages.isEmpty()) {
+            throw new ResourceNotFoundException("No garages match the given criteria.");
         }
-        List<Garage> garages = garageRepository.findAll();
-        synchronized (allGaragesCache) {
-            allGaragesCache.clear();
-            allGaragesCache.addAll(garages);
-        }
-        return mapper.toResponseDTOList(garages);
+
+        return garages.stream()
+                .map(mapper::toResponseDTO)
+                .toList();
     }
+
+
 
     @Override
     public long countAllGarages() {

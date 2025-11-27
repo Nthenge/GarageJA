@@ -11,17 +11,18 @@ import com.eclectics.Garage.model.Garage;
 import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
-import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.MechanicService;
 import com.eclectics.Garage.service.OSSService;
 
+import com.eclectics.Garage.specificationExecutor.MechanicSpecificationExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -191,7 +192,7 @@ public class MechanicServiceImpl implements MechanicService {
                 "Email: " + toEmail + "\n" +
                 "Password: " + rawPassword + "\n\n" +
                 "After login, you will be prompted to complete your profile.\n\n" +
-                "Regards,\n" + garageName;
+                "Regards,\n" + "GARAGE";
 
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(toEmail);
@@ -236,52 +237,30 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Transactional(readOnly = true)
     @Override
-    @Cacheable(value = "mechanicsByNationalId", key = "#nationalIdNumber")
-    public Optional<MechanicResponseDTO> getMechanicByNationalId(Integer nationalIdNumber) {
-        if (mechanicCacheByNationalId.containsKey(nationalIdNumber)) {
-            logger.debug("[CACHE HIT] Mechanic fetched by National ID={}", nationalIdNumber);
-            return Optional.of(mechanicCacheByNationalId.get(nationalIdNumber));
+    @Cacheable(value = "mechanicsByUser")
+    public List<MechanicResponseDTO> filterMechanics(
+            String vehicleBrands,
+            Integer nationalIdNumber,
+            Long garageId
+    ) {
+
+        Specification<Mechanic> spec = Specification.allOf(
+                MechanicSpecificationExecutor.vehicleBrandsContains(vehicleBrands),
+                MechanicSpecificationExecutor.nationalIdEquals(nationalIdNumber),
+                MechanicSpecificationExecutor.garageIdEquals(garageId)
+        );
+
+        List<Mechanic> mechanics = mechanicRepository.findAll(spec);
+
+        if (mechanics.isEmpty()) {
+            throw new ResourceNotFoundException("No mechanics match the given criteria.");
         }
 
-        Optional<MechanicResponseDTO> dto = mechanicRepository.findMechanicByNationalIdNumber(nationalIdNumber)
-                .map(mapper::toResponseDTO);
-        dto.ifPresent(val -> mechanicCacheByNationalId.put(nationalIdNumber, val));
-        return dto;
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    @Cacheable(value = "allMechanics")
-    public List<MechanicResponseDTO> getAllMechanics() {
-        if (!cachedAllMechanics.isEmpty()) {
-            logger.debug("[CACHE HIT] Returning all mechanics from in-memory cache");
-            return cachedAllMechanics;
-        }
-
-        List<MechanicResponseDTO> mechanics = mechanicRepository.findAll()
-                .stream()
+        return mechanics.stream()
                 .map(mapper::toResponseDTO)
                 .toList();
-        cachedAllMechanics.addAll(mechanics);
-        return mechanics;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    @Cacheable(value = "mechanicsByGarage", key = "#garageId")
-    public List<MechanicResponseDTO> getMechanicsByGarageId(Long garageId) {
-        if (mechanicCacheByGarageId.containsKey(garageId)) {
-            logger.debug("[CACHE HIT] Mechanics fetched by garageId={}", garageId);
-            return mechanicCacheByGarageId.get(garageId);
-        }
-
-        List<MechanicResponseDTO> mechanics = mechanicRepository.findByGarage_Id(garageId)
-                .stream()
-                .map(mapper::toResponseDTO)
-                .toList();
-        mechanicCacheByGarageId.put(garageId, mechanics);
-        return mechanics;
-    }
 
     @Transactional
     @Override

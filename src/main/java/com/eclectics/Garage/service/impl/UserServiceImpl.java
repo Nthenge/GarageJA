@@ -14,9 +14,11 @@ import com.eclectics.Garage.exception.GarageExceptions.UnauthorizedException;
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 
+import com.eclectics.Garage.specificationExecutor.UserSpecificationExecutor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
@@ -303,12 +305,31 @@ public class UserServiceImpl implements UserService {
         return mapper.toOptionalResponse(userOpt);
     }
 
-    @Override
     @Cacheable(value = "allUsers")
-    public List<UserRegistrationResponseDTO> getAllUsers() {
-        logger.info("Fetching all users");
-        return mapper.toResponseList(usersRepository.findAll());
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserRegistrationResponseDTO> filterUsers(
+            String email,
+            String firstname,
+            String secondname
+    ) {
+        Specification<User> spec = Specification.allOf(
+                UserSpecificationExecutor.emailContains(email),
+                UserSpecificationExecutor.firstnameContains(firstname),
+                UserSpecificationExecutor.secondnameContains(secondname)
+        );
+
+        List<User> users = usersRepository.findAll(spec);
+
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException("No users match the given criteria.");
+        }
+
+        return users.stream()
+                .map(mapper::toResponseDTO)
+                .toList();
     }
+
 
     @Override
     @CachePut(value = "users", key = "#result.email")

@@ -5,11 +5,13 @@ import com.eclectics.Garage.model.AssignMechanics;
 import com.eclectics.Garage.model.AssignMechanicStatus;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.AssignMechanicService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -22,6 +24,24 @@ public class AssignMechanicsController {
         this.assignMechanicService = assignMechanicService;
     }
 
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','MECHANIC')")
+    @GetMapping("/search")
+    public ResponseEntity<Object> filterAssignments(
+            @RequestParam(required = false) AssignMechanicStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate assignedDate,
+            @RequestParam(required = false) Long requestId,
+            @RequestParam(required = false) Long mechanicId
+    ) {
+        List<AssignMechanicsResponseDTO> assignments = assignMechanicService
+                .filterAssignMechanics(status, assignedDate, requestId, mechanicId);
+
+        return ResponseHandler.generateResponse(
+                "Filtered assignments retrieved successfully",
+                HttpStatus.OK,
+                assignments
+        );
+    }
+
     @PreAuthorize("hasAnyAuthorityRole('SYSTEM_ADMIN','GARAGE_ADMIN')")
     @PostMapping
     public ResponseEntity<Object> assignRequest(@RequestParam Long requestId,
@@ -31,32 +51,11 @@ public class AssignMechanicsController {
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','MECHANIC')")
-    @PutMapping("/status/{assignmentId}")
+    @PutMapping("/update/{assignmentId}")
     public ResponseEntity<Object> updateStatus(@PathVariable Long assignmentId,
                                                @RequestParam AssignMechanicStatus status) {
         AssignMechanicsResponseDTO updateStatus = assignMechanicService.updateAssignmentStatus(assignmentId, status);
         return ResponseHandler.generateResponse("Update Request Status", HttpStatus.CREATED, updateStatus);
-    }
-
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN,'MECHANIC')")
-    @GetMapping("/mechanic/{mechanicId}")
-    public ResponseEntity<Object>getAssignmentsByMechanic(@PathVariable Long mechanicId) {
-        List<AssignMechanicsResponseDTO> updateStatus = assignMechanicService.getAssignmentsByMechanic(mechanicId);
-        return ResponseHandler.generateResponse("Get mechanic assingments", HttpStatus.OK, updateStatus);
-    }
-
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN,'MECHANIC')")
-    @GetMapping("/request/{requestId}")
-    public ResponseEntity<Object>getAssignmentByRequest(@PathVariable Long requestId) {
-        List<AssignMechanicsResponseDTO> updateStatus = assignMechanicService.getAssignmentByRequest(requestId);
-        return ResponseHandler.generateResponse("Get assignments by requests", HttpStatus.OK, updateStatus);
-    }
-
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN', 'SYSTEM_ADMIN)")
-    @GetMapping
-    public ResponseEntity<Object>getAllAssignments() {
-        List<AssignMechanicsResponseDTO> allAssignments = assignMechanicService.getAllAssignments();
-        return ResponseHandler.generateResponse("All assingments", HttpStatus.OK, allAssignments);
     }
 }
 

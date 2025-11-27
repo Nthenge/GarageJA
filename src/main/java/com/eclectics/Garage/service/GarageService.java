@@ -3,6 +3,7 @@ import com.eclectics.Garage.dto.GarageRequestsDTO;
 import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
 import com.eclectics.Garage.model.Garage;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -12,11 +13,13 @@ public interface GarageService {
     ProfileCompleteDTO checkProfileCompletion(Garage garage);
 
     Garage createGarage(GarageRequestsDTO garageRequestsDTO, MultipartFile businessLicense, MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws java.io.IOException;
-    Optional<GarageResponseDTO> findByUserId(Long userId);
     boolean isDetailsCompleted(Long userId);
-    Optional<GarageResponseDTO> getGarageById(Long garageId);
-    Optional<GarageResponseDTO> getGarageByName(String name);
-    List<GarageResponseDTO> getAllGarages();
+
+    List<GarageResponseDTO> filterGarages(
+            String businessName,
+            String physicalBusinessAddress
+    );
+
     long countAllGarages();
     GarageResponseDTO updateOwnGarage(GarageRequestsDTO dto,
                                    MultipartFile businessLicense,

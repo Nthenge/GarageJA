@@ -3,6 +3,7 @@ package com.eclectics.Garage.service.impl;
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
+import com.eclectics.Garage.exception.GarageExceptions;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.model.CarOwner;
 import com.eclectics.Garage.model.User;
@@ -10,10 +11,13 @@ import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
 import com.eclectics.Garage.service.OSSService;
+import com.eclectics.Garage.specificationExecutor.CarOwnerSpecificationExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -104,20 +108,35 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         return saved;
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(
+            value = "allCarOwners"
+    )
     @Override
-    @Cacheable(value = "carOwnerByUser", key = "#userId")
-    public Optional<CarOwnerResponseDTO> findByUserId(Long userId) {
-        if (carOwnerCacheByUserId.containsKey(userId)) {
-            logger.debug("[CACHE HIT] CarOwner fetched from cache for userId={}", userId);
-            return Optional.of(carOwnerCacheByUserId.get(userId));
+    public List<CarOwnerResponseDTO> filterCarOwners(
+            String licensePlate,
+            Integer uniqueId
+    ) {
+
+        Specification<CarOwner> spec = Specification.allOf(
+                CarOwnerSpecificationExecutor.CarOwnerPlateContains(licensePlate),
+                CarOwnerSpecificationExecutor.carOwnerUrlContains(uniqueId)
+        );
+
+        List<CarOwner> carOwners = carOwnerRepository.findAll(spec);
+
+        if (carOwners.isEmpty()) {
+            throw new GarageExceptions.ResourceNotFoundException("No CarOwners match the given criteria.");
         }
 
-        logger.info("[FETCH] Fetching CarOwner by userId={}", userId);
-        Optional<CarOwnerResponseDTO> dto = carOwnerRepository.findByUserId(userId).map(mapper::toDto);
+        List<CarOwnerResponseDTO> dtos = carOwners.stream()
+                .map(mapper::toDto)
+                .toList();
 
-        dto.ifPresent(value -> carOwnerCacheByUserId.put(userId, value));
-        return dto;
+
+        return dtos;
     }
+
 
     @Override
     public boolean isDetailsCompleted(Long userId) {
@@ -126,16 +145,6 @@ public class CarOwnerServiceImpl implements CarOwnerService {
                 .orElse(false);
         logger.info("[DETAILS CHECK] userId={} → completed={}", userId, completed);
         return completed;
-    }
-
-    @Override
-    @Cacheable(value = "allCarOwners")
-    public List<CarOwnerResponseDTO> getAllCarOwners() {
-        logger.info("[FETCH ALL] Retrieving all CarOwners");
-        return carOwnerRepository.findAll()
-                .stream()
-                .map(mapper::toDto)
-                .toList();
     }
 
     private String getObjectNameFromUrl(String fileUrl, String bucketName, String endpoint) {
@@ -204,20 +213,6 @@ public class CarOwnerServiceImpl implements CarOwnerService {
             logger.warn("[DELETE FAILED] No CarOwner found with id={}", id);
             return "No Car Owner with that id";
         }
-    }
-
-    @Override
-    @Cacheable(value = "carOwnerByUniqueId", key = "#uniqueId")
-    public Optional<CarOwnerResponseDTO> getCarOwnerByUniqueId(Integer uniqueId) {
-        if (carOwnerCacheByUniqueId.containsKey(uniqueId)) {
-            logger.debug("[CACHE HIT] CarOwner fetched from cache by uniqueId={}", uniqueId);
-            return Optional.of(carOwnerCacheByUniqueId.get(uniqueId));
-        }
-
-        logger.info("[FETCH] Fetching CarOwner by uniqueId={}", uniqueId);
-        Optional<CarOwnerResponseDTO> dto = carOwnerRepository.findByUniqueId(uniqueId).map(mapper::toDto);
-        dto.ifPresent(value -> carOwnerCacheByUniqueId.put(uniqueId, value));
-        return dto;
     }
 
     @Override

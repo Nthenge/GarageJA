@@ -2,6 +2,7 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
+import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.CarOwnerService;
@@ -30,18 +31,18 @@ public class CarOwnerController {
             this.mapper = mapper;
         }
 
-        @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
-        @GetMapping("/search/{carOwnerUniqueId}")
-        public ResponseEntity<Object> getCarOwnerByUniqueId(@PathVariable("carOwnerUniqueId") Integer carOwnerUniqueId){
-            Optional<CarOwnerResponseDTO> searchCar = carOwnerService.getCarOwnerByUniqueId(carOwnerUniqueId);
-            return ResponseHandler.generateResponse("Car by Unique ID", HttpStatus.OK, searchCar);
-        }
-
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
-        @GetMapping()
-        public ResponseEntity<Object> getAllCarOwners(){
-            List<CarOwnerResponseDTO> allCarOwners = carOwnerService.getAllCarOwners();
-            return ResponseHandler.generateResponse("All Car Owners", HttpStatus.OK, allCarOwners);
+        @GetMapping("/search")
+        public ResponseEntity<Object> filterCarOwners(
+                @RequestParam(required = false) String licensePlate,
+                @RequestParam(required = false) Integer uniqueId
+        ){
+
+            List<CarOwnerResponseDTO> allCarOwners = carOwnerService.filterCarOwners(
+                    licensePlate,
+                    uniqueId
+            );
+            return ResponseHandler.generateResponse("Cars fetched successfully", HttpStatus.OK, allCarOwners);
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER')")

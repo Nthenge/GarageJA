@@ -76,23 +76,17 @@ public class GarageController {
         return ResponseHandler.generateResponse("Count of garages", HttpStatus.OK, count);
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'MECHANIC')")
-    @GetMapping("/search/{garageId}")
-    public ResponseEntity<Object> getGarageById(@PathVariable Long garageId){
-        Optional<GarageResponseDTO> garage = garageService.getGarageById(garageId);
-        if (garage.isPresent()){
-            return ResponseHandler.generateResponse("Garages by their id", HttpStatus.OK,garage);
-        }else {
-            return ResponseEntity.notFound().build();
-        }
-    }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN','CAR_OWNER')")
-    @GetMapping()
-    public ResponseEntity<Object> getAllGarages(){
-        List<GarageResponseDTO> garages = garageService.getAllGarages();
-        return ResponseHandler.generateResponse("All garages", HttpStatus.OK, garages);
+    @GetMapping("/search")
+    public ResponseEntity<Object> searchGarages(
+            @RequestParam(required = false) String businessName,
+            @RequestParam(required = false) String physicalBusinessAddress
+    ) {
+        List<GarageResponseDTO> garages = garageService.filterGarages(businessName, physicalBusinessAddress);
+        return ResponseHandler.generateResponse("Filtered garages", HttpStatus.OK, garages);
     }
+
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})

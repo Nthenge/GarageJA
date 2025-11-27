@@ -11,11 +11,13 @@ import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.ServiceCategoryRepository;
 import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.service.ServicesService;
+import com.eclectics.Garage.specificationExecutor.ServiceSpecificationExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -198,48 +200,19 @@ public class ServiceServiceImpl implements ServicesService {
                     "T(java.util.Objects).toString(#price)"
     )
     public List<ServiceResponseDTO> searchServices(String serviceName, Double price, String garageName){
-        String cacheKey = (serviceName == null ? "null" : serviceName.toLowerCase()) + "-" +
-                (garageName == null ? "null" : garageName.toLowerCase()) + "-" +
-                (price == null ? "null" : price);
+        Specification<Service> spec = Specification.allOf(
+                ServiceSpecificationExecutor.serviceNameContains(serviceName),
+                ServiceSpecificationExecutor.garageNameContains(garageName),
+                ServiceSpecificationExecutor.priceEquals(price)
+        );
 
-        if (searchServiceCache.containsKey(cacheKey)) {
-            logger.debug("Cache hit for search key: {}", cacheKey);
-            return searchServiceCache.get(cacheKey);
-        }
-
-        logger.info("Cache miss for search key: {}, querying database...", cacheKey);
-
-        List<Service> services;
-
-        if (serviceName != null && garageName != null && price != null) {
-            services = serviceRepository.findByServiceNameContainingIgnoreCaseAndGarages_BusinessNameContainingIgnoreCaseAndPrice(
-                    serviceName, garageName, price);
-        } else if (serviceName != null && garageName != null) {
-            services = serviceRepository.findByServiceNameContainingIgnoreCaseAndGarages_BusinessNameContainingIgnoreCase(
-                    serviceName, garageName);
-        } else if (garageName != null && price != null) {
-            services = serviceRepository.findByGarages_BusinessNameContainingIgnoreCaseAndPrice(garageName, price);
-        } else if (serviceName != null && price != null) {
-            services = serviceRepository.findByServiceNameContainingIgnoreCaseAndPrice(serviceName, price);
-        } else if (serviceName != null) {
-            services = serviceRepository.findByServiceNameContainingIgnoreCase(serviceName);
-        } else if (garageName != null) {
-            services = serviceRepository.findByGarages_BusinessNameContainingIgnoreCase(garageName);
-        } else if (price != null) {
-            services = serviceRepository.findByPrice(price);
-        } else {
-            services = serviceRepository.findAll();
-        }
+        List<Service> services = serviceRepository.findAll(spec);
 
         if (services.isEmpty()) {
-            logger.warn("No services found for search key: {}", cacheKey);
-            throw new ResourceNotFoundException("No services found matching your search criteria.");
+            throw new ResourceNotFoundException("No services found matching your criteria.");
         }
 
-        List<ServiceResponseDTO> result = mapper.toResponseDTOList(services);
-        searchServiceCache.put(cacheKey, result);
-
-        return result;
+        return mapper.toResponseDTOList(services);
     }
 
     @Override

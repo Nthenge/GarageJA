@@ -1,7 +1,6 @@
 package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.*;
-import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.MechanicService;
@@ -11,7 +10,6 @@ import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 
 import jakarta.validation.Valid;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,20 +31,20 @@ public class UserController {
         this.mechanicService = mechanicService;
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN,'GARAGE_ADMIN')")
-    @GetMapping("/{email}")
-    public ResponseEntity<Object> getOneUser(@PathVariable String email ){
-        UserRegistrationResponseDTO user = userService.getUserByEmail(email)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()).getBody();
-        return ResponseHandler.generateResponse("User by email", HttpStatus.OK, user);
-    }
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','MECHANIC')")
+    @GetMapping("/search")
+    public ResponseEntity<Object> filterUsers(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String firstname,
+            @RequestParam(required = false) String secondname
+    ) {
+        List<UserRegistrationResponseDTO> users = userService.filterUsers(email, firstname, secondname);
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
-    @GetMapping()
-    public ResponseEntity<Object> getAllUsers(){
-        List<UserRegistrationResponseDTO> list = userService.getAllUsers();
-        return ResponseHandler.generateResponse("List of all Users", HttpStatus.OK, list);
+        return ResponseHandler.generateResponse(
+                "Filtered users retrieved successfully",
+                HttpStatus.OK,
+                users
+        );
     }
 
     @PostMapping("/register")

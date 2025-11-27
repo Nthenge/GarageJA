@@ -5,7 +5,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   cache:
     type: caffeine
-    cache-names: users, allUsers, mechanics, allMechanics, mechanicsByGarage, mechanicsByUser, mechanicsByNationalId,  "garages", "allGarages", "garageById", "garageByName", "garageByUser", "carOwners", "allCarOwners", "carOwnerByUser", "carOwnerByUniqueId","allAutomobiles", "autoMobileMakes", "autoMobileYears", "autoMobileEngineTypes", "autoMobileTransmissions","allServiceCategories", "serviceCategoryByName","allSeverityCategories", "severityCategoryByName", "allServiceRequests", "requestsByGarage", "requestsByCarOwner", "requestById","allServices", "servicesByGarage", "serviceById","paymentById", "paymentsByOwner", "paymentsByService","allAssignments", "assignmentsByMechanic", "assignmentsByRequest"
+    cache-names: users, allUsers, mechanics, allMechanics,garageFilter, mechanicsByGarage, mechanicsByUser, mechanicsByNationalId,  "garages", "allGarages", "garageById", "garageByName", "garageByUser", "carOwners", "allCarOwners", "carOwnerByUser", "carOwnerByUniqueId","allAutomobiles", "autoMobileMakes", "autoMobileYears", "autoMobileEngineTypes", "autoMobileTransmissions","allServiceCategories", "serviceCategoryByName","allSeverityCategories", "severityCategoryByName", "allServiceRequests", "requestsByGarage", "requestsByCarOwner", "requestById","allServices", "servicesByGarage", "serviceById","paymentById", "paymentsByOwner", "paymentsByService","allAssignments", "assignmentsByMechanic", "assignmentsByRequest"
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=10m
   mail:

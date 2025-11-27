@@ -30,19 +30,27 @@ public class MechanicController {
         return ResponseEntity.ok(Map.of("message", message));
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN','MECHANIC')")
-    @GetMapping("/search/{nationalIdNumber}")
-    public ResponseEntity<Object> getMechanicByNationalId(@PathVariable("nationalIdNumber") Integer nationalIdNumber){
-        Optional<MechanicResponseDTO> mechanicsByNationalId = mechanicService.getMechanicByNationalId(nationalIdNumber);
-        return ResponseHandler.generateResponse("Mechanics by national Id", HttpStatus.OK, mechanicsByNationalId);
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','CAR_OWNER')")
+    @GetMapping("/search")
+    public ResponseEntity<Object> filterMechanics(
+            @RequestParam(required = false) String vehicleBrands,
+            @RequestParam(required = false) Integer nationalIdNumber,
+            @RequestParam(required = false) Long garageId
+    ) {
+
+        List<MechanicResponseDTO> mechanics = mechanicService.filterMechanics(
+                vehicleBrands,
+                nationalIdNumber,
+                garageId
+        );
+
+        return ResponseHandler.generateResponse(
+                "Mechanics fetched successfully",
+                HttpStatus.OK,
+                mechanics
+        );
     }
 
-    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
-    @GetMapping()
-    public ResponseEntity<Object>getAllMechanics(){
-        List<MechanicResponseDTO> allmechanics = mechanicService.getAllMechanics();
-        return ResponseHandler.generateResponse("All mechanics", HttpStatus.OK, allmechanics);
-    }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','MECHANIC')")
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

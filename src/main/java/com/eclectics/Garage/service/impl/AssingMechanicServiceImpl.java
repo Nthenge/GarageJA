@@ -9,13 +9,17 @@ import com.eclectics.Garage.repository.RequestServiceRepository;
 import com.eclectics.Garage.service.AssignMechanicService;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 
+import com.eclectics.Garage.specificationExecutor.AssingMechanicsSpecificationExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -118,45 +122,32 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         return mapper.toResponseDTO(updatedAssignment);
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(
+            value = "allAssignments"
+    )
     @Override
-    @Cacheable(value = "assignmentsByMechanic", key = "#mechanicId")
-    public List<AssignMechanicsResponseDTO> getAssignmentsByMechanic(Long mechanicId) {
-        logger.info("Fetching assignments for mechanic ID {}", mechanicId);
+    public List<AssignMechanicsResponseDTO> filterAssignMechanics(
+            AssignMechanicStatus status,
+            LocalDate assignedDate,
+            Long requestId,
+            Long mechanicId
+    ) {
+        Specification<AssignMechanics> spec = Specification.allOf(
+                AssingMechanicsSpecificationExecutor.statusEquals(status),
+                AssingMechanicsSpecificationExecutor.assignedOnDate(assignedDate),
+                AssingMechanicsSpecificationExecutor.requestIdEquals(requestId),
+                AssingMechanicsSpecificationExecutor.mechanicIdEquals(mechanicId)
+        );
 
-        List<AssignMechanics> assignments = mechanicAssignmentsMap.getOrDefault(mechanicId,
-                assignMechanicsRepository.findByMechanicId(mechanicId));
-
-        logger.debug("Found {} assignments for mechanic ID {}", assignments.size(), mechanicId);
-        return mapper.toResponseList(assignments);
-    }
-
-    @Override
-    @Cacheable(value = "assignmentsByRequest", key = "#requestId")
-    public List<AssignMechanicsResponseDTO> getAssignmentByRequest(Long requestId) {
-        logger.info("Fetching assignments for service request ID {}", requestId);
-
-        List<AssignMechanics> assignments = requestAssignmentsMap.getOrDefault(requestId,
-                assignMechanicsRepository.findByService_Id(requestId));
-
-        logger.debug("Found {} assignments for request ID {}", assignments.size(), requestId);
-        return mapper.toResponseList(assignments);
-    }
-
-    @Override
-    @Cacheable(value = "allAssignments")
-    public List<AssignMechanicsResponseDTO> getAllAssignments() {
-        logger.info("Fetching all mechanic assignments");
-
-        List<AssignMechanics> assignments = mechanicAssignmentsMap.values().stream()
-                .flatMap(List::stream)
-                .distinct()
-                .collect(Collectors.toList());
+        List<AssignMechanics> assignments = assignMechanicsRepository.findAll(spec);
 
         if (assignments.isEmpty()) {
-            assignments = assignMechanicsRepository.findAll();
+            throw new ResourceNotFoundException("No assignments match the given criteria.");
         }
 
-        logger.debug("Total assignments found: {}", assignments.size());
-        return mapper.toResponseList(assignments);
+        return assignments.stream()
+                .map(mapper::toResponseDTO)
+                .toList();
     }
 }
