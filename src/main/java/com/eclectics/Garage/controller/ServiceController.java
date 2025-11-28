@@ -68,6 +68,10 @@ public class ServiceController {
             return ResponseHandler.generateResponse("Service created successfully", HttpStatus.OK, service,"/service/create/{categoryId}" );
         }
 
+        @GetMapping("/any-search/{keyword}")
+        public List<ServiceResponseDTO> searchByKeyword(@PathVariable String keyword) {
+            return servicesService.searchServicess(keyword);
+        }
 
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN')")

@@ -19,6 +19,11 @@ public interface ServicesService {
     List<ServiceResponseDTO> getAllServices();
     List<ServiceResponseDTO> getServicesByGarageId(Long garageId);
     List<ServiceResponseDTO> searchServices(String serviceName, Double price,String garageName);
+
+    List<ServiceResponseDTO> searchServicess(
+            String keyword
+    );
+
     ServiceRequestDTO updateService(Long id, ServiceRequestDTO serviceRequestDTO);
     ServiceResponseDTO deleteService(Long id);
     long countGaragesByServiceName(String serviceName);

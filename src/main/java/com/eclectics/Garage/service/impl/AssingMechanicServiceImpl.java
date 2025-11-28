@@ -105,7 +105,7 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         logger.info("Updating assignment ID {} to status {}", assignmentId, status);
 
         AssignMechanics assignRequests = assignMechanicsRepository.findById(assignmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Request with this id does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment with this id does not exist"));
 
         assignRequests.setStatus(status);
         assignRequests.setUpdatedAt(LocalDateTime.now());
@@ -118,9 +118,21 @@ public class AssingMechanicServiceImpl implements AssignMechanicService {
         requestAssignmentsMap.getOrDefault(assignRequests.getService().getId(), new LinkedList<>())
                 .replaceAll(a -> a.getId().equals(assignmentId) ? updatedAssignment : a);
 
+        ServiceRequest serviceRequest = assignRequests.getService();
+        if (status == AssignMechanicStatus.ACCEPTED) {
+            serviceRequest.setStatus(RequestStatus.IN_PROGRESS);
+        } else if (status == AssignMechanicStatus.REJECTED) {
+            serviceRequest.setStatus(RequestStatus.CANCELLED);
+        }else if (status == AssignMechanicStatus.COMPLETED) {
+            serviceRequest.setStatus(RequestStatus.COMPLETED);
+        }
+        serviceRequest.setUpdatedAt(LocalDateTime.now());
+        ServiceRequest updatedRequest = requestServiceRepository.save(serviceRequest);
+        logger.info("Service request ID {} automatically updated to IN_PROGRESS", updatedRequest.getId());
         logger.info("Assignment ID {} updated to status {}", assignmentId, status);
         return mapper.toResponseDTO(updatedAssignment);
     }
+
 
     @Transactional(readOnly = true)
     @Cacheable(

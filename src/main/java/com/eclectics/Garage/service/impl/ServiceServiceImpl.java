@@ -216,6 +216,25 @@ public class ServiceServiceImpl implements ServicesService {
     }
 
     @Override
+    public List<ServiceResponseDTO> searchServicess(String keyword) {
+
+        Specification<Service> spec = Specification.allOf(
+                ServiceSpecificationExecutor.keywordSearch(keyword)
+        );
+
+        List<Service> services = serviceRepository.findAll(spec);
+
+        if (services.isEmpty()) {
+            throw new ResourceNotFoundException("No services found.");
+        }
+
+        return mapper.toResponseDTOList(services);
+    }
+
+
+
+
+    @Override
     @Caching(evict = {
             @CacheEvict(value = "allServices", allEntries = true),
             @CacheEvict(value = "servicesByGarage", allEntries = true),
