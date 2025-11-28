@@ -2,7 +2,6 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
-import com.eclectics.Garage.dto.MechanicResponseDTO;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.CarOwnerService;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/carOwner")
@@ -42,7 +40,7 @@ public class CarOwnerController {
                     licensePlate,
                     uniqueId
             );
-            return ResponseHandler.generateResponse("Cars fetched successfully", HttpStatus.OK, allCarOwners);
+            return ResponseHandler.generateResponse("Cars fetched successfully", HttpStatus.OK, allCarOwners, "/carOwner/search");
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'CAR_OWNER')")
@@ -56,7 +54,7 @@ public class CarOwnerController {
         ) throws IOException {
             carOwnerService.createCarOwner(carOwnerRequestsDTO, profilePic);
             Map<String, String> response = new HashMap<>();
-            return ResponseHandler.generateResponse("Car Owner created successfully", HttpStatus.CREATED, response);
+            return ResponseHandler.generateResponse("Car Owner created successfully", HttpStatus.CREATED, response, "/carOwner/create");
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
@@ -67,14 +65,14 @@ public class CarOwnerController {
         ) throws IOException {
 
             CarOwnerResponseDTO updatedOwner = carOwnerService.updateOwnProfile(carOwnerRequestsDTO, profilePic);
-            return ResponseHandler.generateResponse("CarOwner profile updated successfully", HttpStatus.CREATED,updatedOwner);
+            return ResponseHandler.generateResponse("CarOwner profile updated successfully", HttpStatus.CREATED,updatedOwner, "/carOwner/update");
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
             @DeleteMapping("/{carOwnerId}")
             public ResponseEntity<Object> deleteACarOwner(@PathVariable("carOwnerId") Long carOwnerId){
                 carOwnerService.deleteCarOwner(carOwnerId);
-                return ResponseHandler.generateResponse("CarOwner Deleted Successfully", HttpStatus.OK, null);
+                return ResponseHandler.generateResponse("CarOwner Deleted Successfully", HttpStatus.OK, null, "/carOwner/{{carOwnerId}}");
             }
 
         }

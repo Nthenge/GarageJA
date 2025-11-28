@@ -1,6 +1,5 @@
 package com.eclectics.Garage.controller;
 
-import com.eclectics.Garage.dto.ServiceRequestsRequestDTO;
 import com.eclectics.Garage.dto.ServiceRequestsResponseDTO;
 import com.eclectics.Garage.model.ServiceRequest;
 import com.eclectics.Garage.model.RequestStatus;
@@ -36,7 +35,7 @@ public class ServiceRequestsController {
             @RequestParam Long severityId
             ){
         ServiceRequest serviceRequest = serviceRequestService.createRequest(garageId, serviceId, severityId);
-        return ResponseHandler.generateResponse("Request send", HttpStatus.CREATED, serviceRequest);
+        return ResponseHandler.generateResponse("Request send", HttpStatus.CREATED, serviceRequest, "/request");
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
@@ -47,34 +46,34 @@ public class ServiceRequestsController {
             ){
 
         ServiceRequestsResponseDTO serviceRequestsResponseDTO = serviceRequestService.updateStatus(requestId, status);
-        return ResponseHandler.generateResponse("Update request", HttpStatus.OK, serviceRequestsResponseDTO);
+        return ResponseHandler.generateResponse("Update request", HttpStatus.OK, serviceRequestsResponseDTO, "/request/update/{requestId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')")
     @GetMapping("/carOwner/{carOwnerUniqueId}")
     public ResponseEntity<Object> getRequestsByCarOwner(@PathVariable Integer carOwnerUniqueId){
         List<ServiceRequestsResponseDTO> requestsByCarOwner = serviceRequestService.getRequestsByCarOwner(carOwnerUniqueId);
-        return ResponseHandler.generateResponse("Request By CarOwner", HttpStatus.OK, carOwnerUniqueId);
+        return ResponseHandler.generateResponse("Request By CarOwner", HttpStatus.OK, carOwnerUniqueId, "/request/carOwner/{carOwnerUniqueId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/garage/{garageId}")
     public ResponseEntity<Object> getRequestsByGarage(@PathVariable Long garageId){
         List<ServiceRequestsResponseDTO> requestByGarage = serviceRequestService.getRequestsByGarage(garageId);
-        return ResponseHandler.generateResponse("Request By Garage", HttpStatus.OK, requestByGarage);
+        return ResponseHandler.generateResponse("Request By Garage", HttpStatus.OK, requestByGarage, "/request/garage/{garageId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @GetMapping("/{requestId}")
     public ResponseEntity<Object> getRequestById(@PathVariable Long requestId){
         Optional<ServiceRequestsResponseDTO> requestById = serviceRequestService.getRequestById(requestId);
-        return ResponseHandler.generateResponse("Request By id", HttpStatus.OK, requestById);
+        return ResponseHandler.generateResponse("Request By id", HttpStatus.OK, requestById, "/request/{requestId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteById(@PathVariable Long id){
         serviceRequestService.deleteServiceRequest(id);
-        return ResponseHandler.generateResponse( "Service request deleted", HttpStatus.OK, null);
+        return ResponseHandler.generateResponse( "Service request deleted", HttpStatus.OK, null, "/request/{id}");
     }
 }

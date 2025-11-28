@@ -31,7 +31,7 @@ public class PaymentsController {
     @GetMapping
     public ResponseEntity<Object> allPayments(){
         List<Payment> payments = paymentService.getAllPayments();
-        return ResponseHandler.generateResponse("All payaments", HttpStatus.OK, payments);
+        return ResponseHandler.generateResponse("All payaments", HttpStatus.OK, payments, "/payment");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
@@ -43,27 +43,27 @@ public class PaymentsController {
             @RequestParam(required = false)PaymentMethod paymentMethod
             ){
         PaymentsResponseDTO payment = paymentService.initiatePayment(customUserDetails.getUsername(), serviceId);
-        return ResponseHandler.generateResponse("Payment initiated", HttpStatus.CREATED, payment);
+        return ResponseHandler.generateResponse("Payment initiated", HttpStatus.CREATED, payment, "/payment/initiate");
     }
 
     @GetMapping("/payment/{paymentId}")
     public ResponseEntity<Object> paymentByPaymentId(@PathVariable Integer paymentId){
         Optional<PaymentsResponseDTO> paymenyById = paymentService.getPaymentByPaymentId(paymentId);
-        return ResponseHandler.generateResponse("Payment by Id", HttpStatus.OK, paymenyById);
+        return ResponseHandler.generateResponse("Payment by Id", HttpStatus.OK, paymenyById, "/payment/payment/{paymentId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','CAR_OWNER')")
     @GetMapping("/owner/{ownerId}")
     public ResponseEntity<Object> ownerPayments(@PathVariable Integer ownerId){
         List<PaymentsResponseDTO> paymentsByOwner = paymentService.getAllPaymentsDoneByOwner(ownerId);
-        return ResponseHandler.generateResponse("Payments made by an owner", HttpStatus.OK, paymentsByOwner);
+        return ResponseHandler.generateResponse("Payments made by an owner", HttpStatus.OK, paymentsByOwner, "/payment/owner/{ownerId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/service/{ownerId}")
     public ResponseEntity<Object> allServicePayments(@PathVariable Long serviceId){
         List<PaymentsResponseDTO> allServicePayments = paymentService.getAllPaymentsByService(serviceId);
-        return ResponseHandler.generateResponse("All payments for a particular service", HttpStatus.OK, allServicePayments);
+        return ResponseHandler.generateResponse("All payments for a particular service", HttpStatus.OK, allServicePayments, "/payment/service/{ownerId}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER')") //think of this authorization
@@ -76,7 +76,7 @@ public class PaymentsController {
             @RequestParam(required = false) PaymentCurrency paymentCurrency) {
 
         PaymentsResponseDTO paymentsResponseDTO = paymentService.updatePayment(paymentId, paymentStatus, transactionRef, paymentMethod, paymentCurrency);
-        return ResponseHandler.generateResponse("Update payment", HttpStatus.CREATED, paymentsResponseDTO);
+        return ResponseHandler.generateResponse("Update payment", HttpStatus.CREATED, paymentsResponseDTO, "/payment/update/{paymentId}");
     }
 
 
@@ -84,6 +84,6 @@ public class PaymentsController {
     @DeleteMapping("/delete/{paymentId}")
     public ResponseEntity<Object> deletePayment(@PathVariable Integer paymentId){
         paymentService.deletePayment(paymentId);
-        return ResponseHandler.generateResponse("Payament Deleted", HttpStatus.OK, null);
+        return ResponseHandler.generateResponse("Payament Deleted", HttpStatus.OK, null, "/payment//delete/{paymentId}");
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/ratings")
+@RequestMapping("/rating")
 public class RatingController {
 
     private final RatingService ratingService;
@@ -26,6 +26,6 @@ public class RatingController {
             @RequestBody RatingRequestsDTO dto) {
 
         RatingResponseDTO response = ratingService.rateService(id, dto);
-        return ResponseHandler.generateResponse("Request rating", HttpStatus.CREATED, response);
+        return ResponseHandler.generateResponse("Request rating", HttpStatus.CREATED, response, "/rating/rating/{id}");
     }
 }

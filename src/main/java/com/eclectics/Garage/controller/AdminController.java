@@ -27,14 +27,14 @@ public class AdminController {
     public ResponseEntity<Object> suspendUser(@PathVariable Long userId) {
         userService.suspendUser(userId);
         Map<String, String> response = new HashMap<>();
-        return ResponseHandler.generateResponse("User suspended successfully", HttpStatus.OK, response);
+        return ResponseHandler.generateResponse("User suspended successfully", HttpStatus.OK, response, "/admin/suspend/{userId}");
     }
 
     @PutMapping("/unsuspend/{userId}")
     public ResponseEntity<Object> unsuspendUser(@PathVariable Long userId) {
         userService.unsuspendUser(userId);
         Map<String, String> response = new HashMap<>();
-        return ResponseHandler.generateResponse("User unsuspended successfully", HttpStatus.OK, response);
+        return ResponseHandler.generateResponse("User unsuspended successfully", HttpStatus.OK, response, "/admin/unsuspend/{userId}");
     }
 }
 

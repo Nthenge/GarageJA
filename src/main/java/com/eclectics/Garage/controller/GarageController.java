@@ -4,7 +4,6 @@ import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.dto.ServiceResponseDTO;
 import com.eclectics.Garage.exception.GarageExceptions;
 import com.eclectics.Garage.model.Garage;
-import com.eclectics.Garage.model.Service;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.response.ResponseHandler;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/garage")
@@ -45,7 +43,7 @@ public class GarageController {
         servicesService.assignMultipleServicesToGarage(garageId, serviceIds);
 
         return ResponseHandler.generateResponse(
-                "Services assigned to garage successfully", HttpStatus.CREATED, null);
+                "Services assigned to garage successfully", HttpStatus.CREATED, null, "/garage/{garageId}/choose-services");
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
@@ -55,7 +53,7 @@ public class GarageController {
             @PathVariable Long serviceId) {
 
         ServiceResponseDTO assignedService = servicesService.assignServiceToGarage(serviceId, garageId);
-        return ResponseHandler.generateResponse("Service assinged to garage", HttpStatus.OK, assignedService);
+        return ResponseHandler.generateResponse("Service assinged to garage", HttpStatus.OK, assignedService, "/garage{garageId}/choose-service/{serviceId}");
     }
 
     @GetMapping("/garage/{garageId}/services")
@@ -64,7 +62,7 @@ public class GarageController {
                 .orElseThrow(() -> new GarageExceptions.ResourceNotFoundException("Garage not found"));
 
         return ResponseHandler.generateResponse(
-                "Garage services", HttpStatus.OK, garage.getOfferedServices());
+                "Garage services", HttpStatus.OK, garage.getOfferedServices(), "/garage/garage/{garageId}/services");
     }
 
     @PostMapping
@@ -73,7 +71,7 @@ public class GarageController {
     @GetMapping("/count")
     public ResponseEntity<Object> getGarageCount() {
         long count = garageService.countAllGarages();
-        return ResponseHandler.generateResponse("Count of garages", HttpStatus.OK, count);
+        return ResponseHandler.generateResponse("Count of garages", HttpStatus.OK, count, "/garage/count");
     }
 
 
@@ -84,7 +82,7 @@ public class GarageController {
             @RequestParam(required = false) String physicalBusinessAddress
     ) {
         List<GarageResponseDTO> garages = garageService.filterGarages(businessName, physicalBusinessAddress);
-        return ResponseHandler.generateResponse("Filtered garages", HttpStatus.OK, garages);
+        return ResponseHandler.generateResponse("Filtered garages", HttpStatus.OK, garages, "/garage/search");
     }
 
 
@@ -97,9 +95,9 @@ public class GarageController {
             @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos) throws java.io.IOException{
         try{
             garageService.createGarage(garageRequestsDTO, businessLicense, professionalCertificate, facilityPhotos);
-            return ResponseHandler.generateResponse("Garage created successfully", HttpStatus.CREATED,null);
+            return ResponseHandler.generateResponse("Garage created successfully", HttpStatus.CREATED,null,"/garage/create" );
         }catch (java.io.IOException e){
-            return ResponseHandler.generateResponse("Error creating garage: " + e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR,null);
+            return ResponseHandler.generateResponse("Error creating garage: " + e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR,null,"/garage/create" );
         }
     }
 
@@ -111,14 +109,14 @@ public class GarageController {
             @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
             @RequestPart(value = "facilityPhotos", required = false) MultipartFile facilityPhotos){
         garageService.updateOwnGarage(garageRequestsDTO, businessLicense, professionalCertificate, facilityPhotos);
-        return ResponseHandler.generateResponse("Garage updated successfully", HttpStatus.CREATED, null);
+        return ResponseHandler.generateResponse("Garage updated successfully", HttpStatus.CREATED, null, "/garage/update");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @DeleteMapping("/{garageId}")
     public ResponseEntity<Object> deleteAGarage(@PathVariable("garageId") Long garageId){
         garageService.deleteGarage(garageId);
-        return ResponseHandler.generateResponse("Garage Deleted Successfully", HttpStatus.OK, null);
+        return ResponseHandler.generateResponse("Garage Deleted Successfully", HttpStatus.OK, null,"/garage/{garageId}" );
     }
 
 }

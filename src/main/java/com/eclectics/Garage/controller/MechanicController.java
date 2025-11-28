@@ -11,10 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/mechanic")
@@ -47,7 +45,8 @@ public class MechanicController {
         return ResponseHandler.generateResponse(
                 "Mechanics fetched successfully",
                 HttpStatus.OK,
-                mechanics
+                mechanics,
+                "/mechanic/search"
         );
     }
 
@@ -70,7 +69,7 @@ public class MechanicController {
                 anyRelevantCertificate,
                 policeClearanceCertificate);
 
-        return ResponseHandler.generateResponse("Mechanic updated", HttpStatus.CREATED, updatedMechanic);
+        return ResponseHandler.generateResponse("Mechanic updated", HttpStatus.CREATED, updatedMechanic,"/mechanic/update" );
     }
 
 
@@ -78,6 +77,6 @@ public class MechanicController {
     @DeleteMapping("/{MechanicId}")
     public ResponseEntity<Object> deleteMechanic(@PathVariable("MechanicId") Long MechanicId){
         mechanicService.deleteMechanic(MechanicId);
-        return ResponseHandler.generateResponse( "Mechanic Deleted Successfully", HttpStatus.OK, null);
+        return ResponseHandler.generateResponse( "Mechanic Deleted Successfully", HttpStatus.OK, null, "/mechanic/{MechanicId}");
     }
 }

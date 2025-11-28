@@ -25,14 +25,14 @@ public class ServiceCategoriesController {
     @PostMapping("/create")
     public ResponseEntity<Object> createServiceCategories(@RequestBody ServiceCategoriestRequestDTO serviceCategoriestRequestDTO){
         ServiceCategories serviceCategories =serviceCategoriesService.createCategory(serviceCategoriestRequestDTO);
-        return ResponseHandler.generateResponse("Service created", HttpStatus.CREATED, serviceCategories);
+        return ResponseHandler.generateResponse("Service created", HttpStatus.CREATED, serviceCategories, "/category/create");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN', 'CAR_OWNER', 'MECHANIC')")
     @GetMapping("/all")
     public ResponseEntity<Object> getAllServiceCategories(){
         List<ServiceCategoriesResponseDTO> allservices = serviceCategoriesService.getAllServiceCategories();
-        return ResponseHandler.generateResponse("All services", HttpStatus.OK, allservices);
+        return ResponseHandler.generateResponse("All services", HttpStatus.OK, allservices, "/category/all");
     }
 
 //update/{categoryId}
@@ -41,13 +41,13 @@ public class ServiceCategoriesController {
     @GetMapping("/{serviceCategoryName}")
     public ResponseEntity<Object> getServiceCategoryByName(@PathVariable("serviceCategoryName") String serviceCategoryName){
         ServiceCategoriesResponseDTO serviceCategoriesResponseDTO = serviceCategoriesService.getServiceCategoryByName(serviceCategoryName);
-        return ResponseHandler.generateResponse("Service Category by name", HttpStatus.OK, serviceCategoriesResponseDTO);
+        return ResponseHandler.generateResponse("Service Category by name", HttpStatus.OK, serviceCategoriesResponseDTO, "/category/{serviceCategoryName}");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Object> deleteServiceCategory(@PathVariable Long id){
         serviceCategoriesService.delete(id);
-        return ResponseHandler.generateResponse("Service category deleted", HttpStatus.OK, null);
+        return ResponseHandler.generateResponse("Service category deleted", HttpStatus.OK, null,"/category/delete/{id}" );
     }
 }

@@ -43,7 +43,8 @@ public class UserController {
         return ResponseHandler.generateResponse(
                 "Filtered users retrieved successfully",
                 HttpStatus.OK,
-                users
+                users,
+                "/user/search"
         );
     }
 
@@ -55,7 +56,7 @@ public class UserController {
 
         try {
             userService.createUser(user);
-            return ResponseHandler.generateResponse("To finish registration, Please confirm your email", HttpStatus.CREATED, null);
+            return ResponseHandler.generateResponse("To finish registration, Please confirm your email", HttpStatus.CREATED, null, "/user/register");
 
         } catch (BadRequestException e) {
             throw new BadRequestException(e.getMessage());
@@ -65,7 +66,7 @@ public class UserController {
     @PostMapping("garage/register/mechanic")
     public ResponseEntity<?> createMechanic(@Valid @RequestBody MechanicGarageRegisterRequestDTO mechUser){
             User dto = mechanicService.registerMechanic(mechUser);
-            return ResponseHandler.generateResponse("Mechanic created", HttpStatus.CREATED, dto);
+            return ResponseHandler.generateResponse("Mechanic created", HttpStatus.CREATED, dto, "/user/garage/register/mechanic");
     }
 
     @PostMapping("/login")
@@ -74,7 +75,7 @@ public class UserController {
             throw new BadRequestException("Email and password are required");
         }
         UserDetailsAuthDTO responseDTO = (UserDetailsAuthDTO) userService.loginUser(requestDTO);
-        return ResponseHandler.generateResponse("Login success", HttpStatus.OK, responseDTO);
+        return ResponseHandler.generateResponse("Login success", HttpStatus.OK, responseDTO, "/user/login");
     }
 
     @PostMapping("/confirm")
@@ -88,7 +89,7 @@ public class UserController {
         boolean confirmed = userService.confirmUser(token);
 
         if (confirmed) {
-            return ResponseHandler.generateResponse("Account confirmed successfully!", HttpStatus.CREATED, null);
+            return ResponseHandler.generateResponse("Account confirmed successfully!", HttpStatus.CREATED, null, "/user/confirm");
         } else {
             throw new ForbiddenException("Invalid or expired token");
         }
@@ -100,7 +101,7 @@ public class UserController {
         boolean confirmed = userService.confirmUser(token);
 
         if (confirmed) {
-            return ResponseHandler.generateResponse("Your account has been confirmed!", HttpStatus.CREATED, null);
+            return ResponseHandler.generateResponse("Your account has been confirmed!", HttpStatus.CREATED, null, "/user/confirm");
         } else {
             throw new ForbiddenException("Invalid or expired token");
         }
@@ -115,7 +116,7 @@ public class UserController {
         }
 
         UserPasswordResetResponseDTO responseDTO = userService.resetPassword(requestDTO);
-        return ResponseHandler.generateResponse("Reset PassWord success", HttpStatus.OK, responseDTO);
+        return ResponseHandler.generateResponse("Reset PassWord success", HttpStatus.OK, responseDTO, "/user/reset-password");
     }
 
     @PostMapping("/update-password")
@@ -126,14 +127,14 @@ public class UserController {
         }
         UserPasswordUpdateDTO updateUser = userService.updatePassword(updateDTO);
 
-        return ResponseHandler.generateResponse("Password updated successfully", HttpStatus.CREATED, updateUser);
+        return ResponseHandler.generateResponse("Password updated successfully", HttpStatus.CREATED, null, "/user/update-password");
     }
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/update")
     public ResponseEntity<Object> updateOwnProfile(@RequestBody User user) {
         UserRegistrationResponseDTO userUpdate = userService.updateUser(user);
-        return ResponseHandler.generateResponse("Profile updated successfully", HttpStatus.CREATED, userUpdate);
+        return ResponseHandler.generateResponse("Profile updated successfully", HttpStatus.CREATED, userUpdate, "/user/update");
     }
 
 
@@ -142,7 +143,7 @@ public class UserController {
     public ResponseEntity<Object> deleteOwnAccount() {
         userService.deletePersonalAccount();
         Map<String, String> response = new HashMap<>();
-        return ResponseHandler.generateResponse("Your account has been deleted successfully.",HttpStatus.OK, response);
+        return ResponseHandler.generateResponse("Your account has been deleted successfully.",HttpStatus.OK, response, "/user/delete-account");
     }
 
 
@@ -150,6 +151,6 @@ public class UserController {
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<Object> deleteUser(@PathVariable("userId") Long userId){
         userService.deleteUser(userId);
-        return ResponseHandler.generateResponse("User deleted", HttpStatus.OK, null);
+        return ResponseHandler.generateResponse("User deleted", HttpStatus.OK, null, "/user/delete/{userId}");
     }
 }

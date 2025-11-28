@@ -1,7 +1,6 @@
 package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.AssignMechanicsResponseDTO;
-import com.eclectics.Garage.model.AssignMechanics;
 import com.eclectics.Garage.model.AssignMechanicStatus;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.AssignMechanicService;
@@ -38,7 +37,8 @@ public class AssignMechanicsController {
         return ResponseHandler.generateResponse(
                 "Filtered assignments retrieved successfully",
                 HttpStatus.OK,
-                assignments
+                assignments,
+                "/assign/search"
         );
     }
 
@@ -47,7 +47,7 @@ public class AssignMechanicsController {
     public ResponseEntity<Object> assignRequest(@RequestParam Long requestId,
                                                 @RequestParam Long mechanicId) {
         AssignMechanicsResponseDTO assignRequest = assignMechanicService.assignRequestToMechanic(requestId, mechanicId);
-        return ResponseHandler.generateResponse("Assign Request", HttpStatus.CREATED, assignRequest);
+        return ResponseHandler.generateResponse("Assign Request", HttpStatus.CREATED, assignRequest, "/assign");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','MECHANIC')")
@@ -55,7 +55,7 @@ public class AssignMechanicsController {
     public ResponseEntity<Object> updateStatus(@PathVariable Long assignmentId,
                                                @RequestParam AssignMechanicStatus status) {
         AssignMechanicsResponseDTO updateStatus = assignMechanicService.updateAssignmentStatus(assignmentId, status);
-        return ResponseHandler.generateResponse("Update Request Status", HttpStatus.CREATED, updateStatus);
+        return ResponseHandler.generateResponse("Update Request Status", HttpStatus.CREATED, updateStatus, "/assign/update/{assignId}");
     }
 }
 

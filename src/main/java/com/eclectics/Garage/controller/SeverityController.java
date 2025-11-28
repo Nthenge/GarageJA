@@ -2,7 +2,6 @@ package com.eclectics.Garage.controller;
 
 import com.eclectics.Garage.dto.SeverityRequestDTO;
 import com.eclectics.Garage.dto.SeverityResponseDTO;
-import com.eclectics.Garage.model.SeverityCategories;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.SeverityCategoriesService;
 import org.springframework.http.HttpStatus;
@@ -24,23 +23,23 @@ public class SeverityController {
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
-    @PostMapping()
+    @PostMapping("/create")
     public ResponseEntity<Object> createASeverity(@RequestBody SeverityRequestDTO severityRequestDTO){
          severityCategoriesService.createCategory(severityRequestDTO);
-        return ResponseHandler.generateResponse( "Severity Category created", HttpStatus.CREATED, null);
+        return ResponseHandler.generateResponse( "Severity Category created", HttpStatus.CREATED, null, "/severity/create");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping
     public ResponseEntity<Object> getAllSeverityCategories(){
         List<SeverityResponseDTO> allSeverityCategories = severityCategoriesService.getAllSeverityCategories();
-        return ResponseHandler.generateResponse("All severity Categories", HttpStatus.OK, allSeverityCategories);
+        return ResponseHandler.generateResponse("All severity Categories", HttpStatus.OK, allSeverityCategories, "/severity");
     }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
     @GetMapping("/{severityName}")
     public ResponseEntity<Object> getSeverityCategoryByName(@PathVariable String severityName){
         SeverityResponseDTO severityResponseDTO = severityCategoriesService.getSeverityCategoryByName(severityName);
-        return ResponseHandler.generateResponse("All severity Categories", HttpStatus.OK, severityResponseDTO);
+        return ResponseHandler.generateResponse("All severity Categories", HttpStatus.OK, severityResponseDTO, "/severity");
     }
 }
