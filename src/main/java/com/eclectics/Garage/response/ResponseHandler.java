@@ -14,7 +14,7 @@ public class ResponseHandler {
 
     public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object data) {
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("status", status.is2xxSuccessful() ? "success" : "error");
+        response.put("status", status.is2xxSuccessful());
         response.put("message", message);
         response.put("data", data);
 

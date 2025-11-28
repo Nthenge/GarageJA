@@ -12,7 +12,7 @@ public interface ServiceRequestService {
 
     ServiceRequest createRequest(Long garageId, Long serviceId, Long severityId);
     List<ServiceRequestsResponseDTO> getAllRequests();
-    ServiceRequestsResponseDTO updateStatus(Long requestId, RequestStatus status, Long severityId, ServiceRequestsRequestDTO serviceRequestsRequestDTO);
+    ServiceRequestsResponseDTO updateStatus(Long requestId, RequestStatus status);
     List<ServiceRequestsResponseDTO> getRequestsByCarOwner(Integer carOwnerUniqueId);
     List<ServiceRequestsResponseDTO> getRequestsByGarage(Long garageId);
     Optional<ServiceRequestsResponseDTO> getRequestById(Long requestId);

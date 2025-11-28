@@ -17,7 +17,6 @@ public class CarOwner {
     @Column(unique = true, nullable = false)
         private Integer uniqueId;
 
-    @Lob
     @Column(unique = false, nullable = true)
     private String profilePic;
 

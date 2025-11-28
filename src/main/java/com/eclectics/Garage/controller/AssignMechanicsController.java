@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/assignments")
+@RequestMapping("/assign")
 public class AssignMechanicsController {
 
     private final AssignMechanicService assignMechanicService;
@@ -42,7 +42,7 @@ public class AssignMechanicsController {
         );
     }
 
-    @PreAuthorize("hasAnyAuthorityRole('SYSTEM_ADMIN','GARAGE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN')")
     @PostMapping
     public ResponseEntity<Object> assignRequest(@RequestParam Long requestId,
                                                 @RequestParam Long mechanicId) {

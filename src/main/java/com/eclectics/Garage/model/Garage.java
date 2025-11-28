@@ -15,11 +15,8 @@ public class Garage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Lob
     private String businessLicense;
-    @Lob
     private String professionalCertificate;
-    @Lob
     private String facilityPhotos;
 
     @Column(unique = true, nullable = false)

@@ -122,7 +122,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             @CacheEvict(value = "requestsByCarOwner", allEntries = true),
             @CacheEvict(value = "requestById", key = "#requestId")
     })
-    public ServiceRequestsResponseDTO updateStatus(Long requestId, RequestStatus status, Long severityId, ServiceRequestsRequestDTO serviceRequestsRequestDTO) {
+    public ServiceRequestsResponseDTO updateStatus(Long requestId, RequestStatus status) {
 
         logger.info(String.format("Updating status for request ID: %d to %s", requestId, status));
 
@@ -135,12 +135,12 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         if (status != null) serviceRequest.setStatus(status);
         serviceRequest.setUpdatedAt(LocalDateTime.now());
 
-        if (severityId != null) {
-            severityCategoryRepository.findById(severityId).ifPresentOrElse(
-                    serviceRequest::setSeverityCategories,
-                    () -> logger.warning("Severity category with ID " + severityId + " not found. Keeping previous severity.")
-            );
-        }
+//        if (severityId != null) {
+//            severityCategoryRepository.findById(severityId).ifPresentOrElse(
+//                    serviceRequest::setSeverityCategories,
+//                    () -> logger.warning("Severity category with ID " + severityId + " not found. Keeping previous severity.")
+//            );
+//        }
 
         ServiceRequest updatedRequest = requestServiceRepository.save(serviceRequest);
         logger.info("Service request updated successfully with ID: " + requestId);

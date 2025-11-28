@@ -40,15 +40,13 @@ public class ServiceRequestsController {
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
-    @PutMapping("/status/{requestId}")
+    @PutMapping("/update/{requestId}")
     public ResponseEntity<Object> updateRequest(
             @PathVariable Long requestId,
-            @RequestParam RequestStatus status,
-            @RequestParam Long severityId,
-            @RequestBody ServiceRequestsRequestDTO serviceRequestsRequestDTO
+            @RequestParam RequestStatus status
             ){
 
-        ServiceRequestsResponseDTO serviceRequestsResponseDTO = serviceRequestService.updateStatus(requestId, status,severityId, serviceRequestsRequestDTO);
+        ServiceRequestsResponseDTO serviceRequestsResponseDTO = serviceRequestService.updateStatus(requestId, status);
         return ResponseHandler.generateResponse("Update request", HttpStatus.OK, serviceRequestsResponseDTO);
     }
 
