@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
@@ -37,17 +38,19 @@ public class CarOwnerServiceImpl implements CarOwnerService {
     private final AuthenticationService authenticationService;
     private final CarOwnerMapper mapper;
     private final OSSService ossService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final Map<Long, CarOwnerResponseDTO> carOwnerCacheByUserId = new ConcurrentHashMap<>();
     private final Map<Integer, CarOwnerResponseDTO> carOwnerCacheByUniqueId = new ConcurrentHashMap<>();
     private final Map<Long, ProfileCompleteDTO> profileCompletionCache = new ConcurrentHashMap<>();
     private final Set<Integer> generatedIds = Collections.synchronizedSet(new HashSet<>());
 
-    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService, CarOwnerMapper mapper, OSSService ossService) {
+    public CarOwnerServiceImpl(CarOwnerRepository carOwnerRepository, AuthenticationService authenticationService, CarOwnerMapper mapper, OSSService ossService, SimpMessagingTemplate messagingTemplate) {
         this.carOwnerRepository = carOwnerRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
         this.ossService = ossService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public ProfileCompleteDTO checkProfileCompletion(CarOwner carOwner) {
@@ -217,7 +220,19 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         logger.info("[LIVE LOCATION] Updated live location for CarOwner ID {} to: ({}, {})",
                 carOwnerId, locationDto.getLatitude(), locationDto.getLongitude());
 
-        return carOwnerRepository.save(owner);
+        CarOwner updatedOwner = carOwnerRepository.save(owner);
+        try {
+            CarOwnerResponseDTO responseDTO = mapper.toDto(updatedOwner);
+
+            String destination = "/topic/carOwner-location/" + carOwnerId;
+
+            messagingTemplate.convertAndSend(destination, responseDTO);
+            logger.debug("[WS BROADCAST] Sent live location update to destination: {}", destination);
+        } catch (Exception e) {
+            logger.error("Failed to broadcast live location update for CarOwner {}: {}", carOwnerId, e.getMessage());
+        }
+
+        return updatedOwner;
     }
 
     @Override

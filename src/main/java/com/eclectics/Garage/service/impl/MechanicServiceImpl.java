@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ public class MechanicServiceImpl implements MechanicService {
     private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender javaMailSender;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final Map<Long, MechanicResponseDTO> mechanicCacheByUserId = new ConcurrentHashMap<>();
     private final Map<Long, MechanicResponseDTO> mechanicCacheById = new ConcurrentHashMap<>();
@@ -53,7 +55,7 @@ public class MechanicServiceImpl implements MechanicService {
     private List<MechanicResponseDTO> cachedAllMechanics = Collections.synchronizedList(new ArrayList<>());
 
     public MechanicServiceImpl(MechanicRepository mechanicRepository,
-                               AuthenticationService authenticationService, MechanicMapper mapper, OSSService ossService, UsersRepository usersRepository, PasswordEncoder passwordEncoder, JavaMailSender javaMailSender) {
+                               AuthenticationService authenticationService, MechanicMapper mapper, OSSService ossService, UsersRepository usersRepository, PasswordEncoder passwordEncoder, JavaMailSender javaMailSender, SimpMessagingTemplate messagingTemplate) {
         this.mechanicRepository = mechanicRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
@@ -61,6 +63,7 @@ public class MechanicServiceImpl implements MechanicService {
         this.usersRepository = usersRepository;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
+        this.messagingTemplate = messagingTemplate;
     }
 
     private String getFileExtension(String filename) {
@@ -326,7 +329,19 @@ public class MechanicServiceImpl implements MechanicService {
         // 4. Save the updated entity
         // Since live location changes frequently, we might choose not to update the response DTO caches,
         // but the database persistence is essential.
-        return mechanicRepository.save(mechanic);
+        Mechanic updatedMechanic = mechanicRepository.save(mechanic);
+
+        try {
+            MechanicResponseDTO responseDTO = mapper.toResponseDTO(updatedMechanic);
+
+            String destination = "/topic/mechanic-location/" + mechanicId;
+
+            messagingTemplate.convertAndSend(destination, responseDTO);
+            logger.debug("[WS BROADCAST] Sent live location update to destination: {}", destination);
+        } catch (Exception e) {
+            logger.error("Failed to broadcast live location update for mechanic {}: {}", mechanicId, e.getMessage());
+        }
+        return updatedMechanic;
     }
 
     @Transactional
