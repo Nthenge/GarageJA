@@ -1,14 +1,18 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/garage
-    username: postgres
-    password: 5047
-
+    url: ${SPRING_DATASOURCE_URL} for production
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  cache:
+    type: caffeine
+    cache-names: users, allUsers, mechanics, allMechanics,garageFilter, mechanicsByGarage, mechanicsByUser, mechanicsByNationalId,  "garages", "allGarages", "garageById", "garageByName", "garageByUser", "carOwners", "allCarOwners", "carOwnerByUser", "carOwnerByUniqueId","allAutomobiles", "autoMobileMakes", "autoMobileYears", "autoMobileEngineTypes", "autoMobileTransmissions","allServiceCategories", "serviceCategoryByName","allSeverityCategories", "severityCategoryByName", "allServiceRequests", "requestsByGarage", "requestsByCarOwner", "requestById","allServices", "servicesByGarage", "serviceById","paymentById", "paymentsByOwner", "paymentsByService","allAssignments", "assignmentsByMechanic", "assignmentsByRequest"
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 2525
-    username: 51c2c6a995c556
-    password: 2780c1bfbb46ad
+    host: ${MAILTRAP_HOST}
+    port: ${MAILTRAP_PORT}
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -17,7 +21,7 @@ spring:
             enable: true
 
   flyway:
-    enabled: false  # set to true when you add migration scripts
+    enabled: false  # set to true add migration scripts later
 
   servlet:
     multipart:
@@ -31,12 +35,24 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        hibernate:
+          cache:
+            use_second_level_cache: true
+            use_query_cache: true
+            region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+            provider: org.ehcache.jsr107.EhcacheCachingProvider
 
 server:
   address: 0.0.0.0
-  port: 8083
+  port: ${PORT:8083}
   ssl:
     enabled: false
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,application/json
+    min-response-size: 1024
+
 
 springdoc:
   api-docs:
@@ -50,8 +66,8 @@ alibaba:
   cloud:
     oss:
       endpoint: https://oss-eu-west-1.aliyuncs.com
-      access-key-id: LTAI5tGhV8z2P3ryvU9J6jFq
-      access-key-secret: 1dz2p5isdE68CO8duRQRWHtzDsIman
+      access-key-id: ${ALIBABA_ACCESS_KEY_ID}
+      access-key-secret: ${ALIBABA_ACCESS_KEY_SECRET}
       bucket-name: jagarage
 
 management:
