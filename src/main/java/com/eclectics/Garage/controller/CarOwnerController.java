@@ -1,10 +1,16 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.dto.CarOwnerLocationUpdateDTO;
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
+import com.eclectics.Garage.exception.GarageExceptions;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
+import com.eclectics.Garage.model.CarOwner;
+import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.response.ResponseHandler;
+import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.CarOwnerService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +29,12 @@ public class CarOwnerController {
 
         private final CarOwnerService carOwnerService;
         private final CarOwnerMapper mapper;
+        private final AuthenticationService authenticationService;
 
-        public CarOwnerController(CarOwnerService carOwnerService, CarOwnerMapper mapper) {
+        public CarOwnerController(CarOwnerService carOwnerService, CarOwnerMapper mapper, AuthenticationService authenticationService) {
             this.carOwnerService = carOwnerService;
             this.mapper = mapper;
+            this.authenticationService = authenticationService;
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")
@@ -66,6 +74,26 @@ public class CarOwnerController {
 
             CarOwnerResponseDTO updatedOwner = carOwnerService.updateOwnProfile(carOwnerRequestsDTO, profilePic);
             return ResponseHandler.generateResponse("CarOwner profile updated successfully", HttpStatus.CREATED,updatedOwner, "/carOwner/update");
+        }
+
+        @PostMapping("/live-location")
+        public ResponseEntity<Object> updateOwnLiveLocation(
+                @Valid @RequestBody CarOwnerLocationUpdateDTO locationDto) {
+
+            User currentUser = authenticationService.getCurrentUser();
+            CarOwner carOwnerProfile = currentUser.getCarOwner();
+
+            if (carOwnerProfile == null) {
+                throw new GarageExceptions.ResourceNotFoundException("CarOwner profile not linked to authenticated user.");
+            }
+
+            Long carOwnerId = carOwnerProfile.getId();
+            CarOwner updatedOwner = carOwnerService.updateCarOwnerLiveLocation(
+                    carOwnerId,
+                    locationDto
+            );
+
+            return ResponseHandler.generateResponse("CarOwner live location", HttpStatus.OK, updatedOwner, "/carOwner/live-location");
         }
 
         @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN')")

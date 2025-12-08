@@ -28,6 +28,9 @@ public class Mechanic {
     private String anyRelevantCertificate;
     private String policeClearanceCertficate;
 
+    @Embedded
+    private Location liveLocation;
+
     @Column(unique = true)
     private Integer nationalIdNumber;
 
@@ -42,11 +45,12 @@ public class Mechanic {
 
     public Mechanic() {}
 
-    public Mechanic(Long id, String areasofSpecialization, User user, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate, Integer nationalIdNumber, Garage garage) {
+    public Mechanic(Long id, String areasofSpecialization,Location liveLocation, User user, String alternativePhone, String physicalAddress, String emergencyContactName, String emergencyContactNumber, String yearsofExperience, String vehicleBrands, String availability, String profilePic, String nationalIDPic, String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate, Integer nationalIdNumber, Garage garage) {
         this.id = id;
         this.areasofSpecialization = areasofSpecialization;
         this.alternativePhone = alternativePhone;
         this.physicalAddress = physicalAddress;
+        this.liveLocation = liveLocation;
         this.emergencyContactName = emergencyContactName;
         this.emergencyContactNumber = emergencyContactNumber;
         this.yearsofExperience = yearsofExperience;
@@ -95,6 +99,14 @@ public class Mechanic {
 
     public String getPhysicalAddress() { return physicalAddress;}
     public void setPhysicalAddress(String physicalAddress) { this.physicalAddress = physicalAddress;}
+
+    public Location getLiveLocation() {
+        return liveLocation;
+    }
+
+    public void setLiveLocation(Location liveLocation) {
+        this.liveLocation = liveLocation;
+    }
 
     public String getEmergencyContactName() { return emergencyContactName;}
     public void setEmergencyContactName(String emergencyContactName) {this.emergencyContactName = emergencyContactName;}

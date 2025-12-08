@@ -17,7 +17,10 @@ public interface CarOwnerMapper {
     @Mapping(target = "profilePic", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "requests", ignore = true)
+    @Mapping(target = "liveLocation", ignore = true)
     CarOwner toEntity(CarOwnerRequestsDTO dto);
 
+    @Mapping(source = "liveLocation.latitude", target = "currentLatitude")
+    @Mapping(source = "liveLocation.longitude", target = "currentLongitude")
     CarOwnerResponseDTO toDto(CarOwner entity);
 }

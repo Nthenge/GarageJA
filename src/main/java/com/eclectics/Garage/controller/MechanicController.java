@@ -1,9 +1,12 @@
 package com.eclectics.Garage.controller;
 
+import com.eclectics.Garage.dto.MechanicLocationUpdateDTO;
 import com.eclectics.Garage.dto.MechanicRequestDTO;
 import com.eclectics.Garage.dto.MechanicResponseDTO;
+import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.MechanicService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +73,13 @@ public class MechanicController {
                 policeClearanceCertificate);
 
         return ResponseHandler.generateResponse("Mechanic updated", HttpStatus.CREATED, updatedMechanic,"/mechanic/update" );
+    }
+
+    @PostMapping("/{mechanicId}/live-location")
+    public ResponseEntity<Object> updateLocation(@PathVariable Long mechanicId,
+                                                   @RequestBody @Valid MechanicLocationUpdateDTO locationDto) {
+        Mechanic updatedMechanic = mechanicService.updateMechanicLiveLocation(mechanicId, locationDto);
+        return ResponseHandler.generateResponse("Live location",HttpStatus.OK, updatedMechanic, "/{mechanicId}/live-location");
     }
 
 

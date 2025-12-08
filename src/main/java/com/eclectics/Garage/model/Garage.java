@@ -31,6 +31,8 @@ public class Garage {
 
     private String businessName;
     private String physicalBusinessAddress;
+    @Embedded
+    private Location businessLocation;
     private String businessPhoneNumber;
 
     private Integer yearsInOperation;
@@ -61,7 +63,7 @@ public class Garage {
     @JsonBackReference
     private User user;
 
-    public Garage(String businessLicense, String professionalCertificate, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String twentyFourHours, String serviceCategories, String specialisedServices, String businessName, String physicalBusinessAddress, String businessPhoneNumber, Integer yearsInOperation, Integer mpesaPayBill, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
+    public Garage(String businessLicense, String professionalCertificate, Location businessLocation, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String twentyFourHours, String serviceCategories, String specialisedServices, String businessName, String physicalBusinessAddress, String businessPhoneNumber, Integer yearsInOperation, Integer mpesaPayBill, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
         this.businessLicense = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -74,6 +76,7 @@ public class Garage {
         this.specialisedServices = specialisedServices;
         this.businessName = businessName;
         this.physicalBusinessAddress = physicalBusinessAddress;
+        this.businessLocation = businessLocation;
         this.businessPhoneNumber = businessPhoneNumber;
         this.yearsInOperation = yearsInOperation;
         this.mpesaPayBill = mpesaPayBill;
@@ -151,6 +154,14 @@ public class Garage {
 
     public String getPhysicalBusinessAddress() { return physicalBusinessAddress;}
     public void setPhysicalBusinessAddress(String physicalBusinessAddress) {this.physicalBusinessAddress = physicalBusinessAddress;}
+
+    public Location getBusinessLocation() {
+        return businessLocation;
+    }
+
+    public void setBusinessLocation(Location businessLocation) {
+        this.businessLocation = businessLocation;
+    }
 
     public String getBusinessPhoneNumber() { return businessPhoneNumber;}
     public void setBusinessPhoneNumber(String businessPhoneNumber) {this.businessPhoneNumber = businessPhoneNumber;}

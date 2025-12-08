@@ -1,11 +1,13 @@
 package com.eclectics.Garage.service.impl;
 
+import com.eclectics.Garage.dto.CarOwnerLocationUpdateDTO;
 import com.eclectics.Garage.dto.CarOwnerRequestsDTO;
 import com.eclectics.Garage.dto.CarOwnerResponseDTO;
 import com.eclectics.Garage.dto.ProfileCompleteDTO;
 import com.eclectics.Garage.exception.GarageExceptions;
 import com.eclectics.Garage.mapper.CarOwnerMapper;
 import com.eclectics.Garage.model.CarOwner;
+import com.eclectics.Garage.model.Location;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.CarOwnerRepository;
 import com.eclectics.Garage.service.AuthenticationService;
@@ -193,6 +195,29 @@ public class CarOwnerServiceImpl implements CarOwnerService {
         carOwnerCacheByUserId.put(user.getId(), dto);
         logger.info("[UPDATE SUCCESS] CarOwner profile updated for user={}", user.getEmail());
         return dto;
+    }
+
+    // Inside CarOwnerServiceImpl
+
+    @Transactional
+    @Override
+    public CarOwner updateCarOwnerLiveLocation(Long carOwnerId, CarOwnerLocationUpdateDTO locationDto) {
+
+        CarOwner owner = carOwnerRepository.findById(carOwnerId)
+                .orElseThrow(() -> {
+                    logger.warn("Attempted to update location for non-existent CarOwner ID: {}", carOwnerId);
+                    return new GarageExceptions.ResourceNotFoundException("CarOwner not found with id: " + carOwnerId);
+                });
+
+        Location newLocation = new Location();
+        newLocation.setLatitude(locationDto.getLatitude());
+        newLocation.setLongitude(locationDto.getLongitude());
+
+        owner.setLiveLocation(newLocation);
+        logger.info("[LIVE LOCATION] Updated live location for CarOwner ID {} to: ({}, {})",
+                carOwnerId, locationDto.getLatitude(), locationDto.getLongitude());
+
+        return carOwnerRepository.save(owner);
     }
 
     @Override

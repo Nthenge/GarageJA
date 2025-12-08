@@ -1,15 +1,13 @@
-package com.eclectics.Garage.model;
+package com.eclectics.Garage.dto;
 
-import jakarta.persistence.*;
+public class MechanicLocationUpdateDTO {
 
-@Embeddable
-public class Location {
     private Double latitude;
     private Double longitude;
 
-    public Location() {}
+    public MechanicLocationUpdateDTO() {}
 
-    public Location(Double latitude, Double longitude) {
+    public MechanicLocationUpdateDTO(Double latitude, Double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -30,4 +28,3 @@ public class Location {
         this.longitude = longitude;
     }
 }
-

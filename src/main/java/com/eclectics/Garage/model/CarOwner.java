@@ -20,6 +20,9 @@ public class CarOwner {
     @Column(unique = false, nullable = true)
     private String profilePic;
 
+    @Embedded
+    private Location liveLocation;
+
     @Column(unique = false, nullable = true)
     private String altPhone;
     private String make;
@@ -42,7 +45,7 @@ public class CarOwner {
 
     public CarOwner() {}
 
-    public CarOwner(Long id, Integer uniqueId,User user, String profilePic,String model,String severity, String altPhone,String year,String transmission, String make,String engineType, String licensePlate, String engineCapacity, String color) {
+    public CarOwner(Long id, Integer uniqueId,User user,Location liveLocation, String profilePic,String model,String severity, String altPhone,String year,String transmission, String make,String engineType, String licensePlate, String engineCapacity, String color) {
         this.id = id;
         this.uniqueId = uniqueId;
         this.make = make;
@@ -50,6 +53,7 @@ public class CarOwner {
         this.altPhone = altPhone;
         this.model = model;
         this.year = year;
+        this.liveLocation = liveLocation;
         this.licensePlate = licensePlate;
         this.engineType = engineType;
         this.engineCapacity = engineCapacity;
@@ -106,6 +110,14 @@ public class CarOwner {
 
     public String getLicensePlate() {return licensePlate;}
     public void setLicensePlate(String licensePlate) {this.licensePlate = licensePlate;}
+
+    public Location getLiveLocation() {
+        return liveLocation;
+    }
+
+    public void setLiveLocation(Location liveLocation) {
+        this.liveLocation = liveLocation;
+    }
 
     public String getEngineType() {return engineType;}
     public void setEngineType(String engineType) {this.engineType = engineType;}

@@ -7,10 +7,12 @@ import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 import com.eclectics.Garage.mapper.GarageMapper;
 import com.eclectics.Garage.model.Garage;
+import com.eclectics.Garage.model.Location;
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.GarageRepository;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.GarageService;
+import com.eclectics.Garage.service.GoogleMapsService;
 import com.eclectics.Garage.service.OSSService;
 import com.eclectics.Garage.specificationExecutor.GarageSpecificationExecutor;
 import org.slf4j.Logger;
@@ -34,6 +36,7 @@ public class GarageServiceImpl implements GarageService {
     private final AuthenticationService authenticationService;
     private final GarageMapper mapper;
     private final OSSService ossService;
+    private final GoogleMapsService googleMapsService;
 
     private final Map<Long, Garage> garageCacheById = new ConcurrentHashMap<>();
     private final Map<String, Garage> garageCacheByName = new ConcurrentHashMap<>();
@@ -41,11 +44,12 @@ public class GarageServiceImpl implements GarageService {
     private final List<Garage> allGaragesCache = Collections.synchronizedList(new ArrayList<>());
 
     public GarageServiceImpl(GarageRepository garageRepository, AuthenticationService authenticationService,
-                             GarageMapper mapper, OSSService ossService) {
+                             GarageMapper mapper, OSSService ossService, GoogleMapsService googleMapsService) {
         this.garageRepository = garageRepository;
         this.authenticationService = authenticationService;
         this.mapper = mapper;
         this.ossService = ossService;
+        this.googleMapsService = googleMapsService;
         loadCaches();
     }
 
@@ -82,7 +86,7 @@ public class GarageServiceImpl implements GarageService {
     @Override
     @CacheEvict(value = {"allGarages"}, allEntries = true)
     public synchronized Garage createGarage(GarageRequestsDTO garageRequestsDTO, MultipartFile businessLicense,
-                                            MultipartFile professionalCertificate, MultipartFile facilityPhotos) throws IOException {
+                                            MultipartFile professionalCertificate, MultipartFile facilityPhotos) { // Removed 'throws IOException' from signature
 
         Garage garage = mapper.toEntity(garageRequestsDTO);
         User user = authenticationService.getCurrentUser();
@@ -108,8 +112,28 @@ public class GarageServiceImpl implements GarageService {
                 String path = "Garages/photos/" + user.getId() + "-" + UUID.randomUUID() + ext;
                 garage.setFacilityPhotos(ossService.uploadFile(path, facilityPhotos.getInputStream()));
             }
+
         } catch (IOException e) {
             throw new BadRequestException("Failed to upload garage files");
+        }
+
+        // --- 2. Geocoding Logic (New) ---
+        String address = garage.getPhysicalBusinessAddress();
+        if (address != null && !address.isBlank()) {
+            try {
+                // Block the reactive call to ensure coordinates are set before JPA save
+                googleMapsService.geocode(address)
+                        .map(coords -> {
+                            Location location = new Location(coords.get("lat"), coords.get("lng"));
+                            garage.setBusinessLocation(location);
+                            return garage;
+                        })
+                        .block(); // WARNING: This blocks the thread. Acceptable if app is not fully reactive.
+            } catch (Exception e) {
+                logger.error("Geocoding failed for garage address: {}", address, e);
+                // Decide if you want to throw an exception or continue without location
+                // For now, we'll log and continue without location set.
+            }
         }
 
         long uniqueId;
@@ -235,6 +259,23 @@ public class GarageServiceImpl implements GarageService {
             }
         } catch (IOException e) {
             throw new BadRequestException("Failed to update garage files: " + e.getMessage());
+        }
+
+        if (dto.getPhysicalBusinessAddress() != null) {
+            String newAddress = dto.getPhysicalBusinessAddress();
+            try {
+                // Block the reactive call to ensure coordinates are set before JPA save
+                googleMapsService.geocode(newAddress)
+                        .map(coords -> {
+                            Location location = new Location(coords.get("lat"), coords.get("lng"));
+                            garage.setBusinessLocation(location);
+                            return garage;
+                        })
+                        .block(); // WARNING: This blocks the thread.
+            } catch (Exception e) {
+                logger.error("Geocoding failed during update for garage address: {}", newAddress, e);
+                // Log and continue without updating location, or throw an exception.
+            }
         }
 
         // 5️⃣ Save and cache the updated garage

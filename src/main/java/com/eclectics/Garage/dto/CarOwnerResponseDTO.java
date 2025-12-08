@@ -11,6 +11,8 @@ public class CarOwnerResponseDTO {
     private String model;
     private String year;
     private String licensePlate;
+    private Double currentLatitude;
+    private Double currentLongitude;
     private String engineType;
     private String engineCapacity;
     private String color;
@@ -22,7 +24,7 @@ public class CarOwnerResponseDTO {
     public CarOwnerResponseDTO() {
     }
 
-    public CarOwnerResponseDTO(Long id, String altPhone, String year, String engineCapacity, String severity, String profilePic, boolean isComplete, String transmission, String engineType, String make, Integer uniqueId, String model, String licensePlate, String color) {
+    public CarOwnerResponseDTO(Long id, String altPhone, String year, Double currentLatitude, Double currentLongitude, String engineCapacity, String severity, String profilePic, boolean isComplete, String transmission, String engineType, String make, Integer uniqueId, String model, String licensePlate, String color) {
         this.id = id;
         this.altPhone = altPhone;
         this.year = year;
@@ -35,6 +37,8 @@ public class CarOwnerResponseDTO {
         this.make = make;
         this.uniqueId = uniqueId;
         this.model = model;
+        this.currentLatitude = currentLatitude;
+        this.currentLongitude = currentLongitude;
         this.licensePlate = licensePlate;
         this.color = color;
     }
@@ -125,6 +129,22 @@ public class CarOwnerResponseDTO {
 
     public void setTransmission(String transmission) {
         this.transmission = transmission;
+    }
+
+    public Double getCurrentLatitude() {
+        return currentLatitude;
+    }
+
+    public void setCurrentLatitude(Double currentLatitude) {
+        this.currentLatitude = currentLatitude;
+    }
+
+    public Double getCurrentLongitude() {
+        return currentLongitude;
+    }
+
+    public void setCurrentLongitude(Double currentLongitude) {
+        this.currentLongitude = currentLongitude;
     }
 
     public String getSeverity() {

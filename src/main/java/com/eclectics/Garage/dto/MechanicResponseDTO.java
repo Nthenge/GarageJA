@@ -9,6 +9,8 @@ public class MechanicResponseDTO {
     private String areasofSpecialization;
     private String alternativePhone;
     private String physicalAddress;
+    private Double liveLatitude;
+    private Double liveLongitude;
     private String emergencyContactName;
     private String emergencyContactNumber;
     private String yearsofExperience;
@@ -24,7 +26,7 @@ public class MechanicResponseDTO {
 
     public MechanicResponseDTO() {}
 
-    public MechanicResponseDTO(Long id, String areasofSpecialization, String emergencyContactNumber,Garage garage, Integer nationalIdNumber, String profilePic,String nationalIDPic,String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate, String availability, String vehicleBrands, String yearsofExperience, String emergencyContactName, String physicalAddress, String alternativePhone) {
+    public MechanicResponseDTO(Long id, String areasofSpecialization,Double liveLatitude, Double liveLongitude,  String emergencyContactNumber,Garage garage, Integer nationalIdNumber, String profilePic,String nationalIDPic,String professionalCertfificate, String anyRelevantCertificate, String policeClearanceCertficate, String availability, String vehicleBrands, String yearsofExperience, String emergencyContactName, String physicalAddress, String alternativePhone) {
         this.id = id;
         this.areasofSpecialization = areasofSpecialization;
         this.emergencyContactNumber = emergencyContactNumber;
@@ -35,6 +37,8 @@ public class MechanicResponseDTO {
         this.yearsofExperience = yearsofExperience;
         this.emergencyContactName = emergencyContactName;
         this.physicalAddress = physicalAddress;
+        this.liveLatitude = liveLatitude;
+        this.liveLongitude = liveLongitude;
         this.alternativePhone = alternativePhone;
         this.nationalIDPic = nationalIDPic;
         this.professionalCertfificate = professionalCertfificate;
@@ -73,6 +77,22 @@ public class MechanicResponseDTO {
 
     public void setPhysicalAddress(String physicalAddress) {
         this.physicalAddress = physicalAddress;
+    }
+
+    public Double getLiveLatitude() {
+        return liveLatitude;
+    }
+
+    public void setLiveLatitude(Double liveLatitude) {
+        this.liveLatitude = liveLatitude;
+    }
+
+    public Double getLiveLongitude() {
+        return liveLongitude;
+    }
+
+    public void setLiveLongitude(Double liveLongitude) {
+        this.liveLongitude = liveLongitude;
     }
 
     public String getEmergencyContactName() {

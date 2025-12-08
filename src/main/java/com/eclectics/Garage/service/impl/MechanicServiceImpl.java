@@ -1,16 +1,10 @@
 package com.eclectics.Garage.service.impl;
 
-import com.eclectics.Garage.dto.MechanicGarageRegisterRequestDTO;
-import com.eclectics.Garage.dto.MechanicRequestDTO;
-import com.eclectics.Garage.dto.MechanicResponseDTO;
-import com.eclectics.Garage.dto.ProfileCompleteDTO;
+import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ResourceNotFoundException;
 import com.eclectics.Garage.mapper.MechanicMapper;
-import com.eclectics.Garage.model.Garage;
-import com.eclectics.Garage.model.Mechanic;
-import com.eclectics.Garage.model.Role;
-import com.eclectics.Garage.model.User;
+import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.service.AuthenticationService;
@@ -307,6 +301,33 @@ public class MechanicServiceImpl implements MechanicService {
         return dto;
     }
 
+    @Transactional
+    @Override
+    public Mechanic updateMechanicLiveLocation(Long mechanicId, MechanicLocationUpdateDTO locationDto) {
+
+        // 1. Fetch the Mechanic entity by ID
+        Mechanic mechanic = mechanicRepository.findById(mechanicId)
+                .orElseThrow(() -> {
+                    logger.warn("Attempted to update location for non-existent mechanic ID: {}", mechanicId);
+                    return new ResourceNotFoundException("Mechanic not found with id: " + mechanicId);
+                });
+
+        // 2. Create and configure the new Location object
+        Location newLocation = new Location();
+        newLocation.setLatitude(locationDto.getLatitude());
+        newLocation.setLongitude(locationDto.getLongitude());
+
+        // 3. Update the embedded 'liveLocation' field
+        mechanic.setLiveLocation(newLocation);
+
+        logger.info("[LIVE LOCATION] Updated live location for mechanic ID {} to: ({}, {})",
+                mechanicId, locationDto.getLatitude(), locationDto.getLongitude());
+
+        // 4. Save the updated entity
+        // Since live location changes frequently, we might choose not to update the response DTO caches,
+        // but the database persistence is essential.
+        return mechanicRepository.save(mechanic);
+    }
 
     @Transactional
     @Override

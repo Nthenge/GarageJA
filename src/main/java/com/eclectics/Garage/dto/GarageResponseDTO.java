@@ -18,13 +18,16 @@ public class GarageResponseDTO {
     private String physicalBusinessAddress;
     private String businessPhoneNumber;
 
+    private Double latitude;
+    private Double longitude;
+
     private Integer yearsInOperation;
     private Integer mpesaPayBill;
     private Integer mpesaTill;
 
     public GarageResponseDTO() {}
 
-    public GarageResponseDTO(String businessLicense, String professionalCertificate, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
+    public GarageResponseDTO(String businessLicense, Double latitude, Double longitude, String professionalCertificate, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
         this.businessLicense = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -40,6 +43,8 @@ public class GarageResponseDTO {
         this.specialisedServices = specialisedServices;
         this.twentyFourHours = twentyFourHours;
         this.physicalBusinessAddress = physicalBusinessAddress;
+        this.longitude = longitude;
+        this.latitude = latitude;
         this.mpesaTill = mpesaTill;
     }
 
@@ -137,6 +142,22 @@ public class GarageResponseDTO {
 
     public void setPhysicalBusinessAddress(String physicalBusinessAddress) {
         this.physicalBusinessAddress = physicalBusinessAddress;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public String getBusinessPhoneNumber() {

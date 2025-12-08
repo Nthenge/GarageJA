@@ -125,6 +125,14 @@
         public Garage getGarage() {return garage;}
         public void setGarage(Garage garage) {this.garage = garage;}
 
+        public CarOwner getCarOwner() {
+            return carOwner;
+        }
+
+        public void setCarOwner(CarOwner carOwner) {
+            this.carOwner = carOwner;
+        }
+
         public User() {
         }
 
