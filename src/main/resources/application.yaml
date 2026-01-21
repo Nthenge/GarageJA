@@ -1,77 +1,112 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL} for production
+    url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
-  cache:
-    type: caffeine
-    cache-names: users, allUsers, mechanics, allMechanics,garageFilter, mechanicsByGarage, mechanicsByUser, mechanicsByNationalId,  "garages", "allGarages", "garageById", "garageByName", "garageByUser", "carOwners", "allCarOwners", "carOwnerByUser", "carOwnerByUniqueId","allAutomobiles", "autoMobileMakes", "autoMobileYears", "autoMobileEngineTypes", "autoMobileTransmissions","allServiceCategories", "serviceCategoryByName","allSeverityCategories", "severityCategoryByName", "allServiceRequests", "requestsByGarage", "requestsByCarOwner", "requestById","allServices", "servicesByGarage", "serviceById","paymentById", "paymentsByOwner", "paymentsByService","allAssignments", "assignmentsByMechanic", "assignmentsByRequest"
-    caffeine:
-      spec: maximumSize=1000,expireAfterWrite=10m
-  mail:
-    host: ${MAILTRAP_HOST}
-    port: ${MAILTRAP_PORT}
-    username: ${MAILTRAP_USERNAME}
-    password: ${MAILTRAP_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
 
-  flyway:
-    enabled: false  # set to true add migration scripts later
+    cache:
+      type: caffeine
+      cache-names:
+        - users
+        - allUsers
+        - mechanics
+        - allMechanics
+        - garageFilter
+        - mechanicsByGarage
+        - mechanicsByUser
+        - mechanicsByNationalId
+        - garages
+        - allGarages
+        - garageById
+        - garageByName
+        - garageByUser
+        - carOwners
+        - allCarOwners
+        - carOwnerByUser
+        - carOwnerByUniqueId
+        - allAutomobiles
+        - autoMobileMakes
+        - autoMobileYears
+        - autoMobileEngineTypes
+        - autoMobileTransmissions
+        - allServiceCategories
+        - serviceCategoryByName
+        - allSeverityCategories
+        - severityCategoryByName
+        - allServiceRequests
+        - requestsByGarage
+        - requestsByCarOwner
+        - requestById
+        - allServices
+        - servicesByGarage
+        - serviceById
+        - paymentById
+        - paymentsByOwner
+        - paymentsByService
+        - allAssignments
+        - assignmentsByMechanic
+        - assignmentsByRequest
+      caffeine:
+        spec: maximumSize=1000,expireAfterWrite=10m
 
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 200MB
-      max-request-size: 250MB
+    mail:
+      host: ${MAILTRAP_HOST}
+      port: ${MAILTRAP_PORT}
+      username: ${MAILTRAP_USERNAME}
+      password: ${MAILTRAP_PASSWORD}
+      properties:
+        mail.smtp.auth: true
+        mail.smtp.starttls.enable: true
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
+    flyway:
+      enabled: true # recommended for prod
+
+    servlet:
+      multipart:
+        enabled: true
+        max-file-size: 200MB
+        max-request-size: 250MB
+
+    jpa:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: public
+        ddl-auto: update
+      properties:
         hibernate:
-          cache:
-            use_second_level_cache: true
-            use_query_cache: true
-            region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
-            provider: org.ehcache.jsr107.EhcacheCachingProvider
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+          default_schema: public
+          cache.use_second_level_cache: true
+          cache.use_query_cache: true
+          cache.region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+          cache.provider_class: org.ehcache.jsr107.EhcacheCachingProvider
 
-server:
-  address: 0.0.0.0
-  port: ${PORT:8083}
-  ssl:
-    enabled: false
-  compression:
-    enabled: true
-    mime-types: text/html,text/xml,text/plain,application/json
-    min-response-size: 1024
+  server:
+    address: 0.0.0.0
+    port: ${PORT:8083}
+    ssl:
+      enabled: false
+    compression:
+      enabled: true
+      mime-types: text/html,text/xml,text/plain,application/json
+      min-response-size: 1024
 
+  springdoc:
+    api-docs:
+      enabled: true
+      path: /v3/api-docs
+    swagger-ui:
+      enabled: true
+      path: /swagger-ui.html
 
-springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
+  alibaba:
+    cloud:
+      oss:
+        endpoint: https://oss-eu-west-1.aliyuncs.com
+        access-key-id: ${ALIBABA_ACCESS_KEY_ID}
+        access-key-secret: ${ALIBABA_ACCESS_KEY_SECRET}
+        bucket-name: jagarage
 
-alibaba:
-  cloud:
-    oss:
-      endpoint: https://oss-eu-west-1.aliyuncs.com
-      access-key-id: ${ALIBABA_ACCESS_KEY_ID}
-      access-key-secret: ${ALIBABA_ACCESS_KEY_SECRET}
-      bucket-name: jagarage
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus

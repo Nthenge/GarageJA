@@ -2,8 +2,10 @@ package com.eclectics.Garage.service.impl;
 
 import com.eclectics.Garage.dto.*;
 import com.eclectics.Garage.mapper.UserMapper;
+import com.eclectics.Garage.model.PasswordResetToken;
 import com.eclectics.Garage.model.Role;
 import com.eclectics.Garage.model.User;
+import com.eclectics.Garage.repository.PasswordResetTokenRepository;
 import com.eclectics.Garage.repository.UsersRepository;
 import com.eclectics.Garage.security.CustomUserDetails;
 import com.eclectics.Garage.security.JwtUtil;
@@ -15,18 +17,21 @@ import com.eclectics.Garage.exception.GarageExceptions.BadRequestException;
 import com.eclectics.Garage.exception.GarageExceptions.ForbiddenException;
 
 import com.eclectics.Garage.specificationExecutor.UserSpecificationExecutor;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,7 +44,6 @@ public class UserServiceImpl implements UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     private final Map<String, User> userCache = new ConcurrentHashMap<>();
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
-    private final Map<String, Long> resetTokenCache = Collections.synchronizedMap(new LinkedHashMap<>());
     private final Queue<String> recentLogins = new LinkedList<>();
 
     private final UsersRepository usersRepository;
@@ -47,13 +51,15 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper mapper;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
-    public UserServiceImpl(UsersRepository usersRepository, JavaMailSender javaMailSender, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserMapper mapper) {
+    public UserServiceImpl(UsersRepository usersRepository, JavaMailSender javaMailSender, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserMapper mapper, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.usersRepository = usersRepository;
         this.javaMailSender = javaMailSender;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.mapper = mapper;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     private String decryptToken(String token) {
@@ -65,16 +71,27 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private static SimpleMailMessage getMailMessage(String email, String token, String subject, String urlPath) {
-        String fullUrl = "http://10.20.33.74:4200" + urlPath + "/token=" + token;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject(subject);
-        message.setText("Hello,\n\n" +
-                "Please click the link below:\n" +
-                fullUrl + "\n\n" +
-                "If you did not request this, please ignore this email.\n\n" +
-                "Regards,\nGarage Team");
+    private MimeMessage getMailMessage(String email, String token, String subject, String urlPath) throws MessagingException {
+        String fullUrl = "http://10.36.101.181:4200" + urlPath + "?token=" + token;
+
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(email);
+        helper.setSubject(subject);
+
+        String htmlContent = "<html><body>"
+                + "<p>Hello,</p>"
+                + "<p>Please click the button below:</p>"
+                + "<a href='" + fullUrl + "' style='display:inline-block;padding:12px 24px;font-size:16px;"
+                + "color:white;background-color:#ff6b35;border-radius:8px;text-decoration:none;'>"
+                + (urlPath.contains("reset-password") ? "Reset Password" : "Confirm Email") + "</a>"
+                + "<p>If you did not request this, please ignore this email.</p>"
+                + "<p>Regards,<br>Garage Team</p>"
+                + "</body></html>";
+
+        helper.setText(htmlContent, true);
+
         return message;
     }
 
@@ -107,18 +124,68 @@ public class UserServiceImpl implements UserService {
     public void confirmEmail(String email, String token) {
         logger.info("Preparing confirmation email for user: {}", email);
 
-        SimpleMailMessage message = getMailMessage(
-                email,
-                token,
-                "Confirm your Garage Account",
-                "/user/confirm"
-        );
-
         try {
+            MimeMessage message = getMailMessage(email, token, "Confirm your Garage Account", "/user/confirm");
             javaMailSender.send(message);
             logger.info("Confirmation email successfully sent to: {}", email);
-        } catch (Exception e) {
+        } catch (MessagingException e) {
             logger.error("Failed to send confirmation email to {}: {}", email, e.getMessage());
+        }
+    }
+
+    // UserServiceImpl.java
+
+    // UserServiceImpl.java -> validateResetToken method
+
+    @Override
+    public boolean validateResetToken(String token) {
+        Optional<PasswordResetToken> optionalToken = passwordResetTokenRepository.findByToken(token);
+
+        if (optionalToken.isEmpty()) {
+            logger.warn("Validation failed: Token not found in database.");
+            return false;
+        }
+
+        PasswordResetToken tokenEntity = optionalToken.get();
+
+        // 1. Check expiration time (Database check)
+        if (tokenEntity.getExpiryDate().isBefore(Instant.now())) {
+            passwordResetTokenRepository.delete(tokenEntity);
+            logger.warn("Validation failed: Token expired.");
+            return false;
+        }
+
+        try {
+            // 2. Verify JWT contents (User existence)
+            String decrypted = decryptToken(token);
+
+            // --- ADD THIS CRITICAL DEBUG LINE ---
+            logger.error("DEBUG Decrypted Token Status: Input Token Length: [{}], Decrypted String Length: [{}], Decrypted String (First 50 Chars): [{}]",
+                    token.length(), decrypted.length(), decrypted.substring(0, Math.min(decrypted.length(), 50)));
+            // ------------------------------------
+
+            String emailFromJwt = jwtUtil.extractEmailFromToken(decrypted); // Renamed for clarity
+            String emailFromDbUser = tokenEntity.getUser().getEmail();     // Extracted DB email
+
+            // --- TEMPORARY DEBUGGING LOG ---
+            logger.error("DEBUG Mismatch Check: Email in JWT: [{}], Email of DB User Link: [{}]",
+                    emailFromJwt, emailFromDbUser);
+            // ---------------------------------
+
+            // Optional: Ensure the email in the JWT matches the user linked in the DB
+            if (!emailFromDbUser.equals(emailFromJwt)) {
+                logger.error("Validation failed: Token JWT email mismatch with DB user.");
+                passwordResetTokenRepository.delete(tokenEntity); // KEEP DELETE ACTIVE
+                return false;
+            }
+
+            // Token is valid and current
+            return true;
+
+        } catch (Exception e) {
+            logger.error("Reset token validation failed: {}", e.getMessage());
+            passwordResetTokenRepository.delete(tokenEntity); // KEEP DELETE ACTIVE
+            return false;
         }
     }
 
@@ -204,16 +271,34 @@ public class UserServiceImpl implements UserService {
         return responseDTO;
     }
 
+    // UserServiceImpl.java -> resetPassword method
+
     @Override
     public UserPasswordResetResponseDTO resetPassword(UserPasswordResetRequestDTO resetRequestDTO) {
         String email = resetRequestDTO.getEmail();
         logger.info("Reset password request for email: {}", email);
 
         usersRepository.findByEmail(email).ifPresent(user -> {
-            String resetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
-            sendResetEmail(user.getEmail(), resetToken);
-            resetTokenCache.put(resetToken, System.currentTimeMillis() + (15 * 60 * 1000));
-            logger.info("Password reset token cached for {}", email);
+            String rawResetToken = jwtUtil.generateResetPasswordToken(user.getEmail());
+            String encryptedToken;
+            try {
+                encryptedToken = TokenEncryptor.encrypt(rawResetToken);
+            } catch (Exception e) {
+                logger.error("Failed to encrypt token for email {}: {}", email, e.getMessage());
+                return;
+            }
+
+            // --- REPLACEMENT FOR CACHE ---
+            // Calculate expiration 15 minutes from now
+            Instant expiryDate = Instant.now().plusSeconds(15 * 60);
+
+            // Create and save the persistent token
+            PasswordResetToken tokenEntity = new PasswordResetToken(encryptedToken, user, expiryDate);
+            passwordResetTokenRepository.save(tokenEntity);
+            // --- END REPLACEMENT ---
+
+            sendResetEmail(user.getEmail(), encryptedToken);
+            logger.info("Password reset token saved to database for {}", email);
         });
 
         return new UserPasswordResetResponseDTO(
@@ -225,20 +310,15 @@ public class UserServiceImpl implements UserService {
     public void sendResetEmail(String email, String token) {
         logger.info("Sending password reset email to: {}", email);
 
-        SimpleMailMessage message = getMailMessage(
-                email,
-                token,
-                "Reset Your Password",
-                "/reset-password"
-        );
-
         try {
+            MimeMessage message = getMailMessage(email, token, "Reset Your Password", "/reset-password");
             javaMailSender.send(message);
             logger.info("Password reset email sent to: {}", email);
-        } catch (Exception e) {
+        } catch (MessagingException e) {
             logger.error("Failed to send reset email to {}: {}", email, e.getMessage());
         }
     }
+
 
     @Override
     public void suspendUser(Long userId) {
@@ -271,10 +351,20 @@ public class UserServiceImpl implements UserService {
 
         logger.info("Attempting password update using token.");
 
-        if (!resetTokenCache.containsKey(token) || System.currentTimeMillis() > resetTokenCache.get(token)) {
+        Optional<PasswordResetToken> optionalToken = passwordResetTokenRepository.findByToken(token);
+
+        if (optionalToken.isEmpty()) {
             throw new UnauthorizedException("Invalid or expired reset token");
         }
-        resetTokenCache.remove(token);
+
+        PasswordResetToken tokenEntity = optionalToken.get();
+
+        if (tokenEntity.getExpiryDate().isBefore(Instant.now())) {
+            passwordResetTokenRepository.delete(tokenEntity);
+            throw new UnauthorizedException("Invalid or expired reset token");
+        }
+
+        passwordResetTokenRepository.delete(tokenEntity);
 
         String decryptedToken = decryptToken(token);
         String email = jwtUtil.extractEmailFromToken(decryptedToken);

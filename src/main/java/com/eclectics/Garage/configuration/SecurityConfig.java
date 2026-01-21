@@ -33,13 +33,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://10.20.33.74:4200",
-                "http://10.20.33.60:4200",
-                "http://192.168.1.66:4200",
-                "http://192.168.1.67:4200",
-                "http://192.168.100.100:4200",
-                "http://192.168.1.73:4200",
-                "http://localhost:4200"
+                "http://10.194.153.195:4200"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -71,6 +65,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/user/**",
                                 "/user/login",
+                                "/user/register",
+                                "/user/reset-password",
+                                "/user/confirm",
+                                "/user/verify-reset-token",
                                 "/service/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,7 @@ public class JwtUtil {
     private final long SESSION_EXPIRATION_TIME = 1000 * 60 * 60;
     private final long RESET_CONFIRM_TIME = 1000 * 60 * 15;
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
@@ -65,7 +68,15 @@ public class JwtUtil {
     public String extractEmailFromToken(String token) {
         try {
             return extractEmail(token);
+        } catch (io.jsonwebtoken.SignatureException se) {
+            logger.error("JWT Error: Invalid signature or key mismatch during email extraction: {}", se.getMessage());
+            return null;
+        } catch (io.jsonwebtoken.MalformedJwtException mje) {
+            logger.error("JWT Error: Token is malformed/corrupted: {}", mje.getMessage());
+            return null;
         } catch (Exception e) {
+            // Catch all others (e.g., ExpiredJwtException, etc.)
+            logger.error("JWT Error: General error during email extraction: {}", e.getMessage());
             return null;
         }
     }

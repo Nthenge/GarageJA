@@ -28,6 +28,9 @@ public interface UserService {
     void sendResetEmail(String email, String token);
     void suspendUser(Long userId);
     void unsuspendUser(Long userId);
+
+    boolean validateResetToken(String token);
+
     boolean confirmUser(String token);
 }
 

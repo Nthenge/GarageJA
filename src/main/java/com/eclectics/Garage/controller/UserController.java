@@ -31,6 +31,22 @@ public class UserController {
         this.mechanicService = mechanicService;
     }
 
+    @PostMapping("/verify-reset-token")
+    public ResponseEntity<Object> verifyResetToken(@RequestBody Map<String, String> payload) {
+        String token = payload.get("token");
+        boolean valid = userService.validateResetToken(token);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("valid", valid);
+
+        if(valid){
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "Token invalid or expired");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','GARAGE_ADMIN','MECHANIC')")
     @GetMapping("/search")
     public ResponseEntity<Object> filterUsers(
