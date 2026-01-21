@@ -3,12 +3,13 @@ package com.eclectics.Garage.configuration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
 @ConfigurationProperties(prefix = "rate-limits")
 public class RateLimitProperties {
-    private Map<String, Limit> limits;
+    private Map<String, Limit> limits = new HashMap<>(); // initilize empty map
 
     public Map<String, Limit> getLimits() {
         return limits;
@@ -31,4 +32,5 @@ public class RateLimitProperties {
         public void setRefillPeriodMinutes(int refillPeriodMinutes) { this.refillPeriodMinutes = refillPeriodMinutes; }
     }
 }
+
 

@@ -50,18 +50,28 @@ public class IpRateLimitFilter extends OncePerRequestFilter {
     }
 
     private Bucket createBucketForPath(String path) {
+        Map<String, RateLimitProperties.Limit> limits = rateLimitProperties.getLimits();
+
+        // Ensure the map is not null
+        if (limits == null) {
+            limits = Map.of("default", defaultLimit());
+        }
+
         RateLimitProperties.Limit limit = null;
 
-        if (path.startsWith("/user/login")) limit = rateLimitProperties.getLimits().get("user-login");
-        else if (path.startsWith("/user/register")) limit = rateLimitProperties.getLimits().get("user-register");
-        else if (path.startsWith("/user/delete-account")) limit = rateLimitProperties.getLimits().get("user-delete-account");
-        else if (path.startsWith("/user/verify-reset-token")) limit = rateLimitProperties.getLimits().get("user-verify-reset-token");
-        else if (path.startsWith("/user/confirm")) limit = rateLimitProperties.getLimits().get("user-confirm");
-        else if (path.startsWith("/user/update")) limit = rateLimitProperties.getLimits().get("user-update");
-        else if (path.startsWith("/user/update-password")) limit = rateLimitProperties.getLimits().get("user-update-password");
-        else if (path.startsWith("/user/register/mechanic")) limit = rateLimitProperties.getLimits().get("user-register-mechanic");
-        else if (path.startsWith("/user/search")) limit = rateLimitProperties.getLimits().get("user-search");
-        else limit = rateLimitProperties.getLimits().get("default");
+        if (path.startsWith("/user/login")) limit = limits.get("user-login");
+        else if (path.startsWith("/user/register")) limit = limits.get("user-register");
+        else if (path.startsWith("/user/delete-account")) limit = limits.get("user-delete-account");
+        else if (path.startsWith("/user/verify-reset-token")) limit = limits.get("user-verify-reset-token");
+        else if (path.startsWith("/user/confirm")) limit = limits.get("user-confirm");
+        else if (path.startsWith("/user/update")) limit = limits.get("user-update");
+        else if (path.startsWith("/user/update-password")) limit = limits.get("user-update-password");
+        else if (path.startsWith("/user/register/mechanic")) limit = limits.get("user-register-mechanic");
+        else if (path.startsWith("/user/search")) limit = limits.get("user-search");
+        else limit = limits.get("default");
+
+        // If limit is still null, use a safe default
+        if (limit == null) limit = defaultLimit();
 
         return Bucket4j.builder()
                 .addLimit(Bandwidth.classic(
@@ -70,4 +80,14 @@ public class IpRateLimitFilter extends OncePerRequestFilter {
                 ))
                 .build();
     }
+
+    // Define a default limit in case YAML or map is missing
+    private RateLimitProperties.Limit defaultLimit() {
+        RateLimitProperties.Limit limit = new RateLimitProperties.Limit();
+        limit.setCapacity(50);
+        limit.setRefill(50);
+        limit.setRefillPeriodMinutes(1);
+        return limit;
+    }
+
 }
