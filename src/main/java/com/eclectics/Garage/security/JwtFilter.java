@@ -2,6 +2,7 @@ package com.eclectics.Garage.security;
 
 import com.eclectics.Garage.model.User;
 import com.eclectics.Garage.repository.UsersRepository;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import java.util.List;
 
 @Component
+@Order(2)
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;

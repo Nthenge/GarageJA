@@ -110,3 +110,45 @@ spring:
       web:
         exposure:
           include: health,info,prometheus
+
+rate-limits:
+  user-login:
+    capacity: 5
+    refill: 5
+    refill-period-minutes: 1
+  user-register:
+    capacity: 5
+    refill: 5
+    refill-period-minutes: 1
+  user-delete-account:
+    capacity: 5
+    refill: 5
+    refill-period-minutes: 1
+  user-verify-reset-token:
+    capacity: 3
+    refill: 3
+    refill-period-minutes: 1
+  user-confirm:
+    capacity: 10
+    refill: 10
+    refill-period-minutes: 1
+  user-update:
+    capacity: 10
+    refill: 10
+    refill-period-minutes: 1
+  user-update-password:
+    capacity: 10
+    refill: 10
+    refill-period-minutes: 1
+  user-register-mechanic:
+    capacity: 10
+    refill: 10
+    refill-period-minutes: 1
+  user-search:
+    capacity: 30
+    refill: 30
+    refill-period-minutes: 1
+  default:
+    capacity: 50
+    refill: 50
+    refill-period-minutes: 1
