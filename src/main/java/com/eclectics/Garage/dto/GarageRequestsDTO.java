@@ -2,55 +2,61 @@ package com.eclectics.Garage.dto;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 public class GarageRequestsDTO {
-    private String businessLicense;
+    private String licenseNumber;
     private String professionalCertificate;
     private String facilityPhotos;
 
     private Long garageId;
-    private Long operatingHours;
+    private List<String> operatingDays;
 
-    private String businessRegNumber;
-    private String businessEmailAddress;
-    private String twentyFourHours;
+    private String registrationNumber;
+    private String businessEmail;
+    private String closingTime;
+    private String openingTime;
     private String serviceCategories;
-    private String specialisedServices;
+    private List<Long> services;
 
     private String businessName;
-    private String physicalBusinessAddress;
-    private String businessPhoneNumber;
+    private String physicalAddress;
+    private String phoneNumber;
 
     private Integer yearsInOperation;
     private Integer mpesaPayBill;
+    private Integer accountNumber;
     private Integer mpesaTill;
 
     public GarageRequestsDTO() {}
 
-    public GarageRequestsDTO(String businessLicense, String professionalCertificate, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String serviceCategories, String businessPhoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, String specialisedServices, String twentyFourHours, String physicalBusinessAddress, Integer mpesaTill) {
-        this.businessLicense = businessLicense;
+    public GarageRequestsDTO(String businessLicense,Integer accountNumber, String professionalCertificate,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, String phoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
+        this.licenseNumber = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
+        this.accountNumber = accountNumber;
         this.garageId = garageId;
-        this.operatingHours = operatingHours;
-        this.businessRegNumber = businessRegNumber;
-        this.businessEmailAddress = businessEmailAddress;
+        this.operatingDays = operatingDays;
+        this.registrationNumber = businessRegNumber;
+        this.businessEmail = businessEmail;
         this.serviceCategories = serviceCategories;
-        this.businessPhoneNumber = businessPhoneNumber;
+        this.phoneNumber = phoneNumber;
         this.mpesaPayBill = mpesaPayBill;
+        this.closingTime = closingTime;
+        this.openingTime = openingTime;
         this.yearsInOperation = yearsInOperation;
         this.businessName = businessName;
-        this.specialisedServices = specialisedServices;
-        this.twentyFourHours = twentyFourHours;
-        this.physicalBusinessAddress = physicalBusinessAddress;
+        this.services = services;
+        this.physicalAddress = physicalAddress;
         this.mpesaTill = mpesaTill;
     }
 
     public String getBusinessLicense() {
-        return businessLicense;
+        return licenseNumber;
     }
 
     public void setBusinessLicense(String businessLicense) {
-        this.businessLicense = businessLicense;
+        this.licenseNumber = businessLicense;
     }
 
     public String getProfessionalCertificate() {
@@ -77,36 +83,44 @@ public class GarageRequestsDTO {
         this.garageId = garageId;
     }
 
-    public Long getOperatingHours() {
-        return operatingHours;
+    public String getClosingTime() {
+        return closingTime;
     }
 
-    public void setOperatingHours(Long operatingHours) {
-        this.operatingHours = operatingHours;
+    public void setClosingTime(String closingTime) {
+        this.closingTime = closingTime;
+    }
+
+    public String getOpeningTime() {
+        return openingTime;
+    }
+
+    public void setOpeningTime(String openingTime) {
+        this.openingTime = openingTime;
+    }
+
+    public List<String> getOperatingDays() {
+        return operatingDays;
+    }
+
+    public void setOperatingDays(List<String> operatingDays) {
+        this.operatingDays = operatingDays;
     }
 
     public String getBusinessRegNumber() {
-        return businessRegNumber;
+        return registrationNumber;
     }
 
     public void setBusinessRegNumber(String businessRegNumber) {
-        this.businessRegNumber = businessRegNumber;
+        this.registrationNumber = businessRegNumber;
     }
 
-    public String getBusinessEmailAddress() {
-        return businessEmailAddress;
+    public String getBusinessEmail() {
+        return businessEmail;
     }
 
-    public void setBusinessEmailAddress(String businessEmailAddress) {
-        this.businessEmailAddress = businessEmailAddress;
-    }
-
-    public String getTwentyFourHours() {
-        return twentyFourHours;
-    }
-
-    public void setTwentyFourHours(String twentyFourHours) {
-        this.twentyFourHours = twentyFourHours;
+    public void setBusinessEmail(String businessEmailAddress) {
+        this.businessEmail = businessEmailAddress;
     }
 
     public String getServiceCategories() {
@@ -117,12 +131,20 @@ public class GarageRequestsDTO {
         this.serviceCategories = serviceCategories;
     }
 
-    public String getSpecialisedServices() {
-        return specialisedServices;
+    public List<Long>  getServices() {
+        return services;
     }
 
-    public void setSpecialisedServices(String specialisedServices) {
-        this.specialisedServices = specialisedServices;
+    public void setServices(List<Long>  services) {
+        this.services = services;
+    }
+
+    public Integer getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(Integer accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
     public String getBusinessName() {
@@ -134,19 +156,19 @@ public class GarageRequestsDTO {
     }
 
     public String getPhysicalBusinessAddress() {
-        return physicalBusinessAddress;
+        return physicalAddress;
     }
 
     public void setPhysicalBusinessAddress(String physicalBusinessAddress) {
-        this.physicalBusinessAddress = physicalBusinessAddress;
+        this.physicalAddress = physicalBusinessAddress;
     }
 
     public String getBusinessPhoneNumber() {
-        return businessPhoneNumber;
+        return phoneNumber;
     }
 
     public void setBusinessPhoneNumber(String businessPhoneNumber) {
-        this.businessPhoneNumber = businessPhoneNumber;
+        this.phoneNumber = businessPhoneNumber;
     }
 
     public Integer getYearsInOperation() {

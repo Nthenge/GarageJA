@@ -220,17 +220,19 @@ public class GarageServiceImpl implements GarageService {
 
         // 3️⃣ Update basic garage fields
         if (dto.getBusinessName() != null) garage.setBusinessName(dto.getBusinessName());
-        if (dto.getOperatingHours() != null) garage.setOperatingHours(dto.getOperatingHours());
-        if (dto.getBusinessEmailAddress() != null) garage.setBusinessEmailAddress(dto.getBusinessEmailAddress());
+        if (dto.getOperatingDays() != null) garage.setOperatingDays(dto.getOperatingDays());
+        if (dto.getBusinessEmail() != null) garage.setBusinessEmail(dto.getBusinessEmail());
         if (dto.getBusinessRegNumber() != null) garage.setBusinessRegNumber(dto.getBusinessRegNumber());
-        if (dto.getTwentyFourHours() != null) garage.setTwentyFourHours(dto.getTwentyFourHours());
+        if (dto.getOpeningTime() != null) garage.setOpeningTime(dto.getOpeningTime());
+        if (dto.getClosingTime() != null) garage.setClosingTime(dto.getClosingTime());
         if (dto.getServiceCategories() != null) garage.setServiceCategories(dto.getServiceCategories());
-        if (dto.getSpecialisedServices() != null) garage.setSpecialisedServices(dto.getSpecialisedServices());
+        if (dto.getServices() != null) garage.setServices(dto.getServices());
         if (dto.getPhysicalBusinessAddress() != null) garage.setPhysicalBusinessAddress(dto.getPhysicalBusinessAddress());
         if (dto.getBusinessPhoneNumber() != null) garage.setBusinessPhoneNumber(dto.getBusinessPhoneNumber());
         if (dto.getYearsInOperation() != null) garage.setYearsInOperation(dto.getYearsInOperation());
         if (dto.getMpesaPayBill() != null) garage.setMpesaPayBill(dto.getMpesaPayBill());
         if (dto.getMpesaTill() != null) garage.setMpesaTill(dto.getMpesaTill());
+        if (dto.getAccountNumber() != null) garage.setAccountNumber(dto.getAccountNumber());
 
         // 4️⃣ Handle file uploads
         try {

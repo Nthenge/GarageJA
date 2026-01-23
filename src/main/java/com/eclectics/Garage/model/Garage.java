@@ -15,28 +15,33 @@ public class Garage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String businessLicense;
+    private String licenseNumber;
     private String professionalCertificate;
+
     private String facilityPhotos;
 
     @Column(unique = true, nullable = false)
     private Long garageId;
-    private Long operatingHours;
+    private List<String> operatingDays;
 
-    private String businessRegNumber;
-    private String businessEmailAddress;
-    private String twentyFourHours;
+    private String registrationNumber;
+    private String businessEmail;
+    private String closingTime;
+    private String openingTime;
     private String serviceCategories;
-    private String specialisedServices;
+
+    private List<Long> services;
 
     private String businessName;
-    private String physicalBusinessAddress;
+    private String physicalAddress;
     @Embedded
     private Location businessLocation;
-    private String businessPhoneNumber;
+    private String phoneNumber;
 
     private Integer yearsInOperation;
+
     private Integer mpesaPayBill;
+    private Integer accountNumber;
     private Integer mpesaTill;
 
     @OneToMany(mappedBy = "garage", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -63,21 +68,23 @@ public class Garage {
     @JsonBackReference
     private User user;
 
-    public Garage(String businessLicense, String professionalCertificate, Location businessLocation, String facilityPhotos, Long garageId, Long operatingHours, String businessRegNumber, String businessEmailAddress, String twentyFourHours, String serviceCategories, String specialisedServices, String businessName, String physicalBusinessAddress, String businessPhoneNumber, Integer yearsInOperation, Integer mpesaPayBill, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
-        this.businessLicense = businessLicense;
+    public Garage(String businessLicense,Integer accountNumber, String professionalCertificate, Location businessLocation,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, List<Long> services, String businessName, String physicalAddress, String phoneNumber, Integer yearsInOperation, Integer mpesaPayBill, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
+        this.licenseNumber = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
+        this.accountNumber = accountNumber;
         this.garageId = garageId;
-        this.operatingHours = operatingHours;
-        this.businessRegNumber = businessRegNumber;
-        this.businessEmailAddress = businessEmailAddress;
-        this.twentyFourHours = twentyFourHours;
+        this.operatingDays = operatingDays;
+        this.registrationNumber = businessRegNumber;
+        this.businessEmail = businessEmail;
         this.serviceCategories = serviceCategories;
-        this.specialisedServices = specialisedServices;
+        this.services = services;
+        this.closingTime = closingTime;
+        this.openingTime = openingTime;
         this.businessName = businessName;
-        this.physicalBusinessAddress = physicalBusinessAddress;
+        this.physicalAddress = physicalAddress;
         this.businessLocation = businessLocation;
-        this.businessPhoneNumber = businessPhoneNumber;
+        this.phoneNumber = phoneNumber;
         this.yearsInOperation = yearsInOperation;
         this.mpesaPayBill = mpesaPayBill;
         this.mpesaTill = mpesaTill;
@@ -95,17 +102,20 @@ public class Garage {
     public List<String> getMissingFields() {
         List<String> missingFields = new ArrayList<>();
 
-        if (businessLicense == null || businessLicense.isEmpty()) missingFields.add("businessLicense");
+        if (licenseNumber == null || licenseNumber.isEmpty()) missingFields.add("businessLicense");
         if (professionalCertificate == null || professionalCertificate.isEmpty()) missingFields.add("professionalCertificate");
         if (facilityPhotos == null || facilityPhotos.isEmpty()) missingFields.add("facilityPhotos");
-        if (operatingHours == null) missingFields.add("operatingHours");
-        if (businessRegNumber == null || businessRegNumber.isBlank()) missingFields.add("businessRegNumber");
-        if (businessEmailAddress == null || businessEmailAddress.isBlank()) missingFields.add("businessEmailAddress");
-        if (specialisedServices == null || specialisedServices.isBlank()) missingFields.add("specialisedServices");
+        if (operatingDays == null) missingFields.add("operatingDays");
+        if (registrationNumber == null || registrationNumber.isBlank()) missingFields.add("businessRegNumber");
+        if (businessEmail == null || businessEmail.isBlank()) missingFields.add("businessEmailAddress");
+        if (services == null || services.isEmpty()) missingFields.add("specialisedServices");
         if (businessName == null || businessName.isBlank()) missingFields.add("businessName");
-        if (physicalBusinessAddress == null || physicalBusinessAddress.isBlank()) missingFields.add("physicalBusinessAddress");
-        if (businessPhoneNumber == null || businessPhoneNumber.isBlank()) missingFields.add("businessPhoneNumber");
+        if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalBusinessAddress");
+        if (phoneNumber == null || phoneNumber.isBlank()) missingFields.add("businessPhoneNumber");
         if (mpesaPayBill == null && mpesaTill == null) missingFields.add("mpesaPayBill/mpesaTill");
+        if (openingTime == null) missingFields.add("openingTime");
+        if (closingTime == null) missingFields.add("closingTime");
+        if (accountNumber == null) missingFields.add("accountNumber");
 
         return missingFields;
     }
@@ -116,8 +126,8 @@ public class Garage {
     public Long getId() { return id;}
     public void setId(Long id) { this.id = id;}
 
-    public String getBusinessLicense() { return businessLicense;}
-    public void setBusinessLicense(String businessLicense) { this.businessLicense = businessLicense;}
+    public String getBusinessLicense() { return licenseNumber;}
+    public void setBusinessLicense(String businessLicense) { this.licenseNumber = businessLicense;}
 
     public String getProfessionalCertificate() { return professionalCertificate;}
     public void setProfessionalCertificate(String professionalCertificate) {this.professionalCertificate = professionalCertificate;}
@@ -128,48 +138,69 @@ public class Garage {
     public Long getGarageId() { return garageId;}
     public void setGarageId(Long garageId) { this.garageId = garageId;}
 
-    public String getBusinessRegNumber() {return businessRegNumber;}
-    public void setBusinessRegNumber(String businessRegNumber) { this.businessRegNumber = businessRegNumber;}
+    public String getBusinessRegNumber() {return registrationNumber;}
+    public void setBusinessRegNumber(String businessRegNumber) { this.registrationNumber = businessRegNumber;}
 
-    public String getBusinessEmailAddress() { return businessEmailAddress;}
-    public void setBusinessEmailAddress(String businessEmailAddress) {this.businessEmailAddress = businessEmailAddress;}
+    public String getBusinessEmail() { return businessEmail;}
+    public void setBusinessEmail(String businessEmailAddress) {this.businessEmail = businessEmailAddress;}
 
     public Integer getYearsInOperation() { return yearsInOperation;}
     public void setYearsInOperation(Integer yearsInOperation) { this.yearsInOperation = yearsInOperation;}
 
-    public Long getOperatingHours() { return operatingHours;}
-    public void setOperatingHours(Long operatingHours) { this.operatingHours = operatingHours;}
-
-    public String getTwentyFourHours() { return twentyFourHours;}
-    public void setTwentyFourHours(String twentyFourHours) { this.twentyFourHours = twentyFourHours;}
+    public List<String> getOperatingDays() { return operatingDays;}
+    public void setOperatingDays(List<String> operatingHours) { this.operatingDays = operatingDays;}
 
     public String getServiceCategories() { return serviceCategories; }
     public void setServiceCategories(String serviceCategories) {this.serviceCategories = serviceCategories;}
 
-    public String getSpecialisedServices() { return specialisedServices;}
-    public void setSpecialisedServices(String specialisedServices) {this.specialisedServices = specialisedServices;}
+    public List<Long> getServices() { return services;}
+    public void setServices(List<Long> services) {this.services = services;}
 
     public String getBusinessName() { return businessName;}
     public void setBusinessName(String businessName) { this.businessName = businessName;}
 
-    public String getPhysicalBusinessAddress() { return physicalBusinessAddress;}
-    public void setPhysicalBusinessAddress(String physicalBusinessAddress) {this.physicalBusinessAddress = physicalBusinessAddress;}
+    public String getPhysicalBusinessAddress() { return physicalAddress;}
+    public void setPhysicalBusinessAddress(String physicalBusinessAddress) {this.physicalAddress = physicalBusinessAddress;}
 
     public Location getBusinessLocation() {
         return businessLocation;
+    }
+
+    public Integer getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(Integer accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
     public void setBusinessLocation(Location businessLocation) {
         this.businessLocation = businessLocation;
     }
 
-    public String getBusinessPhoneNumber() { return businessPhoneNumber;}
-    public void setBusinessPhoneNumber(String businessPhoneNumber) {this.businessPhoneNumber = businessPhoneNumber;}
+    public String getBusinessPhoneNumber() { return phoneNumber;}
+    public void setBusinessPhoneNumber(String businessPhoneNumber) {this.phoneNumber = businessPhoneNumber;}
 
     public List<ServiceRequest> getRequests() {return requests;
     }
     public void setRequests(List<ServiceRequest> requests) {
         this.requests = requests;
+    }
+
+    public String getClosingTime() {
+        return closingTime;
+    }
+
+    public void setClosingTime(String closingTime) {
+        this.closingTime = closingTime;
+    }
+
+    public String getOpeningTime() {
+        return openingTime;
+    }
+
+    public void setOpeningTime(String openingTime) {
+        this.openingTime = openingTime;
     }
 
     public Set<Service> getOfferedServices() {
