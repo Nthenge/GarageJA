@@ -18,7 +18,6 @@ public class GarageRequestsDTO {
     private String businessEmail;
     private String closingTime;
     private String openingTime;
-    private String serviceCategories;
     private List<Long> services;
 
     private String businessName;
@@ -32,7 +31,7 @@ public class GarageRequestsDTO {
 
     public GarageRequestsDTO() {}
 
-    public GarageRequestsDTO(String businessLicense,Integer accountNumber,Location businessLocation, String professionalCertificate,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, String phoneNumber, Integer paybillNumber, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
+    public GarageRequestsDTO(String businessLicense,Integer accountNumber,Location businessLocation, String professionalCertificate,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String phoneNumber, Integer paybillNumber, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
         this.licenseNumber = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -42,7 +41,6 @@ public class GarageRequestsDTO {
         this.operatingDays = operatingDays;
         this.registrationNumber = businessRegNumber;
         this.businessEmail = businessEmail;
-        this.serviceCategories = serviceCategories;
         this.phoneNumber = phoneNumber;
         this.paybillNumber = paybillNumber;
         this.closingTime = closingTime;
@@ -132,14 +130,6 @@ public class GarageRequestsDTO {
 
     public void setBusinessEmail(String businessEmailAddress) {
         this.businessEmail = businessEmailAddress;
-    }
-
-    public String getServiceCategories() {
-        return serviceCategories;
-    }
-
-    public void setServiceCategories(String serviceCategories) {
-        this.serviceCategories = serviceCategories;
     }
 
     public List<Long>  getServices() {

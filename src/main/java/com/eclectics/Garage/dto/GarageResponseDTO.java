@@ -14,7 +14,6 @@ public class GarageResponseDTO {
     private String businessEmail;
     private String closingTime;
     private String openingTime;
-    private String serviceCategories;
     private List<Long> services;
 
     private String businessName;
@@ -31,7 +30,7 @@ public class GarageResponseDTO {
 
     public GarageResponseDTO() {}
 
-    public GarageResponseDTO(String businessLicense,Integer accountNumber, Double latitude, Double longitude, String professionalCertificate, String closingTime, String openingTime,String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, String phoneNumber, Integer paybillNumber, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
+    public GarageResponseDTO(String businessLicense,Integer accountNumber, Double latitude, Double longitude, String professionalCertificate, String closingTime, String openingTime,String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String phoneNumber, Integer paybillNumber, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
         this.licenseNumber = businessLicense;
         this.accountNumber = accountNumber;
         this.professionalCertificate = professionalCertificate;
@@ -40,7 +39,6 @@ public class GarageResponseDTO {
         this.operatingDays = operatingDays;
         this.registrationNumber = businessRegNumber;
         this.businessEmail = businessEmail;
-        this.serviceCategories = serviceCategories;
         this.phoneNumber = phoneNumber;
         this.paybillNumber = paybillNumber;
         this.yearsInOperation = yearsInOperation;
@@ -108,14 +106,6 @@ public class GarageResponseDTO {
 
     public void setBusinessEmailAddress(String businessEmailAddress) {
         this.businessEmail = businessEmailAddress;
-    }
-
-    public String getServiceCategories() {
-        return serviceCategories;
-    }
-
-    public void setServiceCategories(String serviceCategories) {
-        this.serviceCategories = serviceCategories;
     }
 
     public List<Long>  getServices() {

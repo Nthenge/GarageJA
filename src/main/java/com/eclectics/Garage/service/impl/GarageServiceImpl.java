@@ -223,7 +223,6 @@ public class GarageServiceImpl implements GarageService {
         if (dto.getRegistrationNumber() != null) garage.setRegistrationNumber(dto.getRegistrationNumber());
         if (dto.getOpeningTime() != null) garage.setOpeningTime(dto.getOpeningTime());
         if (dto.getClosingTime() != null) garage.setClosingTime(dto.getClosingTime());
-        if (dto.getServiceCategories() != null) garage.setServiceCategories(dto.getServiceCategories());
         if (dto.getServices() != null) garage.setServices(dto.getServices());
         if (dto.getPhysicalAddress() != null) garage.setPhysicalAddress(dto.getPhysicalAddress());
         if (dto.getPhoneNumber() != null) garage.setPhoneNumber(dto.getPhoneNumber());

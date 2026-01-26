@@ -28,7 +28,6 @@ public class Garage {
     private String businessEmail;
     private String closingTime;
     private String openingTime;
-    private String serviceCategories;
 
     private List<Long> services;
 
@@ -68,7 +67,7 @@ public class Garage {
     @JsonBackReference
     private User user;
 
-    public Garage(String businessLicense,Integer accountNumber, String professionalCertificate, Location businessLocation,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, List<Long> services, String businessName, String physicalAddress, String phoneNumber, Integer yearsInOperation, Integer paybillNumber, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
+    public Garage(String businessLicense,Integer accountNumber, String professionalCertificate, Location businessLocation,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, List<Long> services, String businessName, String physicalAddress, String phoneNumber, Integer yearsInOperation, Integer paybillNumber, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
         this.licenseNumber = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -77,7 +76,6 @@ public class Garage {
         this.operatingDays = operatingDays;
         this.registrationNumber = businessRegNumber;
         this.businessEmail = businessEmail;
-        this.serviceCategories = serviceCategories;
         this.services = services;
         this.closingTime = closingTime;
         this.openingTime = openingTime;
@@ -157,9 +155,6 @@ public class Garage {
 
     public List<String> getOperatingDays() { return operatingDays;}
     public void setOperatingDays(List<String> operatingDays) { this.operatingDays = operatingDays;}
-
-    public String getServiceCategories() { return serviceCategories; }
-    public void setServiceCategories(String serviceCategories) {this.serviceCategories = serviceCategories;}
 
     public List<Long> getServices() { return services;}
     public void setServices(List<Long> services) {this.services = services;}

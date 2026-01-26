@@ -3,7 +3,6 @@ package com.eclectics.Garage.mapper;
 import com.eclectics.Garage.dto.GarageRequestsDTO;
 import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.model.Garage;
-// import jdk.dynalink.linker.LinkerServices; // Not needed, can be removed
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
