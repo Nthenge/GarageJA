@@ -25,13 +25,13 @@ public class GarageResponseDTO {
     private Double longitude;
 
     private Integer yearsInOperation;
-    private Integer mpesaPayBill;
+    private Integer paybillNumber;
     private Integer accountNumber;
     private Integer mpesaTill;
 
     public GarageResponseDTO() {}
 
-    public GarageResponseDTO(String businessLicense,Integer accountNumber, Double latitude, Double longitude, String professionalCertificate, String closingTime, String openingTime,String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, String phoneNumber, Integer mpesaPayBill, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
+    public GarageResponseDTO(String businessLicense,Integer accountNumber, Double latitude, Double longitude, String professionalCertificate, String closingTime, String openingTime,String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, String phoneNumber, Integer paybillNumber, Integer yearsInOperation, String businessName, List<Long>  services, String physicalAddress, Integer mpesaTill) {
         this.licenseNumber = businessLicense;
         this.accountNumber = accountNumber;
         this.professionalCertificate = professionalCertificate;
@@ -42,7 +42,7 @@ public class GarageResponseDTO {
         this.businessEmail = businessEmail;
         this.serviceCategories = serviceCategories;
         this.phoneNumber = phoneNumber;
-        this.mpesaPayBill = mpesaPayBill;
+        this.paybillNumber = paybillNumber;
         this.yearsInOperation = yearsInOperation;
         this.businessName = businessName;
         this.closingTime = closingTime;
@@ -54,12 +54,12 @@ public class GarageResponseDTO {
         this.mpesaTill = mpesaTill;
     }
 
-    public String getBusinessLicense() {
+    public String getLicenseNumber() {
         return licenseNumber;
     }
 
-    public void setBusinessLicense(String businessLicense) {
-        this.licenseNumber = businessLicense;
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
     }
 
     public String getProfessionalCertificate() {
@@ -94,12 +94,12 @@ public class GarageResponseDTO {
         this.operatingDays = operatingDays;
     }
 
-    public String getBusinessRegNumber() {
+    public String getRegistrationNumber() {
         return registrationNumber;
     }
 
-    public void setBusinessRegNumber(String businessRegNumber) {
-        this.registrationNumber = businessRegNumber;
+    public void setRegistrationNumber(String registrationNumber) {
+        this.registrationNumber = registrationNumber;
     }
 
     public String getBusinessEmailAddress() {
@@ -141,12 +141,12 @@ public class GarageResponseDTO {
         this.businessName = businessName;
     }
 
-    public String getPhysicalBusinessAddress() {
+    public String getPhysicalAddress() {
         return physicalAddress;
     }
 
-    public void setPhysicalBusinessAddress(String physicalBusinessAddress) {
-        this.physicalAddress = physicalBusinessAddress;
+    public void setPhysicalAddress(String physicalAddress) {
+        this.physicalAddress = physicalAddress;
     }
 
     public String getClosingTime() {
@@ -181,12 +181,12 @@ public class GarageResponseDTO {
         this.longitude = longitude;
     }
 
-    public String getBusinessPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setBusinessPhoneNumber(String businessPhoneNumber) {
-        this.phoneNumber = businessPhoneNumber;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public Integer getYearsInOperation() {
@@ -197,12 +197,12 @@ public class GarageResponseDTO {
         this.yearsInOperation = yearsInOperation;
     }
 
-    public Integer getMpesaPayBill() {
-        return mpesaPayBill;
+    public Integer getPaybillNumber() {
+        return paybillNumber;
     }
 
-    public void setMpesaPayBill(Integer mpesaPayBill) {
-        this.mpesaPayBill = mpesaPayBill;
+    public void setPaybillNumber(Integer paybillNumber) {
+        this.paybillNumber = paybillNumber;
     }
 
     public Integer getMpesaTill() {

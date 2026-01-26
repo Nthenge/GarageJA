@@ -16,12 +16,10 @@ public interface GarageMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
-    @Mapping(target = "businessLicense", ignore = true)
+    @Mapping(target = "licenseNumber", ignore = true)
     @Mapping(target = "professionalCertificate", ignore = true)
     @Mapping(target = "facilityPhotos", ignore = true)
-    // You should also ignore the new businessLocation field here if you want to be explicit,
-    // though MapStruct usually ignores complex types if not mapped.
-    @Mapping(target = "businessLocation", ignore = true)
+    @Mapping(source = "businessLocation", target = "businessLocation")
     Garage toEntity(GarageRequestsDTO dto);
 
     @Mapping(source = "businessLocation.latitude", target = "latitude")

@@ -100,7 +100,7 @@ public class GarageServiceImpl implements GarageService {
             if (businessLicense != null && !businessLicense.isEmpty()) {
                 String ext = getFileExtension(businessLicense.getOriginalFilename());
                 String path = "Garages/licences/" + user.getId() + "-" + UUID.randomUUID() + ext;
-                garage.setBusinessLicense(ossService.uploadFile(path, businessLicense.getInputStream()));
+                garage.setLicenseNumber(ossService.uploadFile(path, businessLicense.getInputStream()));
             }
             if (professionalCertificate != null && !professionalCertificate.isEmpty()) {
                 String ext = getFileExtension(professionalCertificate.getOriginalFilename());
@@ -118,21 +118,19 @@ public class GarageServiceImpl implements GarageService {
         }
 
         // --- 2. Geocoding Logic (New) ---
-        String address = garage.getPhysicalBusinessAddress();
-        if (address != null && !address.isBlank()) {
+        boolean hasCoordinates = garage.getBusinessLocation() != null &&
+                garage.getBusinessLocation().getLatitude() != null;
+
+        if (!hasCoordinates && garage.getPhysicalAddress() != null) {
             try {
-                // Block the reactive call to ensure coordinates are set before JPA save
-                googleMapsService.geocode(address)
+                googleMapsService.geocode(garage.getPhysicalAddress())
                         .map(coords -> {
-                            Location location = new Location(coords.get("lat"), coords.get("lng"));
-                            garage.setBusinessLocation(location);
+                            garage.setBusinessLocation(new Location(coords.get("lat"), coords.get("lng")));
                             return garage;
                         })
-                        .block(); // WARNING: This blocks the thread. Acceptable if app is not fully reactive.
+                        .block();
             } catch (Exception e) {
-                logger.error("Geocoding failed for garage address: {}", address, e);
-                // Decide if you want to throw an exception or continue without location
-                // For now, we'll log and continue without location set.
+                logger.error("Geocoding failed for address: {}", garage.getPhysicalAddress());
             }
         }
 
@@ -222,15 +220,15 @@ public class GarageServiceImpl implements GarageService {
         if (dto.getBusinessName() != null) garage.setBusinessName(dto.getBusinessName());
         if (dto.getOperatingDays() != null) garage.setOperatingDays(dto.getOperatingDays());
         if (dto.getBusinessEmail() != null) garage.setBusinessEmail(dto.getBusinessEmail());
-        if (dto.getBusinessRegNumber() != null) garage.setBusinessRegNumber(dto.getBusinessRegNumber());
+        if (dto.getRegistrationNumber() != null) garage.setRegistrationNumber(dto.getRegistrationNumber());
         if (dto.getOpeningTime() != null) garage.setOpeningTime(dto.getOpeningTime());
         if (dto.getClosingTime() != null) garage.setClosingTime(dto.getClosingTime());
         if (dto.getServiceCategories() != null) garage.setServiceCategories(dto.getServiceCategories());
         if (dto.getServices() != null) garage.setServices(dto.getServices());
-        if (dto.getPhysicalBusinessAddress() != null) garage.setPhysicalBusinessAddress(dto.getPhysicalBusinessAddress());
-        if (dto.getBusinessPhoneNumber() != null) garage.setBusinessPhoneNumber(dto.getBusinessPhoneNumber());
+        if (dto.getPhysicalAddress() != null) garage.setPhysicalAddress(dto.getPhysicalAddress());
+        if (dto.getPhoneNumber() != null) garage.setPhoneNumber(dto.getPhoneNumber());
         if (dto.getYearsInOperation() != null) garage.setYearsInOperation(dto.getYearsInOperation());
-        if (dto.getMpesaPayBill() != null) garage.setMpesaPayBill(dto.getMpesaPayBill());
+        if (dto.getPaybillNumber() != null) garage.setPaybillNumber(dto.getPaybillNumber());
         if (dto.getMpesaTill() != null) garage.setMpesaTill(dto.getMpesaTill());
         if (dto.getAccountNumber() != null) garage.setAccountNumber(dto.getAccountNumber());
 
@@ -240,7 +238,7 @@ public class GarageServiceImpl implements GarageService {
                 String ext = getFileExtension(businessLicense.getOriginalFilename());
                 String uniqueFileName = "Garages/licences/" + garage.getGarageId() + "-" + UUID.randomUUID() + ext;
                 String fileUrl = ossService.uploadFile(uniqueFileName, businessLicense.getInputStream());
-                garage.setBusinessLicense(fileUrl);
+                garage.setLicenseNumber(fileUrl);
                 logger.debug("[UPDATE] Business license updated: {}", fileUrl);
             }
 
@@ -263,8 +261,8 @@ public class GarageServiceImpl implements GarageService {
             throw new BadRequestException("Failed to update garage files: " + e.getMessage());
         }
 
-        if (dto.getPhysicalBusinessAddress() != null) {
-            String newAddress = dto.getPhysicalBusinessAddress();
+        if (dto.getPhysicalAddress() != null) {
+            String newAddress = dto.getPhysicalAddress();
             try {
                 // Block the reactive call to ensure coordinates are set before JPA save
                 googleMapsService.geocode(newAddress)
@@ -312,11 +310,11 @@ public class GarageServiceImpl implements GarageService {
     @Override
     public Optional<String> getGarageUrlByUniqueId(Long uniqueId, int expiryMinutes) {
         Garage cached = garageCacheById.get(uniqueId);
-        if (cached != null && cached.getBusinessLicense() != null) {
-            return Optional.of(ossService.generatePresignedUrl(cached.getBusinessLicense(), expiryMinutes));
+        if (cached != null && cached.getLicenseNumber() != null) {
+            return Optional.of(ossService.generatePresignedUrl(cached.getBusinessName(), expiryMinutes));
         }
 
         return garageRepository.findByGarageId(uniqueId)
-                .map(g -> ossService.generatePresignedUrl(g.getBusinessLicense(), expiryMinutes));
+                .map(g -> ossService.generatePresignedUrl(g.getLicenseNumber(), expiryMinutes));
     }
 }

@@ -40,7 +40,7 @@ public class Garage {
 
     private Integer yearsInOperation;
 
-    private Integer mpesaPayBill;
+    private Integer paybillNumber;
     private Integer accountNumber;
     private Integer mpesaTill;
 
@@ -68,7 +68,7 @@ public class Garage {
     @JsonBackReference
     private User user;
 
-    public Garage(String businessLicense,Integer accountNumber, String professionalCertificate, Location businessLocation,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, List<Long> services, String businessName, String physicalAddress, String phoneNumber, Integer yearsInOperation, Integer mpesaPayBill, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
+    public Garage(String businessLicense,Integer accountNumber, String professionalCertificate, Location businessLocation,String closingTime, String openingTime, String facilityPhotos, Long garageId, List<String> operatingDays, String businessRegNumber, String businessEmail, String serviceCategories, List<Long> services, String businessName, String physicalAddress, String phoneNumber, Integer yearsInOperation, Integer paybillNumber, Integer mpesaTill, List<ServiceRequest> requests, Set<Service> offeredServices, User user) {
         this.licenseNumber = businessLicense;
         this.professionalCertificate = professionalCertificate;
         this.facilityPhotos = facilityPhotos;
@@ -86,7 +86,7 @@ public class Garage {
         this.businessLocation = businessLocation;
         this.phoneNumber = phoneNumber;
         this.yearsInOperation = yearsInOperation;
-        this.mpesaPayBill = mpesaPayBill;
+        this.paybillNumber = paybillNumber;
         this.mpesaTill = mpesaTill;
         this.requests = requests;
         this.offeredServices = offeredServices;
@@ -103,8 +103,6 @@ public class Garage {
         List<String> missingFields = new ArrayList<>();
 
         if (licenseNumber == null || licenseNumber.isEmpty()) missingFields.add("businessLicense");
-        if (professionalCertificate == null || professionalCertificate.isEmpty()) missingFields.add("professionalCertificate");
-        if (facilityPhotos == null || facilityPhotos.isEmpty()) missingFields.add("facilityPhotos");
         if (operatingDays == null) missingFields.add("operatingDays");
         if (registrationNumber == null || registrationNumber.isBlank()) missingFields.add("businessRegNumber");
         if (businessEmail == null || businessEmail.isBlank()) missingFields.add("businessEmailAddress");
@@ -112,7 +110,7 @@ public class Garage {
         if (businessName == null || businessName.isBlank()) missingFields.add("businessName");
         if (physicalAddress == null || physicalAddress.isBlank()) missingFields.add("physicalBusinessAddress");
         if (phoneNumber == null || phoneNumber.isBlank()) missingFields.add("businessPhoneNumber");
-        if (mpesaPayBill == null && mpesaTill == null) missingFields.add("mpesaPayBill/mpesaTill");
+        if (paybillNumber == null) missingFields.add("mpesaPayBill/mpesaTill");
         if (openingTime == null) missingFields.add("openingTime");
         if (closingTime == null) missingFields.add("closingTime");
         if (accountNumber == null) missingFields.add("accountNumber");
@@ -126,8 +124,13 @@ public class Garage {
     public Long getId() { return id;}
     public void setId(Long id) { this.id = id;}
 
-    public String getBusinessLicense() { return licenseNumber;}
-    public void setBusinessLicense(String businessLicense) { this.licenseNumber = businessLicense;}
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
 
     public String getProfessionalCertificate() { return professionalCertificate;}
     public void setProfessionalCertificate(String professionalCertificate) {this.professionalCertificate = professionalCertificate;}
@@ -138,8 +141,13 @@ public class Garage {
     public Long getGarageId() { return garageId;}
     public void setGarageId(Long garageId) { this.garageId = garageId;}
 
-    public String getBusinessRegNumber() {return registrationNumber;}
-    public void setBusinessRegNumber(String businessRegNumber) { this.registrationNumber = businessRegNumber;}
+    public String getRegistrationNumber() {
+        return registrationNumber;
+    }
+
+    public void setRegistrationNumber(String registrationNumber) {
+        this.registrationNumber = registrationNumber;
+    }
 
     public String getBusinessEmail() { return businessEmail;}
     public void setBusinessEmail(String businessEmailAddress) {this.businessEmail = businessEmailAddress;}
@@ -148,7 +156,7 @@ public class Garage {
     public void setYearsInOperation(Integer yearsInOperation) { this.yearsInOperation = yearsInOperation;}
 
     public List<String> getOperatingDays() { return operatingDays;}
-    public void setOperatingDays(List<String> operatingHours) { this.operatingDays = operatingDays;}
+    public void setOperatingDays(List<String> operatingDays) { this.operatingDays = operatingDays;}
 
     public String getServiceCategories() { return serviceCategories; }
     public void setServiceCategories(String serviceCategories) {this.serviceCategories = serviceCategories;}
@@ -159,8 +167,13 @@ public class Garage {
     public String getBusinessName() { return businessName;}
     public void setBusinessName(String businessName) { this.businessName = businessName;}
 
-    public String getPhysicalBusinessAddress() { return physicalAddress;}
-    public void setPhysicalBusinessAddress(String physicalBusinessAddress) {this.physicalAddress = physicalBusinessAddress;}
+    public String getPhysicalAddress() {
+        return physicalAddress;
+    }
+
+    public void setPhysicalAddress(String physicalAddress) {
+        this.physicalAddress = physicalAddress;
+    }
 
     public Location getBusinessLocation() {
         return businessLocation;
@@ -178,8 +191,13 @@ public class Garage {
         this.businessLocation = businessLocation;
     }
 
-    public String getBusinessPhoneNumber() { return phoneNumber;}
-    public void setBusinessPhoneNumber(String businessPhoneNumber) {this.phoneNumber = businessPhoneNumber;}
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
     public List<ServiceRequest> getRequests() {return requests;
     }
@@ -210,8 +228,13 @@ public class Garage {
         this.offeredServices = offeredServices;
     }
 
-    public Integer getMpesaPayBill() { return mpesaPayBill;}
-    public void setMpesaPayBill(Integer mpesaPayBill) { this.mpesaPayBill = mpesaPayBill;}
+    public Integer getPaybillNumber() {
+        return paybillNumber;
+    }
+
+    public void setPaybillNumber(Integer paybillNumber) {
+        this.paybillNumber = paybillNumber;
+    }
 
     public Integer getMpesaTill() { return mpesaTill;}
     public void setMpesaTill(Integer mpesaTill) {this.mpesaTill = mpesaTill;}
