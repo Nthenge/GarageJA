@@ -57,7 +57,7 @@ public class MechanicController {
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN','MECHANIC')")
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateOwnMechanic(
-            @RequestPart MechanicRequestDTO mechanicRequestDTO,
+            @RequestPart MechanicRequestDTO mechanic,
             @RequestPart(value = "profilePic", required = false) MultipartFile profilePic,
             @RequestPart(value = "nationalIDPic", required = true) MultipartFile nationalIDPic,
             @RequestPart(value = "professionalCertificate", required = false) MultipartFile professionalCertificate,
@@ -65,7 +65,7 @@ public class MechanicController {
             @RequestPart(value = "policeClearanceCertificate", required = true) MultipartFile policeClearanceCertificate) {
 
         MechanicResponseDTO updatedMechanic = mechanicService.updateOwnMechanic(
-                mechanicRequestDTO,
+                mechanic,
                 profilePic,
                 nationalIDPic,
                 professionalCertificate,

@@ -375,4 +375,9 @@ public class MechanicServiceImpl implements MechanicService {
                     return ossService.generatePresignedUrl(objectKey, expiryMinutes);
                 });
     }
+
+    @Override
+    public List<Mechanic> findMechanicsByGarageId(Long garageId) {
+        return mechanicRepository.findByGarage_GarageId(garageId);
+    }
 }

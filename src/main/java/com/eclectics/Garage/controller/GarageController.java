@@ -4,10 +4,11 @@ import com.eclectics.Garage.dto.GarageResponseDTO;
 import com.eclectics.Garage.dto.ServiceResponseDTO;
 import com.eclectics.Garage.exception.GarageExceptions;
 import com.eclectics.Garage.model.Garage;
+import com.eclectics.Garage.model.Mechanic;
 import com.eclectics.Garage.repository.GarageRepository;
-import com.eclectics.Garage.repository.ServiceRepository;
 import com.eclectics.Garage.response.ResponseHandler;
 import com.eclectics.Garage.service.GarageService;
+import com.eclectics.Garage.service.MechanicService;
 import com.eclectics.Garage.service.ServicesService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/garage")
@@ -24,14 +26,14 @@ public class GarageController {
 
     private final GarageService garageService;
     private final GarageRepository garageRepository;
-    private final ServiceRepository serviceRepository;
     private final ServicesService servicesService;
+    private final MechanicService mechanicService;
 
-    public GarageController(GarageService garageService, GarageRepository garageRepository, ServiceRepository serviceRepository, ServicesService servicesService) {
+    public GarageController(GarageService garageService, GarageRepository garageRepository, ServicesService servicesService, MechanicService mechanicService) {
         this.garageService = garageService;
         this.garageRepository = garageRepository;
-        this.serviceRepository = serviceRepository;
         this.servicesService = servicesService;
+        this.mechanicService = mechanicService;
     }
 
     @PreAuthorize("hasAnyAuthority('GARAGE_ADMIN')")
@@ -85,6 +87,11 @@ public class GarageController {
         return ResponseHandler.generateResponse("Filtered garages", HttpStatus.OK, garages, "/garage/search");
     }
 
+    @GetMapping("/{garageId}/mechanics")
+    public ResponseEntity<Object> getMechanicsByGarage(@PathVariable Long garageId) {
+        List<Mechanic> mechanics = mechanicService.findMechanicsByGarageId(garageId);
+        return ResponseHandler.generateResponse("Mechanics belonging to this garage",HttpStatus.OK, mechanics, "/garage/{garageId}/mechanics");
+    }
 
     @PreAuthorize("hasAnyAuthority('SYSTEM_ADMIN', 'GARAGE_ADMIN')")
     @PostMapping(value = "/create", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})

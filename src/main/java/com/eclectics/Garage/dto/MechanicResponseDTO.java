@@ -1,6 +1,7 @@
 package com.eclectics.Garage.dto;
 
 import com.eclectics.Garage.model.Garage;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Lob;
 
@@ -22,6 +23,7 @@ public class MechanicResponseDTO {
     private String professionalCertfificate;
     private String anyRelevantCertificate;
     private String policeClearanceCertficate;
+    @JsonIgnore
     private Garage garage;
 
     public MechanicResponseDTO() {}

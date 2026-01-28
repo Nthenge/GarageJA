@@ -39,4 +39,8 @@ public interface MechanicService {
 
     String deleteMechanic(Long id);
     Optional<String> getMechanicFilesUrlByNationalId(Integer nationalId, int expiryMinutes);
+
+    List<Mechanic> findMechanicsByGarageId(
+            Long garageId
+    );
 }

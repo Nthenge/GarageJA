@@ -1,6 +1,7 @@
 package com.eclectics.Garage.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class Mechanic {
 
     @ManyToOne
     @JoinColumn(name = "garageId", referencedColumnName = "garageId")
+    @JsonIgnore
     private Garage garage;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
