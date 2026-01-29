@@ -7,6 +7,7 @@ import com.eclectics.Garage.mapper.MechanicMapper;
 import com.eclectics.Garage.model.*;
 import com.eclectics.Garage.repository.MechanicRepository;
 import com.eclectics.Garage.repository.UsersRepository;
+import com.eclectics.Garage.security.CustomUserDetails;
 import com.eclectics.Garage.service.AuthenticationService;
 import com.eclectics.Garage.service.MechanicService;
 import com.eclectics.Garage.service.OSSService;
@@ -20,6 +21,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -377,7 +380,14 @@ public class MechanicServiceImpl implements MechanicService {
     }
 
     @Override
-    public List<Mechanic> findMechanicsByGarageId(Long garageId) {
-        return mechanicRepository.findByGarage_GarageId(garageId);
+    public List<Mechanic> findMechanicsByGarageId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long secureGarageId = userDetails.getUser().getGarage().getGarageId();
+        return mechanicRepository.findByGarage_GarageId(secureGarageId);
     }
 }

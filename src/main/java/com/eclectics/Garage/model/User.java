@@ -146,5 +146,9 @@
                 default -> false;
             };
         }
+
+        public Long getGarageId() {
+            return this.garage != null ? this.garage.getGarageId() : null;
+        }
     }
 

@@ -87,9 +87,9 @@ public class GarageController {
         return ResponseHandler.generateResponse("Filtered garages", HttpStatus.OK, garages, "/garage/search");
     }
 
-    @GetMapping("/{garageId}/mechanics")
-    public ResponseEntity<Object> getMechanicsByGarage(@PathVariable Long garageId) {
-        List<Mechanic> mechanics = mechanicService.findMechanicsByGarageId(garageId);
+    @GetMapping("/mechanics")
+    public ResponseEntity<?> getMyMechanics() {
+        List<Mechanic> mechanics = mechanicService.findMechanicsByGarageId();
         return ResponseHandler.generateResponse("Mechanics belonging to this garage",HttpStatus.OK, mechanics, "/garage/{garageId}/mechanics");
     }
 
